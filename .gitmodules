@@ -1,0 +1,6 @@
+[submodule "externals/cob_extern"]
+	path = externals/cob_extern
+	url = https://github.com/ual-arm-ros-pkg/cob_extern.git
+[submodule "externals/phidgets_drivers"]
+	path = externals/phidgets_drivers
+	url = https://github.com/ual-arm-ros-pkg/phidgets_drivers.git
