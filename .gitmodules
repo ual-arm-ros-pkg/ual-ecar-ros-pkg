@@ -4,3 +4,6 @@
 [submodule "externals/phidgets_drivers"]
 	path = externals/phidgets_drivers
 	url = https://github.com/ual-arm-ros-pkg/phidgets_drivers.git
+[submodule "externals/epos_hardware"]
+	path = externals/epos_hardware
+	url = https://github.com/ual-arm-ros-pkg/epos_hardware.git
