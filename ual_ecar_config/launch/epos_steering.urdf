@@ -22,7 +22,7 @@
       <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
     </joint>
     <actuator name="test_joint_actuator">
-      <mechanicalReduction>1000</mechanicalReduction>
+      <mechanicalReduction>100</mechanicalReduction>
     </actuator>
   </transmission>
 </robot>

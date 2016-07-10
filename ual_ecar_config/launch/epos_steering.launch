@@ -1,7 +1,7 @@
 <launch>
-  <param name="robot_description" textfile="$(find epos_hardware)/launch/example.urdf" />
-  <node name="epos_hardware" pkg="epos_hardware" type="epos_hardware_node" args="my_joint_actuator">
-    <rosparam command="load" file="$(find epos_hardware)/launch/example.yaml" />
+    <param name="robot_description" textfile="$(find ual_ecar_config)/launch/epos_steering.urdf" />
+  <node name="epos_hardware" pkg="epos_hardware" type="epos_hardware_node" args="my_joint_actuator" output="screen">
+    <rosparam command="load" file="$(find ual_ecar_config)/launch/epos_steering.yaml" />
   </node>
 
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
