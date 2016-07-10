@@ -1,0 +1,103 @@
+{
+  "keys": {}, 
+  "groups": {
+    "pluginmanager": {
+      "keys": {
+        "running-plugins": {
+          "type": "repr", 
+          "repr": "{u'rqt_topic/TopicPlugin': [1], u'rqt_publisher/Publisher': [1]}"
+        }
+      }, 
+      "groups": {
+        "plugin__rqt_publisher__Publisher__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__PublisherWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }, 
+                "dock_widget_title": {
+                  "type": "repr", 
+                  "repr": "u'Message Publisher'"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "publishers": {
+                  "type": "repr", 
+                  "repr": "u\"[{'type_name': 'std_msgs/Float64', 'topic_name': '/velocity_controller/command', 'enabled': False, 'rate': 1.0, 'expressions': {u'/velocity_controller/command/data': '10'}, 'publisher_id': 1, 'counter': 81}]\""
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_topic__TopicPlugin__1": {
+          "keys": {}, 
+          "groups": {
+            "plugin": {
+              "keys": {
+                "tree_widget_header_state": {
+                  "type": "repr(QByteArray.hex)", 
+                  "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff0000000000000001000000000000000001000000000000000000000000000000000000036f000000050101000100000000000000000500000064ffffffff000000810000000300000005000000fd0000000100000003000000f50000000100000003000000710000000100000003000000390000000100000003000000d30000000100000003')", 
+                  "pretty-print": "                              d                     q     9          "
+                }
+              }, 
+              "groups": {}
+            }, 
+            "dock_widget__TopicWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }, 
+                "dock_widget_title": {
+                  "type": "repr", 
+                  "repr": "u'Topic Monitor'"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }
+      }
+    }, 
+    "mainwindow": {
+      "keys": {
+        "geometry": {
+          "type": "repr(QByteArray.hex)", 
+          "repr(QByteArray.hex)": "QtCore.QByteArray('01d9d0cb0001000000000037fffffff2000006490000038d00000041000000180000063f00000383000000000000')", 
+          "pretty-print": "     7   I   A   ?     "
+        }, 
+        "state": {
+          "type": "repr(QByteArray.hex)", 
+          "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000fd0000000100000003000005ff0000033dfc0100000004fb00000062007200710074005f0072006f0062006f0074005f006d006f006e00690074006f0072005f005f0052006f0062006f0074004d006f006e00690074006f0072005f005f0031005f005f0052006f0062006f00740020004d006f006e00690074006f00720100000000000002fd0000000000000000fb00000058007200710074005f007000750062006c00690073006800650072005f005f005000750062006c00690073006800650072005f005f0031005f005f005000750062006c006900730068006500720057006900640067006500740100000000000002760000026600fffffffb000000b4007200710074005f006a006f0069006e0074005f007400720061006a006500630074006f00720079005f0063006f006e00740072006f006c006c00650072005f005f004a006f0069006e0074005400720061006a006500630074006f007200790043006f006e00740072006f006c006c00650072005f005f0031005f005f004a006f0069006e0074005400720061006a006500630074006f007200790043006f006e00740072006f006c006c006500720055006901000004d9000001260000000000000000fb0000004c007200710074005f0074006f007000690063005f005f0054006f0070006900630050006c007500670069006e005f005f0031005f005f0054006f007000690063005700690064006700650074010000027c00000383000000d600ffffff000005ff0000000000000004000000040000000800000008fc00000001000000030000000100000036004d0069006e0069006d0069007a006500640044006f0063006b00570069006400670065007400730054006f006f006c0062006100720000000000ffffffff0000000000000000')", 
+          "pretty-print": "                 brqt_robot_monitor__RobotMonitor__1__Robot Monitor          Xrqt_publisher__Publisher__1__PublisherWidget           rqt_joint_trajectory_controller__JointTrajectoryController__1__JointTrajectoryControllerUi          Lrqt_topic__TopicPlugin__1__TopicWidget                            6MinimizedDockWidgetsToolbar        "
+        }
+      }, 
+      "groups": {
+        "toolbar_areas": {
+          "keys": {
+            "MinimizedDockWidgetsToolbar": {
+              "type": "repr", 
+              "repr": "8"
+            }
+          }, 
+          "groups": {}
+        }
+      }
+    }
+  }
+}
