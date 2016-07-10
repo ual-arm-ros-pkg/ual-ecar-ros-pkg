@@ -11,13 +11,13 @@ my_joint_actuator:
   motor:
     type: 10
     ec_motor:
-      nominal_current: 4.430
+      nominal_current: 5.0
       max_output_current: 8.6
       thermal_time_constant: 36.8
-      number_of_pole_pairs: 7
+      number_of_pole_pairs: 7    # Parece que tiene que ser 7 para nuestro motor en la UAL
 
   sensor:
-    type: 1
+    type: 2      # 1: 3-ch encoder, 2: 2-ch encoder
     incremental_encoder:
       resolution: 1024
       inverted_polarity: false
