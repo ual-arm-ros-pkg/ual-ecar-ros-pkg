@@ -13,6 +13,13 @@ catkin_init_workspace
 git clone --recursive https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg.git
 ```
 
+* Install dependencies:
+```
+sudo apt-get install -y ros-${ROS_DISTRO}-hardware-interface \
+  ros-${ROS_DISTRO}-transmission-interface  ros-${ROS_DISTRO}-controller-manager \
+  ros-${ROS_DISTRO}-diagnostic-updater
+```
+
 * Build:
 ```
 cd ~/catkin_ws
