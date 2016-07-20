@@ -3,24 +3,24 @@
 # position, velocity, and acceleration in device units
 my_joint_actuator:
   actuator_name: 'test_joint_actuator'
-  serial_number: '602079009582'
+  serial_number: '662080006659'
   operation_mode: 'profile_velocity'
 #  operation_mode: 'profile_position'
   clear_faults: true
 
   motor:
-    type: 10
-    ec_motor:
-      nominal_current: 5.0
-      max_output_current: 8.6
-      thermal_time_constant: 36.8
-      number_of_pole_pairs: 7    # Parece que tiene que ser 7 para nuestro motor en la UAL
+    type: 1
+    dc_motor:
+      nominal_current: 9.650
+      max_output_current: 200.000
+      thermal_time_constant: 71.7
+      #number_of_pole_pairs: 1    # tiene 1 pero no hay que ponerlo
 
   sensor:
-    type: 2      # 1: 3-ch encoder, 2: 2-ch encoder
+    type: 1      # 1: 3-ch encoder, 2: 2-ch encoder
     incremental_encoder:
-      resolution: 1024
-      inverted_polarity: false
+      resolution: 500
+      inverted_polarity: true
 
   safety:
     max_following_error: 2000
