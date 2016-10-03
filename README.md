@@ -17,7 +17,7 @@ git clone --recursive https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg.git
 ```
 sudo apt-get install -y ros-${ROS_DISTRO}-hardware-interface \
   ros-${ROS_DISTRO}-transmission-interface  ros-${ROS_DISTRO}-controller-manager \
-  ros-${ROS_DISTRO}-diagnostic-updater
+  ros-${ROS_DISTRO}-diagnostic-updater xutils-dev
 ```
 
 * Build:
