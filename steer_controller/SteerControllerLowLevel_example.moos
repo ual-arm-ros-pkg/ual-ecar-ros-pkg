@@ -1,0 +1,57 @@
+
+ProcessConfig = ANTLER
+{
+	MSBetweenLaunches 	= 200
+	
+	//crucial processes
+	Run = MOOSDB        @  NewConsole = false
+
+	Run = SteerControllerLowLevel  @       NewConsole=false
+	
+	// Optional logger:
+	Run = pLogger  @       NewConsole=false
+}
+
+ProcessConfig = MOOSDB 
+{
+	// Enable webserver in MOOSDB
+	WEBSERVERPORT  = 9080
+
+}
+
+
+//------------------------------------------
+// SteerControllerLowLevel configuration block
+
+ProcessConfig = SteerControllerLowLevel
+{
+	CommsTick  = 100
+	AppTick    = 100
+	MaxAppTick = 1000
+
+	// COMMS_DRIVEN_ITERATE_AND_MAIL
+	IterateMode = 1
+
+	// The serial port to connect to:
+	SERIAL_PORT_WIN  = COM11  
+	SERIAL_PORT_LIN  = ttyUSB0
+
+	SERIAL_PORT_BAUDRATE = 1000000
+	
+	// (Default=50) The desired frequency (Hz) for steering column state
+	STEERPOS_STATUS_FREQ = 2000   // 1000
+}
+
+
+
+ProcessConfig = pLogger 
+{
+	AppTick   = 100
+	CommsTick = 100
+
+	Log = STEERCONTROLSTATE_POS @ 0.020
+	Log = STEERCONTROL_PWM @ 0.020
+	Log = STEERCONTROL_STEERANG @ 0.020
+	
+	SyncLog  = true @ 0.10
+}
