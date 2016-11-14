@@ -6,31 +6,36 @@
 
 #pragma once
 
-#include <COpenMORAMOOSApp.h>
-
+#include <ros/ros.h>
 #include <mrpt/hwdrivers/CSerialPort.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Float64.h>
 
-class CSteerControllerLowLevel : public COpenMORAApp
+class CSteerControllerLowLevel
 {
 public:
-    CSteerControllerLowLevel();
-    virtual ~CSteerControllerLowLevel();
+	CSteerControllerLowLevel();
+	virtual ~CSteerControllerLowLevel();
+
+	/**
+	* NodeHandle is the main access point to communications with the ROS system.
+	* The first NodeHandle constructed will fully initialize this node, and the last
+	* NodeHandle destructed will close down the node.
+	*/
+	ros::NodeHandle m_nh;
+	ros::NodeHandle m_nh_params;
+
+	ros::Publisher  m_pub_contr_status;
+	ros::Subscriber m_sub_auto_pos, m_sub_pwm;
+
+	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
+	  * \return false on error */
+	bool initialize();
+
+	/** called when work is to be done */
+	bool iterate();
 
 protected:
-	/** called at startup */
-	virtual bool OnStartUp();
-	/** called when new mail arrives */
-	virtual bool OnNewMail(MOOSMSG_LIST & NewMail);
-	/** called when work is to be done */
-	virtual bool Iterate();
-	/** called when app connects to DB */
-	virtual bool OnConnectToServer();
-
-	bool OnCommandMsg( CMOOSMsg Msg );
-
-	bool DoRegistrations();
-
-
 	// Local class members:
 	std::string m_serial_port_name;
 	int         m_serial_port_baudrate;
@@ -56,6 +61,7 @@ protected:
 	/** Convert Ackermann central angle (radians) to encoder ticks: */
 	int32_t ackermannAngle_inverse(double angle_radians) const;
 
-
+	void autoPosEnableCallback(const std_msgs::Bool::ConstPtr& msg);
+	void pwmCallback(const std_msgs::Float64::ConstPtr& msg);
 
 };

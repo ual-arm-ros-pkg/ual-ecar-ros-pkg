@@ -4,7 +4,7 @@
    |   Copyright (C) 2014-16  University of Almeria                            |
    +---------------------------------------------------------------------------+ */
 
-#include "CSteerControllerLowLevel.h"
+#include <steer_controller/CSteerControllerLowLevel.h>
 
 using namespace std;
 using namespace mrpt;

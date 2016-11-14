@@ -10,8 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+# System dependencies are found with CMake's conventions
+find_package(MRPT REQUIRED hwdrivers)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -114,11 +114,13 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/public_include/
+  ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 
 
 # Declare a C++ library
-file(GLOB lib_srcs  src/${PROJECT_NAME}/*.cpp)
+file(GLOB lib_srcs  src/${PROJECT_NAME}/*.cpp include/${PROJECT_NAME}/*.h)
 
 add_library(steer_controller
    ${lib_srcs}
@@ -129,16 +131,23 @@ add_library(steer_controller
 # either from message generation or dynamic reconfigure
 add_dependencies(steer_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+target_link_libraries(steer_controller
+   ${catkin_LIBRARIES}
+   ${MRPT_LIBS}
+   )
+
 # Declare a C++ executable
 add_executable(steer_controller_node src/steer_controller_node.cpp)
 
 # Add cmake target dependencies of the executable
 # same as for the library above
-add_dependencies(steer_controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(steer_controller_node steer_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 # Specify libraries to link a library or executable target against
- target_link_libraries(steer_controller_node
+target_link_libraries(steer_controller_node
    ${catkin_LIBRARIES}
+   steer_controller
+   ${MRPT_LIBS}
 )
 
 #############
