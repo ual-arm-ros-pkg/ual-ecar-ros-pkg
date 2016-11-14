@@ -19,7 +19,7 @@ CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	m_nh_params("~"),
 	m_serial_port_name("ttyUSB0"),
 	m_serial_port_baudrate(1000000),
-	m_steer_report_freq(10)
+	m_steer_report_freq(30)
 {
 
 }
