@@ -1,0 +1,20 @@
+
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "SteeringControlFirmware", "SteeringControlFirmware_6_1.cppproj", "{E1718EAB-C927-4170-8313-88F5193AE0BF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E1718EAB-C927-4170-8313-88F5193AE0BF}.Debug|AVR.ActiveCfg = Debug|AVR
+		{E1718EAB-C927-4170-8313-88F5193AE0BF}.Debug|AVR.Build.0 = Debug|AVR
+		{E1718EAB-C927-4170-8313-88F5193AE0BF}.Release|AVR.ActiveCfg = Release|AVR
+		{E1718EAB-C927-4170-8313-88F5193AE0BF}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
