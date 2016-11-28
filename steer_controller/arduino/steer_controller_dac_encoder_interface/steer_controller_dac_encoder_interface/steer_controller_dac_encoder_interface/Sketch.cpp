@@ -211,6 +211,8 @@ void processIncommingPkts()
 
 			// 100% sure: we have a valid frame: dispatch it:
 			process_command(opcode,datalen,data);
+
+			reset_rx_buf();
 		}
 	}
 }
