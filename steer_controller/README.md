@@ -9,7 +9,7 @@ Examples of use & demos:
        roscore     # In one terminal
        rosrun steer_controller steer_controller_node    # In another terminal
 
-  * Getting the controller / encoder status:
+  * Getting the controller / encoder status / motor current:
 
        rostopic echo /steer_controller_status
 
