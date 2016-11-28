@@ -28,6 +28,16 @@ Commands C1.C0:
  
 */
 
+void flash_led(int ntimes, int nms)
+{
+	pinMode(PIN_LED,OUTPUT);
+	for (int i=0;i<ntimes;i++)
+	{
+		digitalWrite(PIN_LED, HIGH); delay(nms);
+		digitalWrite(PIN_LED, LOW); delay(nms);
+	}
+}
+
 void mod_dac_max5500_send_spi_word(uint16_t tx_word)
 {
 	// Send HiByte:
@@ -55,20 +65,12 @@ void mod_dac_max5500_update_single_DAC(uint8_t dac_idx, uint16_t dac_value)
 	(((uint16_t)0x03)    << 12) |
 	(dac_value & 0x0fff);
 	
-
-	Serial.print("set DAC:");
-	Serial.print(dac_idx);
-	Serial.print(" ");
-	Serial.println(dac_value);
-
 	mod_dac_max5500_send_spi_word(tx_word);
 }
 
 
 void setup() 
 {
-	pinMode(PIN_LED, OUTPUT);
-
 	// start the SPI library:
 	SPI.begin();
 
@@ -81,15 +83,140 @@ void setup()
 	Serial.begin(9600);
 }
 
+
+// Frame format: see README.md
+
+/* Frame format:
+      START_FLAG   |  OPCODE  |  DATA_LEN   |   DATA      |    CHECKSUM    | END_FLAG |
+        0x69          1 byte      1 byte       N bytes       =sum(data)       0x96
+
+## Computer => controller
+  * 0x10: Set DAC value. DATA_LEN = 3
+          * DATA[0]   = DAC index
+          * DATA[1:2] = DAC value (0x0000-0xffff)  (MSByte first!)
+  * 0x11: Set GPIO pin. DATA_LEN = 2
+          * DATA[0]   = Arduino-based pin number
+          * DATA[1]   = 0/1
+  * 0x12: Read GPIO pin. DATA_LEN = 1
+          * DATA[0]   = Arduino-based pin number
+ 
+## Controller => Computer
+  * 0x80: Set DAC value ACK. DATA_LEN=0
+  * 0x81: GPIO pin value ACK. DATA_LEN=0
+  * 0x82: GPIO pin value read. DATA_LEN=1
+  * 0xfe: Unknown command opcode.
+
+*/
+uint8_t rx_buf_len = 0;
+uint8_t rx_buf[30];
+
+void reset_rx_buf()
+{
+	rx_buf_len = 0;
+}
+
+void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*data)
+{
+	switch (opcode)
+	{
+	case 0x10:
+	{
+		if (datalen!=3) return;
+
+		const uint8_t dac_idx = data[0];
+		const uint16_t dac_value = (uint16_t(data[1]) << 8)  | data[2];
+		mod_dac_max5500_update_single_DAC(dac_idx,dac_value);
+
+		// send answer back:
+		const uint8_t rx[] = { 0x69, 0x80, 0x00, 0x00, 0x96 };
+		Serial.write(rx,sizeof(rx));
+	}
+	break;
+	case 0x11:
+	{
+		if (datalen!=2) return;
+
+		const uint8_t pin_no = data[0];
+		const uint8_t pin_val = data[1];
+		pinMode(pin_no, OUTPUT);
+		digitalWrite(pin_no, pin_val);
+
+		// send answer back:
+		const uint8_t rx[] = { 0x69, 0x81, 0x00, 0x00, 0x96 };
+		Serial.write(rx,sizeof(rx));
+	}
+	break;
+	case 0x12:
+	{
+		if (datalen!=1) return;
+
+		const uint8_t pin_no = data[0];
+		pinMode(pin_no, INPUT);
+		const uint8_t val = digitalRead(pin_no);
+
+		// send answer back:
+		const uint8_t rx[] = { 0x69, 0x81, 0x01, val, 0x00 + val, 0x96 };
+		Serial.write(rx,sizeof(rx));
+	}
+	break;
+
+	default:
+	{
+		// Error:
+		const uint8_t rx[] = { 0x69, 0xfe, 0x00, 0x00, 0x96 };
+		Serial.write(rx,sizeof(rx));
+	}
+	break;
+	};
+}
+
+void processIncommingPkts()
+{
+	while (Serial.available())
+	{
+		const uint8_t b = Serial.read();
+
+		// sanity:
+		if (rx_buf_len==0)
+			if (b!=0x69) {
+				reset_rx_buf();
+				continue;
+			}
+		
+		// store:
+		rx_buf[rx_buf_len++] = b;
+
+		//char buf[10];
+		//sprintf(buf,"rx: 0x%02X\n",b);
+		//Serial.print(buf);
+
+		if (rx_buf_len==5+rx_buf[2])
+		{
+			// Check if we have a full frame:
+			if (rx_buf[rx_buf_len-1]!=0x96) {
+				reset_rx_buf();
+				continue;
+			}
+			const uint8_t opcode  = rx_buf[1];
+			const uint8_t datalen = rx_buf[2];
+			const uint8_t *data   = rx_buf+3;
+
+			// chksum:
+			uint8_t chksum = 0;
+			for (uint8_t i=0;i<datalen;i++) chksum+=data[i];
+			if (rx_buf[rx_buf_len-2]!=chksum) {
+				reset_rx_buf();
+				continue;
+			}
+
+			// 100% sure: we have a valid frame: dispatch it:
+			process_command(opcode,datalen,data);
+		}
+	}
+}
+
+
 void loop()
 {
-	for (uint16_t val=0; ; val+=100)
-	{
-		mod_dac_max5500_update_single_DAC(0,val);
-		//Serial.println("Iteration...\n");
-		digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
-		delay(5);              // wait for a second
-		digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
-		delay(1);
-	}
+	processIncommingPkts();
 }
