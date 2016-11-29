@@ -21,11 +21,11 @@ const int PIN_LED             =  13;
 Commands C1.C0:
  * 0 1: Load DAC, do NOT update DAC output.
  * 1 1: Load DAC, update ALL DAC outputs.
- 
+
 - POLARITY: CPOL=0 (inactive SCK=low level)
 - PHASE: CPHA=1 (master changes data on the falling edge of clock)
  ==> SPI_MODE_0 (1?)
- 
+
 */
 
 void flash_led(int ntimes, int nms)
@@ -42,15 +42,15 @@ void mod_dac_max5500_send_spi_word(uint16_t tx_word)
 {
 	// Send HiByte:
 	SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-	
+
 	// nCS -> 0
 	digitalWrite(PIN_DAC_MAX5500_CS, LOW);
 	delayMicroseconds(1); // Min. 40ns: nCS->0 to SCK
 
 	SPI.transfer16 (tx_word);
-	
+
 	delayMicroseconds(1);
-	
+
 	// nCS -> 1
 	digitalWrite(PIN_DAC_MAX5500_CS, HIGH);
 
@@ -64,12 +64,12 @@ void mod_dac_max5500_update_single_DAC(uint8_t dac_idx, uint16_t dac_value)
 	(((uint16_t)dac_idx) << 14) |
 	(((uint16_t)0x03)    << 12) |
 	(dac_value & 0x0fff);
-	
+
 	mod_dac_max5500_send_spi_word(tx_word);
 }
 
 
-void setup() 
+void setup()
 {
 	// start the SPI library:
 	SPI.begin();
@@ -86,27 +86,6 @@ void setup()
 
 // Frame format: see README.md
 
-/* Frame format:
-      START_FLAG   |  OPCODE  |  DATA_LEN   |   DATA      |    CHECKSUM    | END_FLAG |
-        0x69          1 byte      1 byte       N bytes       =sum(data)       0x96
-
-## Computer => controller
-  * 0x10: Set DAC value. DATA_LEN = 3
-          * DATA[0]   = DAC index
-          * DATA[1:2] = DAC value (0x0000-0xffff)  (MSByte first!)
-  * 0x11: Set GPIO pin. DATA_LEN = 2
-          * DATA[0]   = Arduino-based pin number
-          * DATA[1]   = 0/1
-  * 0x12: Read GPIO pin. DATA_LEN = 1
-          * DATA[0]   = Arduino-based pin number
- 
-## Controller => Computer
-  * 0x80: Set DAC value ACK. DATA_LEN=0
-  * 0x81: GPIO pin value ACK. DATA_LEN=0
-  * 0x82: GPIO pin value read. DATA_LEN=1
-  * 0xfe: Unknown command opcode.
-
-*/
 uint8_t rx_buf_len = 0;
 uint8_t rx_buf[30];
 
@@ -182,7 +161,7 @@ void processIncommingPkts()
 				reset_rx_buf();
 				continue;
 			}
-		
+
 		// store:
 		rx_buf[rx_buf_len++] = b;
 
