@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ual-arm-ros-pkg/ual-aecar-ros-pkg.svg?branch=master)](https://travis-ci.org/ual-arm-ros-pkg/ual-aecar-ros-pkg)
+[![Build Status](https://travis-ci.org/ual-arm-ros-pkg/ual-ecar-ros-pkg.svg?branch=master)](https://travis-ci.org/ual-arm-ros-pkg/ual-ecar-ros-pkg)
 
 # ual-ecar-ros-pkg
 ROS packages and config files for University of Almeria autonomous electric car (UAL eCar).
