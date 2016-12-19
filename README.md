@@ -3,6 +3,10 @@
 # ual-ecar-ros-pkg
 ROS packages and config files for University of Almeria autonomous electric car (UAL eCar).
 
+See docs for each individual node:
+  * [steer_controller](https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg/tree/master/steer_controller): ROS node for UAL eCAR's steer driver ("caja azul").
+  * [arduino_daq](https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg/tree/master/arduino_daq): A minimal DAQ system based on an Arduino.
+
 
 ## Installation
 
