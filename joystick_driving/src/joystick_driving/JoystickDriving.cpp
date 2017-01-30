@@ -21,6 +21,13 @@ bool JoystickDriving::initialize()
 	m_pub_pwm_steering  = m_nh.advertise<std_msgs::Float64>("steer_controller_pwm", 10);
 	m_pub_voltage_pedal = m_nh.advertise<std_msgs::Float64>("arduino_daq_dac0", 10);
 
+
+        {
+                std_msgs::Bool b;
+                b.data = true;
+                m_pub_rev_relay.publish(b);
+        }
+
 	{
 		std_msgs::Float64 msg_f;
 		msg_f.data = 0;
@@ -48,7 +55,7 @@ bool JoystickDriving::iterate()
 
 	// Rev button:
 	// ---------------
-	const bool reverse_btn = (buttons.size()>=4 && buttons[3]);
+	const bool reverse_btn = (buttons.size()>=4 && !buttons[3]);
 	{
 		std_msgs::Bool b;
 		b.data = reverse_btn;
