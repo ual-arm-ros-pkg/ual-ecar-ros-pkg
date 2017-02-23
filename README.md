@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/ual-arm-ros-pkg/ual-ecar-ros-pkg.svg?branch=master)](https://travis-ci.org/ual-arm-ros-pkg/ual-ecar-ros-pkg)
 
 # ual-ecar-ros-pkg
-ROS packages and config files for University of Almeria autonomous electric car (UAL eCar).
+ROS packages and config files for University of Almeria autonomous electric car (UAL eCar). Documentation for electrical connections, etc. are kept in a [separate repo](https://github.com/ual-arm/ual-ecar-docs).
 
 See docs for each individual node:
   * [steer_controller](https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg/tree/master/steer_controller): ROS node for UAL eCAR's steer driver ("caja azul").
