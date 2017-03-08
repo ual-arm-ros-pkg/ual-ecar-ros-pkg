@@ -22,11 +22,11 @@ bool JoystickDriving::initialize()
 	m_pub_voltage_pedal = m_nh.advertise<std_msgs::Float64>("arduino_daq_dac0", 10);
 
 
-        {
-                std_msgs::Bool b;
-                b.data = true;
-                m_pub_rev_relay.publish(b);
-        }
+	{
+		std_msgs::Bool b;
+		b.data = true;
+		m_pub_rev_relay.publish(b);
+	}
 
 	{
 		std_msgs::Float64 msg_f;
@@ -36,7 +36,7 @@ bool JoystickDriving::initialize()
 
 	{
 		std_msgs::Float64 msg_f;
-		msg_f.data = 0;
+		msg_f.data = 1.0;
 		m_pub_voltage_pedal.publish(msg_f);
 	}
 
@@ -77,8 +77,8 @@ bool JoystickDriving::iterate()
 	if (y<=0)
 	{
 		// Accel:
-		const double K = -5.0/0.85;
-		const double volt_pedal = y*K;
+		const double K = 4.0/0.85;
+		const double volt_pedal = 1.0+(-y)*K;
 
 		std_msgs::Float64 msg_f;
 		msg_f.data = volt_pedal;
