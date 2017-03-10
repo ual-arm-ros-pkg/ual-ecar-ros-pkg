@@ -17,6 +17,7 @@
 #include "firmware-common.h"
 
 TFirmwareParams firm_params;
+int16_t  last_pwm_cmd = 0;
 
 // Trick: faster than strlen()
 //template <typename CHAR,int N> int static_strlen(const CHAR (&)[N] array){ return N-1; }
@@ -64,16 +65,40 @@ bool process_command(const uint8_t *cmd, const uint16_t cmd_len)
 	}
 	break;
 
+	case CMD_SET_OVERCURRENT_THRESHOLD:
+	{
+		const TCmdSetOvercurrentThreshold *frame = (TCmdSetOvercurrentThreshold*)cmd;
+		OVERCURRENT_THRESHOLD_ADC = (uint16_t)( frame->threshold_volt * 1024 / 5.0f);
+	}
+	break;
+
 	case CMD_SET_PWM_VALUE:
 		{
 			const TCmdSetPWMValue *frame = (TCmdSetPWMValue*)cmd;
-			SetMotorPWM(frame->pwm_value);			
+			if (OVERCURRENT_TRIGGERED) 
+			{
+				// shall we reset the o.c. flag?
+				if (frame->pwm_value==0 || 
+					(OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED && frame->pwm_value<0) ||
+					(!OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED && frame->pwm_value>0)
+				 )
+				{
+					OVERCURRENT_TRIGGERED = false;
+				}
+			}
+			
+			if (!OVERCURRENT_TRIGGERED) 
+			{
+				SetMotorPWM(frame->pwm_value);
+			}
 		}
 		break;
 
 	case CMD_SET_POS_CONTROL_SETPOINT:
 	{
 		const TCmdSetPosControlSetPoint *frame = (TCmdSetPosControlSetPoint*)cmd;
+		OVERCURRENT_TRIGGERED = false;
+
 		MOTOR_CONTROL_SETPOINT = frame->setpoint_ticks;
 	}
 	break;
@@ -176,8 +201,12 @@ See page 134 of Mega324p datasheet
 
 /* pwm values can range from -255 (full-speed reverse)
    to 255 (full-speed forward), with 0 indicating a stop */
-void SetMotorPWM(int pwm)
+void SetMotorPWM(int pwm, bool update_last_cmd)
 {
+	if (update_last_cmd) {
+		last_pwm_cmd = pwm;
+	}
+
   if (pwm == 0)
   {
     RStop();

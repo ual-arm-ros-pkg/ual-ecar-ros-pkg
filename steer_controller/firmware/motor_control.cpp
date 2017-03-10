@@ -17,6 +17,9 @@ volatile int16_t MOTOR_CONTROL_SETPOINT = 0;
 // -----------------------------------------------------
 void realtime_motor_control()
 {
+	if (OVERCURRENT_TRIGGERED)
+		return;
+
 	// P controller
 	// out = P * ( setpoint - state )
 	

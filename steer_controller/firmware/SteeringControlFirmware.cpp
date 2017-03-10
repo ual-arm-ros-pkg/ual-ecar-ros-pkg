@@ -14,6 +14,11 @@
 
 volatile uint32_t timer_us=0;
 
+uint16_t OVERCURRENT_THRESHOLD_ADC = (uint16_t)( 0.7f * 1024/5.0f );
+bool     OVERCURRENT_TRIGGERED = false;    // If overcurrent protection has been triggered. If true, PWM is forced to 0
+bool     OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED = false;  // true if PWM>0,  false if PWM<0
+const uint16_t OCUR_CENTRAL_PT = uint16_t(2.4f*1024/5.0f);
+
 uint32_t getTimer_us()
 {
 	cli();
@@ -237,9 +242,9 @@ int main(void)
 	configureADCs();
 	
 	InitPWM();
-		
+
 	configureMillisecsTimer();
-	
+
 	for (int i=0;i<3;i++)
 	{
 		LED_ON(6);  _delay_ms(30);
@@ -248,8 +253,8 @@ int main(void)
 	// Enable interrupts:
 	sei();
 	
-    while(1)
-    {
+	while(1)
+	{
 		// Real-time cyclic tasks:
 		// --------------------------------
 		if (RUN_realtime_update_encoder_read)
@@ -298,8 +303,26 @@ int main(void)
 			process_command(UART_LAST_RX_CMD, UART_LAST_RX_CMD_LEN);
 			UART_LAST_RX_CMD_NEW=false;
 		}
-	
-    }
+
+		// Overcurrent protection:
+		if (!OVERCURRENT_TRIGGERED)
+		{
+			if (  ADC_CURRENT_SENSE_READ > OCUR_CENTRAL_PT+OVERCURRENT_THRESHOLD_ADC ||
+					ADC_CURRENT_SENSE_READ < OCUR_CENTRAL_PT-OVERCURRENT_THRESHOLD_ADC)
+			{
+				OVERCURRENT_TRIGGERED = true;
+				// Store the sign of the PWM motion direction, so we can detect a change and reset the triggered flag:
+				OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED = (last_pwm_cmd>0);
+
+				SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
+			}
+		}
+		else
+		{
+			// We are in overcurrent protection:
+			SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
+		}
+	}
 }
 
 

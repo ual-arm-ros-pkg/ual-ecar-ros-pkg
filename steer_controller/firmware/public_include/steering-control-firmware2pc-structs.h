@@ -54,7 +54,8 @@ enum STEER_COMMS_COMMANDS
 	CMD_SET_AUTO_MODE,
 	CMD_SET_PWM_VALUE,
 	CMD_SET_POS_CONTROL_SETPOINT,
-	CMD_SET_REPORT_DECIMATION
+	CMD_SET_REPORT_DECIMATION,
+	CMD_SET_OVERCURRENT_THRESHOLD
 };
 
 struct TCmdSetClutch
@@ -108,7 +109,15 @@ struct TCmdSetReportDecimation
 	TCmdSetReportDecimation() : cmd_code(CMD_SET_REPORT_DECIMATION) {}
 };
 
+struct TCmdSetOvercurrentThreshold
+{
+	// HEADER
+	uint8_t cmd_code;
+	// PAYLOAD
+	float  threshold_volt;  //!< Value in volts, over the center point 2.4 V
 
+	TCmdSetOvercurrentThreshold() : cmd_code(CMD_SET_OVERCURRENT_THRESHOLD),threshold_volt(0.7f) {}
+};
 
 #if !defined(__AVR_MEGA__)
 #	pragma pack(pop)

@@ -38,7 +38,7 @@ extern void InitPWM();
   *  Max=+1023 -> Full speed in the other direction
   *  Zero = 0  -> STOP
   */
-extern void SetMotorPWM(int pwm);
+extern void SetMotorPWM(int pwm, bool update_last_cmd = true);
 
 
 struct TEncoderRead
@@ -61,7 +61,10 @@ extern volatile uint16_t ADC_CURRENT_SENSE_READ; // The last value of the curren
 
 #include "public_include/steering-control-firmware2pc-structs.h"
 extern TFirmwareParams firm_params;  //!< Set of current params, updated from the PC via USB commands.
-
+extern uint16_t OVERCURRENT_THRESHOLD_ADC;  //!< Overcurrent protection, over the mid point 2.4V, IN ADC UNITS!
+extern int16_t  last_pwm_cmd;  //!< Latest PWM cmd, in either manual PWM or P-controlled mode.
+extern bool     OVERCURRENT_TRIGGERED ;    // If overcurrent protection has been triggered. If true, PWM is forced to 0
+extern bool     OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED ;  // true if PWM>0,  false if PWM<0
 
 
 #endif
