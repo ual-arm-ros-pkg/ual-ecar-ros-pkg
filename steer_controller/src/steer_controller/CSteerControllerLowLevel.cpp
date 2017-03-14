@@ -34,6 +34,10 @@ bool CSteerControllerLowLevel::initialize()
 	m_nh_params.getParam("SERIAL_PORT_BAUDRATE",m_serial_port_baudrate);
 	m_nh_params.getParam("STEERPOS_STATUS_FREQ",m_steer_report_freq);
 
+	// Default value:
+	float current_limit_threshold = 0.7;
+	m_nh_params.getParam("CURRENT_LIMIT_THRESHOLD_VOLT",current_limit_threshold);
+
 	// Try to connect...
 	if (this->AttemptConnection())
 	{
@@ -41,8 +45,10 @@ bool CSteerControllerLowLevel::initialize()
 
 		CMD_SetReportFreq(m_steer_report_freq);
 		CMD_SetPWMValue(0);
+		CMD_SetCurrentThreshold(current_limit_threshold);
 
 		// TODO: Send control parameters to controller?
+
 	}
 
 	m_pub_contr_status = m_nh.advertise<steer_controller::SteerControllerStatus>("steer_controller_status", 10);
@@ -292,3 +298,15 @@ bool CSteerControllerLowLevel::CMD_SetPosControlSetPoint(int pos_ticks)
 	cmd.setpoint_ticks = pos_ticks;
 	return WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd),sizeof(cmd));
 }
+
+//!< Sets the overcurrent protection threshold (in **Volts**, as measured by the current sensor)
+bool CSteerControllerLowLevel::CMD_SetCurrentThreshold(float current_threshold_volt)
+{
+	TCmdSetOvercurrentThreshold cmd;
+	cmd.threshold_volt = current_threshold_volt;
+
+	ROS_INFO("[CSteerControllerLowLevel] Setting current threshold voltage to %.02f V\n", current_threshold_volt);
+
+	return WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd),sizeof(cmd));
+}
+
