@@ -114,9 +114,10 @@ struct TCmdSetOvercurrentThreshold
 	// HEADER
 	uint8_t cmd_code;
 	// PAYLOAD
-	float  threshold_volt;  //!< Value in volts, over the center point 2.4 V
+	float     threshold_volt;  //!< Value in volts, over the center point 2.5 V
+	uint16_t  threshold_ms_length; //!< How many milliseconds must the current pass the threshold for the motor to be stopped.
 
-	TCmdSetOvercurrentThreshold() : cmd_code(CMD_SET_OVERCURRENT_THRESHOLD),threshold_volt(0.7f) {}
+	TCmdSetOvercurrentThreshold() : cmd_code(CMD_SET_OVERCURRENT_THRESHOLD),threshold_volt(1.5f),threshold_ms_length(300) {}
 };
 
 #if !defined(__AVR_MEGA__)

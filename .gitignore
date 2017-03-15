@@ -7,3 +7,8 @@ arduino_daq/arduino_firmware/arduino_daq/ArduinoCore/Release
 arduino_daq/arduino_firmware/arduino_daq/arduino_daq/Debug
 arduino_daq/arduino_firmware/arduino_daq/arduino_daq/Release
 *.o
+*.d
+steer_controller/firmware/Release/makedep.mk
+*.eep
+steer_controller/firmware/Release/SteeringControlFirmware.lss
+*.map

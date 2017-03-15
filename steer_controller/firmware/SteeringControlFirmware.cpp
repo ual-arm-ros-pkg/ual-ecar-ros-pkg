@@ -14,12 +14,17 @@
 
 volatile uint32_t timer_us=0;
 
-uint16_t OVERCURRENT_THRESHOLD_ADC = (uint16_t)( 0.7f * 1024/5.0f );
+uint16_t OVERCURRENT_THRESHOLD_ADC = (uint16_t)( 1.5f * 1024/5.0f );
 bool     OVERCURRENT_TRIGGERED = false;    // If overcurrent protection has been triggered. If true, PWM is forced to 0
 bool     OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED = false;  // true if PWM>0,  false if PWM<0
-const uint16_t OCUR_CENTRAL_PT = uint16_t(2.4f*1024/5.0f);
+const uint16_t OCUR_CENTRAL_PT = uint16_t(2.5f*1024/5.0f);
 
-uint32_t getTimer_us()
+uint32_t  OVERCURRENT_LAST_TRIGGERED_TIM = 0;
+uint16_t  OVERCURRENT_ELLAPSED_100US     = 0;
+uint16_t  OVERCURRENT_TIME_THRESHOLD_MS  = 300;
+
+
+uint32_t getTimer_us()  // 100ths of us
 {
 	cli();
 	const uint32_t ret = timer_us;
@@ -310,11 +315,27 @@ int main(void)
 			if (  ADC_CURRENT_SENSE_READ > OCUR_CENTRAL_PT+OVERCURRENT_THRESHOLD_ADC ||
 					ADC_CURRENT_SENSE_READ < OCUR_CENTRAL_PT-OVERCURRENT_THRESHOLD_ADC)
 			{
-				OVERCURRENT_TRIGGERED = true;
-				// Store the sign of the PWM motion direction, so we can detect a change and reset the triggered flag:
-				OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED = (last_pwm_cmd>0);
+				// Increase overcurrent timer counter:
+				const uint32_t tim_now = getTimer_us();
+				if (tim_now!=OVERCURRENT_LAST_TRIGGERED_TIM) {
+					++OVERCURRENT_ELLAPSED_100US;
+					OVERCURRENT_LAST_TRIGGERED_TIM = tim_now;
+				}
+				
 
-				SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
+				// If timer > limit: 
+				if (OVERCURRENT_ELLAPSED_100US >= OVERCURRENT_TIME_THRESHOLD_MS * 10)
+				{
+					OVERCURRENT_TRIGGERED = true;
+					// Store the sign of the PWM motion direction, so we can detect a change and reset the triggered flag:
+					OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED = (last_pwm_cmd>0);
+
+					SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
+				}
+			}
+			else
+			{
+				OVERCURRENT_ELLAPSED_100US = 0;
 			}
 		}
 		else
