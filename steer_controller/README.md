@@ -7,7 +7,7 @@ Examples of use & demos:
   * Launch:
 ```
        roscore     # In one terminal
-       rosrun steer_controller steer_controller_node _CURRENT_LIMIT_THRESHOLD_VOLT:=0.8   # In another terminal
+       rosrun steer_controller steer_controller_node _CURRENT_LIMIT_THRESHOLD_VOLT:=1.5 _CURRENT_LIMIT_TIME:=0.75   # In another terminal
 ```
 
   * Getting the controller / encoder status / motor current:

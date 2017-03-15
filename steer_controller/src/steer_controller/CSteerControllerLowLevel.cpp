@@ -37,6 +37,9 @@ bool CSteerControllerLowLevel::initialize()
 	// Default value:
 	float current_limit_threshold = 0.7;
 	m_nh_params.getParam("CURRENT_LIMIT_THRESHOLD_VOLT",current_limit_threshold);
+	
+	float current_time_limit = 0.75;
+	m_nh_params.getParam("CURRENT_LIMIT_TIME",current_time_limit);
 
 	// Try to connect...
 	if (this->AttemptConnection())
@@ -45,7 +48,7 @@ bool CSteerControllerLowLevel::initialize()
 
 		CMD_SetReportFreq(m_steer_report_freq);
 		CMD_SetPWMValue(0);
-		CMD_SetCurrentThreshold(current_limit_threshold);
+		CMD_SetCurrentThreshold(current_limit_threshold,current_time_limit);
 
 		// TODO: Send control parameters to controller?
 
@@ -300,12 +303,13 @@ bool CSteerControllerLowLevel::CMD_SetPosControlSetPoint(int pos_ticks)
 }
 
 //!< Sets the overcurrent protection threshold (in **Volts**, as measured by the current sensor)
-bool CSteerControllerLowLevel::CMD_SetCurrentThreshold(float current_threshold_volt)
+bool CSteerControllerLowLevel::CMD_SetCurrentThreshold(float current_threshold_volt, float overcurrent_time_limit_seconds)
 {
 	TCmdSetOvercurrentThreshold cmd;
 	cmd.threshold_volt = current_threshold_volt;
+	cmd.threshold_ms_length = (uint16_t)(overcurrent_time_limit_seconds * 1e3);
 
-	ROS_INFO("[CSteerControllerLowLevel] Setting current threshold voltage to %.02f V\n", current_threshold_volt);
+	ROS_INFO("[CSteerControllerLowLevel] Setting current threshold voltage to %.02f V, time limit: %.03f s\n", current_threshold_volt, overcurrent_time_limit_seconds);
 
 	return WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd),sizeof(cmd));
 }

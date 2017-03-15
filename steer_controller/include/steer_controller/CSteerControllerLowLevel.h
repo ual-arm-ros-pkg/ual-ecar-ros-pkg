@@ -53,7 +53,7 @@ protected:
 	bool CMD_SetReportFreq(double freq); //!< Sets the report frequency
 	bool CMD_SetPWMValue(double pwm_duty_cycle); //!< Sets the PWM value (-1.0 to 1.0)
 	bool CMD_SetPosControlSetPoint(int pos_ticks); //!< Sets the position setpoint
-	bool CMD_SetCurrentThreshold(float current_threshold_volt); //!< Sets the overcurrent protection threshold (in **Volts**, as measured by the current sensor)
+	bool CMD_SetCurrentThreshold(float current_threshold_volt, float overcurrent_time_limit_seconds); //!< Sets the overcurrent protection threshold (in **Volts**, as measured by the current sensor)
 
 
 	/** Convert encoder ticks into Ackermann central angle (radians) */
