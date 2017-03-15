@@ -69,6 +69,7 @@ bool process_command(const uint8_t *cmd, const uint16_t cmd_len)
 	{
 		const TCmdSetOvercurrentThreshold *frame = (TCmdSetOvercurrentThreshold*)cmd;
 		OVERCURRENT_THRESHOLD_ADC = (uint16_t)( frame->threshold_volt * 1024 / 5.0f);
+		OVERCURRENT_TIME_THRESHOLD_MS = frame->threshold_ms_length;
 	}
 	break;
 

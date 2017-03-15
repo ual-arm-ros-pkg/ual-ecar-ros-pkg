@@ -65,6 +65,7 @@ extern uint16_t OVERCURRENT_THRESHOLD_ADC;  //!< Overcurrent protection, over th
 extern int16_t  last_pwm_cmd;  //!< Latest PWM cmd, in either manual PWM or P-controlled mode.
 extern bool     OVERCURRENT_TRIGGERED ;    // If overcurrent protection has been triggered. If true, PWM is forced to 0
 extern bool     OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED ;  // true if PWM>0,  false if PWM<0
+extern uint16_t  OVERCURRENT_TIME_THRESHOLD_MS;
 
 
 #endif
