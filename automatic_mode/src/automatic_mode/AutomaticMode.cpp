@@ -24,7 +24,7 @@ bool AutomaticMode::initialize(){
   // Try to connect...
 	if (this->AttemptConnection())
 	{
-//  ROS_INFO("Connection OK to automatic mode."); // Estp debería salir solo si se pasa a automático, no?
+//  ROS_INFO("Connection OK to automatic mode."); // Esto debería salir solo si se pasa a automático, no?
     CMD_SetAutomaticMode(ecar_joystick_mode);
 
 		// TODO: initial controller parameters
