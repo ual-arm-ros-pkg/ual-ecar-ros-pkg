@@ -16,25 +16,20 @@ using namespace mrpt::utils;
 
 bool AutomaticMode::initialize(){
 
-  // Default value:
-  // Se haría así la inicialización del modo de conducción o como está en las líneas 33-37?
-  bool ecar_joystick_mode=true;
-  m_nh_params.getParam("ECAR_JOYSTICK_MODE",ecar_joystick_mode);
-
   // Try to connect...
 	if (this->AttemptConnection())
 	{
-//  ROS_INFO("Connection OK to automatic mode."); // Estp debería salir solo si se pasa a automático, no?
+    ROS_INFO("Connection OK to automatic mode."); 
     CMD_SetAutomaticMode(ecar_joystick_mode);
 
 		// TODO: initial controller parameters
 	}
   m_pub_mode= m_nh.advertise<std_msgs::Bool>("automatic_mode", 10);
-/*{
+    {
   		std_msgs::Bool b;
-  		b.data = true;
-  		m_pub_rev_relay.publish(b);
-  }*/
+  		b.data = false;
+  		m_pub_mode.publish(b);
+    }
 }
 
 bool AutomaticMode::iterate(){
