@@ -1,0 +1,12 @@
+<launch>
+  <node name="steer_controller" pkg="steer_controller" type="steer_controller_node" output="screen">
+    <param name="CURRENT_LIMIT_THRESHOLD_VOLT" value="1.45" />
+  </node>
+
+  <node name="arduino_daq" pkg="arduino_daq" type="arduino_daq_node" output="screen">
+  </node>
+
+  <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
+  </node>
+
+</launch>
