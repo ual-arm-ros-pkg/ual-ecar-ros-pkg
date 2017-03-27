@@ -37,9 +37,11 @@ bool CSteerControllerLowLevel::initialize()
 	// Default value:
 	float current_limit_threshold = 0.7;
 	m_nh_params.getParam("CURRENT_LIMIT_THRESHOLD_VOLT",current_limit_threshold);
-	
+	ROS_INFO("CURRENT_LIMIT_THRESHOLD_VOLT=%f",current_limit_threshold);
+
 	float current_time_limit = 0.75;
 	m_nh_params.getParam("CURRENT_LIMIT_TIME",current_time_limit);
+	ROS_INFO("CURRENT_LIMIT_TIME=%f",current_time_limit);
 
 	// Try to connect...
 	if (this->AttemptConnection())
@@ -313,4 +315,3 @@ bool CSteerControllerLowLevel::CMD_SetCurrentThreshold(float current_threshold_v
 
 	return WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd),sizeof(cmd));
 }
-
