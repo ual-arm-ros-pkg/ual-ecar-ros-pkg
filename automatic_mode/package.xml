@@ -1,22 +1,11 @@
 <?xml version="1.0"?>
 <package>
   <name>automatic_mode</name>
-<<<<<<< HEAD
-  <version>1.0.0</version>
+  <version>0.1.0</version>
   <description>The automatic_mode package</description>
-
   <maintainer email="fma527@inlumine.ual.es">Francisco José Mañas Álvarez</maintainer>
 
   <license>GPLv3</license>
-=======
-  <version>0.0.0</version>
-  <description>The automatic_mode package</description>
-
-  <maintainer email="ecar@todo.todo">ecar</maintainer>
-
-  <license>TODO</license>
->>>>>>> refs/remotes/ual-arm-ros-pkg/master
-
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>ackermann_msgs</build_depend>
   <build_depend>roscpp</build_depend>

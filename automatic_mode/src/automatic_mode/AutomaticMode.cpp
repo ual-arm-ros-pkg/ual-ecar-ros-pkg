@@ -16,12 +16,10 @@ using namespace mrpt::utils;
 
 bool AutomaticMode::initialize(){
 
-<<<<<<< HEAD
   // Try to connect...
 	if (this->AttemptConnection())
 	{
     ROS_INFO("Connection OK to automatic mode."); 
-=======
   // Default value:
   // Se haría así la inicialización del modo de conducción o como está en las líneas 33-37?
   bool ecar_joystick_mode=true;
@@ -31,25 +29,17 @@ bool AutomaticMode::initialize(){
 	if (this->AttemptConnection())
 	{
 //  ROS_INFO("Connection OK to automatic mode."); // Esto debería salir solo si se pasa a automático, no?
->>>>>>> refs/remotes/ual-arm-ros-pkg/master
+
     CMD_SetAutomaticMode(ecar_joystick_mode);
 
 		// TODO: initial controller parameters
 	}
   m_pub_mode= m_nh.advertise<std_msgs::Bool>("automatic_mode", 10);
-<<<<<<< HEAD
     {
   		std_msgs::Bool b;
   		b.data = false;
   		m_pub_mode.publish(b);
     }
-=======
-/*{
-  		std_msgs::Bool b;
-  		b.data = true;
-  		m_pub_rev_relay.publish(b);
-  }*/
->>>>>>> refs/remotes/ual-arm-ros-pkg/master
 }
 
 bool AutomaticMode::iterate(){
