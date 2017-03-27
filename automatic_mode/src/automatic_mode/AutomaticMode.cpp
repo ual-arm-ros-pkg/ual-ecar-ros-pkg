@@ -20,6 +20,16 @@ bool AutomaticMode::initialize(){
 	if (this->AttemptConnection())
 	{
     ROS_INFO("Connection OK to automatic mode."); 
+  // Default value:
+  // Se haría así la inicialización del modo de conducción o como está en las líneas 33-37?
+  bool ecar_joystick_mode=true;
+  m_nh_params.getParam("ECAR_JOYSTICK_MODE",ecar_joystick_mode);
+
+  // Try to connect...
+	if (this->AttemptConnection())
+	{
+//  ROS_INFO("Connection OK to automatic mode."); // Esto debería salir solo si se pasa a automático, no?
+
     CMD_SetAutomaticMode(ecar_joystick_mode);
 
 		// TODO: initial controller parameters
