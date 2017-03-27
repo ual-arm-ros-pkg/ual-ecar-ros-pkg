@@ -12,7 +12,11 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 # System dependencies are found with CMake's conventions
+<<<<<<< HEAD
+#find_package(MRPT REQUIRED hwdrivers)
+=======
 find_package(MRPT REQUIRED hwdrivers)
+>>>>>>> refs/remotes/ual-arm-ros-pkg/master
 
 add_definitions(-std=c++11)
 
@@ -79,7 +83,11 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
    ${PROJECT_NAME}
+<<<<<<< HEAD
+#  ${MRPT_LIBS}
+=======
    ${MRPT_LIBS}
+>>>>>>> refs/remotes/ual-arm-ros-pkg/master
    )
 
 #############
