@@ -27,6 +27,10 @@ sudo apt-get install -y ros-${ROS_DISTRO}-hardware-interface \
 ```
 
 * Install [arduino_daq](https://github.com/ual-arm-ros-pkg/arduino-daq-ros-pkg).
+* Install Ackermann messages:
+```
+sudo apt-get install ros-kinetic-ackermann-msgs 
+```
 
 * Build:
 ```
