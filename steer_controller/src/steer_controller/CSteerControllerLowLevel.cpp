@@ -17,7 +17,7 @@ using namespace mrpt::utils;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	m_nh_params("~"),
-	m_serial_port_name("/dev/serial/by-id/usb-UAL_eCar_-_Controladora_Volante_A7XIK9IV-if00-port0"),
+	m_serial_port_name("/dev/serial/by-id/usb-UAL_eCar_-_Controladora_Volante_A71SFVKK-if00-port0"),
 	m_serial_port_baudrate(1000000),
 	m_steer_report_freq(30)
 {
