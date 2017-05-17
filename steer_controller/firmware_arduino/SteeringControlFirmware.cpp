@@ -9,7 +9,7 @@
 #include "commands.h"
 
 // Define baud rate
-#define USART_BAUDRATE  1000000 //115200
+#define USART_BAUDRATE   115200 // 1000000 //115200
 #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 8UL))) - 1)
 
 volatile uint32_t timer_us=0;
@@ -88,6 +88,7 @@ ISR(TIMER0_COMPA_vect)
 	// Update real-time high freq clock:
 	++timer_us;
 	
+#if  0
 	// hard real time tasks:
 	if (++READ_ENCODERS_PERIOD_CNT>=firm_params.READ_ENCODERS_PERIOD)
 	{
@@ -95,6 +96,7 @@ ISR(TIMER0_COMPA_vect)
 		READ_ENCODERS_PERIOD_CNT = 0;
 		
 	}
+#endif 
 
 	if (++MOTOR_CONTROL_PERIOD_CNT>=firm_params.MOTOR_CONTROL_PERIOD)
 	{
@@ -119,6 +121,7 @@ void configureADCs()
 {
 	//Avcc(+5v) as voltage reference: REFS0=1, REFS1=0
 	//TODO: Volt. ref= internal 2.56V
+	// TODO: Mirar y documentar aqui que canal ADC es (parece que el ADC0)
 	ADMUX = (1<<REFS0) | (0<<REFS1);
 	
 	// Autotrigger:
@@ -147,6 +150,8 @@ uint16_t blocking_readADC(uint8_t channel)
 	
 	return ADC;	
 }
+
+#if 0
 
 void encoders_cntsclr_set()  // 0=SET
 {
@@ -228,6 +233,7 @@ void realtime_update_encoder_read()
 }
 
 uint8_t SEND_ENCODER_DECIMATION_cnt = 0;
+#endif
 
 
 namespace UART 
@@ -243,7 +249,7 @@ int main(void)
 
 	UART::WriteStringFramed( "Steering Control Firmware-Build " __TIMESTAMP__ "\r\n" );
 
-	encoders_init();
+	//encoders_init();
 	configureADCs();
 	
 	InitPWM();
@@ -262,12 +268,14 @@ int main(void)
 	{
 		// Real-time cyclic tasks:
 		// --------------------------------
+#if 0
 		if (RUN_realtime_update_encoder_read)
 		{
 			realtime_update_encoder_read();
 			RUN_realtime_update_encoder_read = false;
 			READ_ENCODERS_NEW=true;
 		}
+#endif
 		if (RUN_realtime_motor_control && firm_params.ENABLE_POS_CONTROL!=0)
 		{
 			realtime_motor_control();
@@ -275,6 +283,7 @@ int main(void)
 		}
 
 
+#if 0
 		if (READ_ENCODERS_NEW)
 		{
 			READ_ENCODERS_NEW=false;
@@ -302,6 +311,7 @@ int main(void)
 				//UART::WriteStringFramed(s);
 			}							
 		}
+#endif
 
 		if (UART_LAST_RX_CMD_NEW)
 		{

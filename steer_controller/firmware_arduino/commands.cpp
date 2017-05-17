@@ -129,15 +129,10 @@ bool process_command(const uint8_t *cmd, const uint16_t cmd_len)
 /* PWM output on PD4/OC1B for left motor, PD5/OC1A for right motor; these
    pins are connected to H-bridge; we just need to send signals */
 //#define SetupLPWM()	{ SetBit(DDRD, DDRD4);  SetBit(DDRD, DDRD4);  }
-#define SetupRPWM()	{ SetBit(DDRD, DDRD5); SetBit(DDRA, DDRA5); }
+#define SetupRPWM()	{ SetBit(DDRD, DDD5); SetBit(DDRA, DDD5); }
 /* we compare to OCR1A/B for R/L motor speeds */
 //#define lPWM		OCR1B
 #define rPWM		OCR1A
-/* set direction (input to H-bridge) and wave output mode */
-//#define LFwd()		( ClearBit(PORTD, PD6),   SetBit(TCCR1A, COM1B1), ClearBit(TCCR1A, COM1B0) )
-////#define LRev()		(   SetBit(PORTD, PD6),   SetBit(TCCR1A, COM1B1),   SetBit(TCCR1A, COM1B0) )
-//#define LRev()		(   SetBit(PORTD, PD6),   SetBit(TCCR1A, COM1B1),   ClearBit(TCCR1A, COM1B0) )
-//#define LStop()		( ClearBit(PORTD, PD6), ClearBit(TCCR1A, COM1B1), ClearBit(TCCR1A, COM1B0) )
 
 #define RFwd()		( ClearBit(PORTA, PORTA5),   SetBit(TCCR1A, COM1A1), ClearBit(TCCR1A, COM1A0) )
 #define RRev()		(   SetBit(PORTA, PORTA5),   SetBit(TCCR1A, COM1A1),   ClearBit(TCCR1A, COM1A0) )
@@ -190,7 +185,7 @@ See page 134 of Mega324p datasheet
   SetupRPWM();
   
   // 
-  sbi(DDRD, DDRD4); 
+  sbi(DDRD, DDD4); 
   sbi(PORTD, PORTD4);
 
   /* OCR1A/B are the values that the timer is compared to; a match will

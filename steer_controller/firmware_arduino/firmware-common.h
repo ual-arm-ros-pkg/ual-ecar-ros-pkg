@@ -9,7 +9,7 @@ Universidad de Almeria
 #define STEERCONTROL_FIRM_COMMON_H
 
 // --------- Firmware specific definitions  ---------------
-#define STEERCONTROL_FIRMWARE_VERSION "1.0.0"
+#define STEERCONTROL_FIRMWARE_VERSION "2.0.0"
 
 // --------------------------------------------------------
 
