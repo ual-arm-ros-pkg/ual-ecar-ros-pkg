@@ -9,7 +9,7 @@
 #include "commands.h"
 
 // Define baud rate
-#define USART_BAUDRATE  1000000 //115200
+#define USART_BAUDRATE  125200 //115200
 #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 8UL))) - 1)
 
 volatile uint32_t timer_us=0;

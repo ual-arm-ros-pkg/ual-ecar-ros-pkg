@@ -7,7 +7,7 @@
 
 
 /*
- Ejemplos:
+ Examples:
  
  T1_FREQ_ON 250
  T1_FREQ_OFF
@@ -121,22 +121,22 @@ bool process_command(const uint8_t *cmd, const uint16_t cmd_len)
 }
 
 
-// pololu  < --- >  Atmel164
-//   DIR              PA5
-//   PWMH             PD5/OC1A   (PWM output)
-//   PWML             PD4        (=1 for forward/backward)
+// pololu  < --- >  Atmel328P
+//   DIR              A5
+//   PWMH             PWM~D9
+//   PWML             PWM~D10    (=1 for forward/backward)
 
 /* PWM output on PD4/OC1B for left motor, PD5/OC1A for right motor; these
    pins are connected to H-bridge; we just need to send signals */
-//#define SetupLPWM()	{ SetBit(DDRD, DDRD4);  SetBit(DDRD, DDRD4);  }
-#define SetupRPWM()	{ SetBit(DDRD, DDD5); SetBit(DDRA, DDD5); }
+//#define SetupLPWM()	{ SetBit(DDRD, DDRD10);  SetBit(DDRD, DDRD10);  }
+#define SetupRPWM()	{ SetBit(DDRB, DDB1); SetBit(DDRB, DDB1); }
 /* we compare to OCR1A/B for R/L motor speeds */
 //#define lPWM		OCR1B
 #define rPWM		OCR1A
 
-#define RFwd()		( ClearBit(PORTA, PORTA5),   SetBit(TCCR1A, COM1A1), ClearBit(TCCR1A, COM1A0) )
-#define RRev()		(   SetBit(PORTA, PORTA5),   SetBit(TCCR1A, COM1A1),   ClearBit(TCCR1A, COM1A0) )
-#define RStop()		( ClearBit(PORTA, PORTA5), ClearBit(TCCR1A, COM1A1), ClearBit(TCCR1A, COM1A0) )
+#define RFwd()		( ClearBit(PORTC, PORTC5),   SetBit(TCCR1A, COM1A1), ClearBit(TCCR1A, COM1A0) )
+#define RRev()		(   SetBit(PORTC, PORTC5),   SetBit(TCCR1A, COM1A1),   ClearBit(TCCR1A, COM1A0) )
+#define RStop()		( ClearBit(PORTC, PORTC5), ClearBit(TCCR1A, COM1A1), ClearBit(TCCR1A, COM1A0) )
 
 /* sets up microprocessor for PWM control of motors */
 void InitPWM()
@@ -185,8 +185,8 @@ See page 134 of Mega324p datasheet
   SetupRPWM();
   
   // 
-  sbi(DDRD, DDD4); 
-  sbi(PORTD, PORTD4);
+  sbi(DDRB, DDB2); 
+  sbi(PORTB, PORTD4);
 
   /* OCR1A/B are the values that the timer is compared to; a match will
      cause the output to change; small values mean the motor runs for a
@@ -227,13 +227,13 @@ void SetMotorPWM(int pwm, bool update_last_cmd)
 
 void set_relay_on()
 {
-	sbi(DDRA,DDRA6);
-	cbi(PORTA,PORTA6);	
+	sbi(DDRD,DDD2);
+	cbi(PORTD,PORTD2);	
 }	
 
 void set_relay_off()
 {
-	sbi(DDRA,DDRA6);
-	sbi(PORTA,PORTA6);
+	sbi(DDRD,DDD2);
+	sbi(PORTD,PORTD2);
 }
 
