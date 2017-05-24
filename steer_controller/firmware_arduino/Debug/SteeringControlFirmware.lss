@@ -151,7 +151,7 @@ void InitPWM()
   //SetupLPWM();
   SetupRPWM();
   d8:	21 9a       	sbi	0x04, 1	; 4
-  da:	21 9a       	sbi	0x04, 1	; 4
+  da:	3d 9a       	sbi	0x07, 5	; 7
   
   // 
   sbi(DDRB, DDB2); 
@@ -252,10 +252,10 @@ void SetMotorPWM(int pwm, bool update_last_cmd)
 
 void set_relay_on()
 {
-	sbi(DDRD,DDD2);
- 154:	52 9a       	sbi	0x0a, 2	; 10
-	cbi(PORTD,PORTD2);	
- 156:	5a 98       	cbi	0x0b, 2	; 11
+	sbi(DDRD,DDD3);
+ 154:	53 9a       	sbi	0x0a, 3	; 10
+	cbi(PORTD,PORTD3);	
+ 156:	5b 98       	cbi	0x0b, 3	; 11
  158:	08 95       	ret
 
 0000015a <_Z13set_relay_offv>:
@@ -263,10 +263,10 @@ void set_relay_on()
 
 void set_relay_off()
 {
-	sbi(DDRD,DDD2);
- 15a:	52 9a       	sbi	0x0a, 2	; 10
-	sbi(PORTD,PORTD2);
- 15c:	5a 9a       	sbi	0x0b, 2	; 11
+	sbi(DDRD,DDD3);
+ 15a:	53 9a       	sbi	0x0a, 3	; 10
+	sbi(PORTD,PORTD3);
+ 15c:	5b 9a       	sbi	0x0b, 3	; 11
  15e:	08 95       	ret
 
 00000160 <_Z15process_commandPKhj>:

@@ -248,10 +248,9 @@ int main(void)
 	UART::InitInterruptBasedCommandReceiver();
 
 	UART::WriteStringFramed( "Steering Control Firmware-Build " __TIMESTAMP__ "\r\n" );
-
 	//encoders_init();
 	configureADCs();
-	
+	ROS_INFO("Prueba");
 	InitPWM();
 
 	configureMillisecsTimer();

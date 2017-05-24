@@ -122,14 +122,14 @@ bool process_command(const uint8_t *cmd, const uint16_t cmd_len)
 
 
 // pololu  < --- >  Atmel328P
-//   DIR              A5
-//   PWMH             PWM~D9
-//   PWML             PWM~D10    (=1 for forward/backward)
+//   DIR              A5(PC5)
+//   PWMH             PWM~D9 (PB1)
+//   PWML             PWM~D10 (PB2)  (=1 for forward/backward)
 
-/* PWM output on PD4/OC1B for left motor, PD5/OC1A for right motor; these
+/* PWM output on PB2/OC1B for left motor, PB1/OC1A for right motor; these
    pins are connected to H-bridge; we just need to send signals */
-//#define SetupLPWM()	{ SetBit(DDRD, DDRD10);  SetBit(DDRD, DDRD10);  }
-#define SetupRPWM()	{ SetBit(DDRB, DDB1); SetBit(DDRB, DDB1); }
+#define SetupLPWM()	{ SetBit(DDRB, DDB2);  SetBit(DDRB, DDB2);  }
+#define SetupRPWM()	{ SetBit(DDRB, DDB1); SetBit(DDRC, DDC5); }
 /* we compare to OCR1A/B for R/L motor speeds */
 //#define lPWM		OCR1B
 #define rPWM		OCR1A
@@ -227,13 +227,13 @@ void SetMotorPWM(int pwm, bool update_last_cmd)
 
 void set_relay_on()
 {
-	sbi(DDRD,DDD2);
-	cbi(PORTD,PORTD2);	
+	sbi(DDRD,DDD3);
+	cbi(PORTD,PORTD3);	
 }	
 
 void set_relay_off()
 {
-	sbi(DDRD,DDD2);
-	sbi(PORTD,PORTD2);
+	sbi(DDRD,DDD3);
+	sbi(PORTD,PORTD3);
 }
 
