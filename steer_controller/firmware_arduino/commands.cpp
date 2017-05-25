@@ -57,7 +57,6 @@ bool process_command(const uint8_t *cmd, const uint16_t cmd_len)
 			}				
 		}
 		break;
-		
 	case CMD_SET_AUTO_MODE:
 	{
 		const TCmdSetAutoMode *frame = (TCmdSetAutoMode*)cmd;
@@ -186,7 +185,7 @@ See page 134 of Mega324p datasheet
   
   // 
   sbi(DDRB, DDB2); 
-  sbi(PORTB, PORTD4);
+  sbi(PORTB, PORTB2);
 
   /* OCR1A/B are the values that the timer is compared to; a match will
      cause the output to change; small values mean the motor runs for a
