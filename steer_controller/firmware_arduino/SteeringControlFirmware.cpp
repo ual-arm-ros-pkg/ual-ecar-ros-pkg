@@ -315,11 +315,12 @@ int main(void)
 		{
 			process_command(UART_LAST_RX_CMD, UART_LAST_RX_CMD_LEN);
 			UART_LAST_RX_CMD_NEW=false;
+			UART::WriteStringFramed( "PWM escrito\r\n" );
 		}
-
 		// Overcurrent protection:
 		if (!OVERCURRENT_TRIGGERED)
 		{
+			UART::WriteStringFramed( "!Overcurrent\r\n" );
 			if (  ADC_CURRENT_SENSE_READ > OCUR_CENTRAL_PT+OVERCURRENT_THRESHOLD_ADC ||
 					ADC_CURRENT_SENSE_READ < OCUR_CENTRAL_PT-OVERCURRENT_THRESHOLD_ADC)
 			{
@@ -329,15 +330,14 @@ int main(void)
 					++OVERCURRENT_ELLAPSED_100US;
 					OVERCURRENT_LAST_TRIGGERED_TIM = tim_now;
 				}
-				
-
+			
 				// If timer > limit: 
 				if (OVERCURRENT_ELLAPSED_100US >= OVERCURRENT_TIME_THRESHOLD_MS * 10)
 				{
 					OVERCURRENT_TRIGGERED = true;
 					// Store the sign of the PWM motion direction, so we can detect a change and reset the triggered flag:
 					OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED = (last_pwm_cmd>0);
-
+					UART::WriteStringFramed( "Protección\r\n" );
 					SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
 				}
 			}
@@ -349,6 +349,7 @@ int main(void)
 		else
 		{
 			// We are in overcurrent protection:
+			UART::WriteStringFramed( "Overcurrent\r\n" );
 			SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
 		}
 	}
