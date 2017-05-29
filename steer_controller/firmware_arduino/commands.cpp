@@ -89,7 +89,6 @@ bool process_command(const uint8_t *cmd, const uint16_t cmd_len)
 			
 			if (!OVERCURRENT_TRIGGERED) 
 			{
-				UART::WriteStringFramed( "PWM\r\n" );
 				SetMotorPWM(frame->pwm_value);
 			}
 		}

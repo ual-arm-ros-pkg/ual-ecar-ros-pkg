@@ -169,7 +169,7 @@ void InitInterruptBasedCommandReceiver()
 //===========================  TEXT BASED UART RX  ===========================
 
 // Handle the Timer 2 events:
-ISR(USART0__RX_vect)
+SIGNAL(USART0__RX_vect)
 {
 	// Get byte from UART:
 	const uint8_t rx = UDR0;
@@ -245,9 +245,11 @@ void QUEUE_RX_BYTE(const uint8_t rx)
 		}
 	}		
 }
-
+#if!defined(USART0_RX_vect)&&defined(USART0_RX_vect)
+#define USART0_RX_vect USART0_RX_vect
+#endif 
 // Handle the Timer 2 events:
-ISR(USART0_RX_vect)
+SIGNAL(USART0_RX_vect)
 {
 	// Get byte from UART:
 	const uint8_t rx = UDR0;

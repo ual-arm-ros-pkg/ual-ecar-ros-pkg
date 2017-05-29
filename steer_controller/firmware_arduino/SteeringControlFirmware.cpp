@@ -83,7 +83,7 @@ bool RUN_realtime_motor_control = false;
 
 
 // Handle the Timer 2 events:
-ISR(TIMER0_COMPA_vect)
+SIGNAL(TIMER0_COMPA_vect)
 {
 	// Update real-time high freq clock:
 	++timer_us;
@@ -115,7 +115,7 @@ ISR(TIMER0_COMPA_vect)
 }
 
 // Handle ADC read event:
-//ISR(ADC_vect)
+//SIGNAL(ADC_vect)
 
 void configureADCs()
 {
@@ -192,7 +192,7 @@ void encoders_init()
 volatile bool encoder_Z_pulse_detected = false;
 
 // Handle Encoder Z signal (zero)
-ISR(PCINT0_vect)
+SIGNAL(PCINT0_vect)
 {
 	// PINA7 = Encoder Z 
 	encoder_Z_pulse_detected = true;
@@ -315,12 +315,10 @@ int main(void)
 		{
 			process_command(UART_LAST_RX_CMD, UART_LAST_RX_CMD_LEN);
 			UART_LAST_RX_CMD_NEW=false;
-			UART::WriteStringFramed( "PWM escrito\r\n" );
 		}
 		// Overcurrent protection:
 		if (!OVERCURRENT_TRIGGERED)
 		{
-			UART::WriteStringFramed( "!Overcurrent\r\n" );
 			if (  ADC_CURRENT_SENSE_READ > OCUR_CENTRAL_PT+OVERCURRENT_THRESHOLD_ADC ||
 					ADC_CURRENT_SENSE_READ < OCUR_CENTRAL_PT-OVERCURRENT_THRESHOLD_ADC)
 			{
@@ -337,7 +335,6 @@ int main(void)
 					OVERCURRENT_TRIGGERED = true;
 					// Store the sign of the PWM motion direction, so we can detect a change and reset the triggered flag:
 					OVERCURRENT_PWM_POSITIVE_WHEN_TRIGGERED = (last_pwm_cmd>0);
-					UART::WriteStringFramed( "Protección\r\n" );
 					SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
 				}
 			}
@@ -349,7 +346,6 @@ int main(void)
 		else
 		{
 			// We are in overcurrent protection:
-			UART::WriteStringFramed( "Overcurrent\r\n" );
 			SetMotorPWM(0, false /* dont update sign of last pwm cmd */);
 		}
 	}
