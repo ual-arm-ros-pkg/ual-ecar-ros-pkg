@@ -18,7 +18,7 @@ bool JoystickDriving::initialize()
 	ROS_INFO("JoystickDriving::initialize() ok.");
 
 	m_pub_rev_relay     = m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output7", 10);
-	m_pub_pwm_steering  = m_nh.advertise<std_msgs::Float64>("steer_controller_pwm", 10);
+	m_pub_pwm_steering  = m_nh.advertise<std_msgs::Float64>("arduino_daq_pwm3", 10);
 	m_pub_voltage_pedal = m_nh.advertise<std_msgs::Float64>("arduino_daq_dac0", 10);
 
 
