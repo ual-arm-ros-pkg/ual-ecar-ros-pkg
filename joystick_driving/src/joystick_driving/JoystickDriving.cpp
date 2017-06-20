@@ -68,7 +68,26 @@ bool JoystickDriving::iterate()
 	// [-1,1] -> [-1,1]
 	{
 		std_msgs::UInt8 msg_ui;
-		aux = (int)(x * 127 + 127); 
+	//  	Aumento de resolución
+	//		aux = (int)(x * range + offset)
+		if (buttons[4])
+		{
+			if (x > 0)
+			{
+				aux = (int)(x * 64 + 127 + 64);
+			}
+			else
+			{
+				aux = (int)(x * 64 + 127 - 64);
+			}
+		}
+		else
+		{
+			aux = (int)(x * 64 + 127);
+		}
+
+	
+		// aux = (int)(x * 127 + 127); 
 		msg_ui.data = aux;
 		ROS_INFO("PWM: %i ", aux);
 
