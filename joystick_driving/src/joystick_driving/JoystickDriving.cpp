@@ -30,8 +30,8 @@ bool JoystickDriving::initialize()
 
 	{
 		std_msgs::UInt8 msg_ui;
-		msg_f.data = 0;
-		m_pub_pwm_steering.publish(msg_f);
+		msg_ui.data = 0;
+		m_pub_pwm_steering.publish(msg_ui);
 	}
 
 	{
@@ -67,10 +67,12 @@ bool JoystickDriving::iterate()
 	// ----------------
 	// [-1,1] -> [-1,1]
 	{
-		std_msgs::UInt8 msg_i;
-		aux = ((int) * 125) + 125; 
-		msg_i.data = aux;
-		m_pub_pwm_steering.publish(msg_i);
+		std_msgs::UInt8 msg_ui;
+		aux = (int)(x * 127 + 127); 
+		msg_ui.data = aux;
+		ROS_INFO("PWM: %i ", aux);
+
+		m_pub_pwm_steering.publish(msg_ui);
 	}
 
 	// Volt pedal:
