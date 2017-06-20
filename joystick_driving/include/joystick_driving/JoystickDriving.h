@@ -10,6 +10,7 @@
 #include <mrpt/hwdrivers/CJoystick.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/UInt8.h>
 
 class JoystickDriving
 {
