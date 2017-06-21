@@ -18,6 +18,7 @@ bool JoystickDriving::initialize()
 	ROS_INFO("JoystickDriving::initialize() ok.");
 
 	m_pub_rev_relay     = m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output7", 10);
+	m_pub_rev_steering  = m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output4", 10);
 	m_pub_pwm_steering  = m_nh.advertise<std_msgs::UInt8>("arduino_daq_pwm3", 10);
 	m_pub_voltage_pedal = m_nh.advertise<std_msgs::Float64>("arduino_daq_dac0", 10);
 
@@ -26,6 +27,12 @@ bool JoystickDriving::initialize()
 		std_msgs::Bool b;
 		b.data = true;
 		m_pub_rev_relay.publish(b);
+	}
+
+	{	// Pin DIR para pololu
+		std_msgs::Bool b_s;
+		b_s.data = true;
+		m_pub_rev_steering.publish(b_s);
 	}
 
 	{
@@ -61,6 +68,15 @@ bool JoystickDriving::iterate()
 		std_msgs::Bool b;
 		b.data = reverse_btn;
 		m_pub_rev_relay.publish(b);
+	}
+
+	// Rev Steering button:
+	// ---------------
+	const bool reverse_steering_btn = (buttons.size()>=3 && !buttons[2]); // No estoy seguro del valor de buttons.size()>=3
+	{
+		std_msgs::Bool b_s;
+		b_s.data = reverse_steering_btn;
+		m_pub_rev_steering.publish(b_s);
 	}
 
 	// PWM steering:
@@ -115,7 +131,7 @@ bool JoystickDriving::iterate()
 		// NOT IMPLEMENTED YET!!
 	}
 
-  ROS_INFO("Joy: x:%f y:%f z:%f nbut=%u B3=%i", x,y,z, (unsigned int)buttons.size(), buttons[3] ? 1:0 );
+  ROS_INFO("Joy: x:%f y:%f z:%f nbut=%u B2=%i B3=%i", x,y,z, (unsigned int)buttons.size(), buttons[2] ? 1:0 ,(unsigned int)buttons.size(), buttons[3] ? 1:0 );
 
 	return true;
 }
