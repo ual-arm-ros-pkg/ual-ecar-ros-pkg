@@ -131,7 +131,7 @@ bool JoystickDriving::iterate()
 		// NOT IMPLEMENTED YET!!
 	}
 
-  ROS_INFO("Joy: x:%f y:%f z:%f nbut=%u B2=%i B3=%i", x,y,z, (unsigned int)buttons.size(), buttons[2] ? 1:0 ,(unsigned int)buttons.size(), buttons[3] ? 1:0 );
+  ROS_INFO("Joy: x:%f y:%f z:%f nbut=%u B2=%i B3=%i", x,y,z, (unsigned int)buttons.size(), buttons[2] ? 1:0 , buttons[3] ? 1:0 );
 
 	return true;
 }
