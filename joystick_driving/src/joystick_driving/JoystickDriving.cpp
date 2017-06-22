@@ -11,6 +11,8 @@ using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
 
+int pwm_steering_const = 0;
+
 bool JoystickDriving::initialize()
 {
 	// Subscriber:
@@ -72,7 +74,7 @@ bool JoystickDriving::iterate()
 
 	// Rev Steering button:
 	// ---------------
-	const bool reverse_steering_btn = (buttons.size()>=3 && !buttons[2]); // No estoy seguro del valor de buttons.size()>=3
+	const bool reverse_steering_btn = (buttons.size()>=3 && !buttons[2]);
 	{
 		std_msgs::Bool b_s;
 		b_s.data = reverse_steering_btn;
@@ -85,25 +87,35 @@ bool JoystickDriving::iterate()
 	{
 		std_msgs::UInt8 msg_ui;
 	//  	Aumento de resolución
-	//		aux = (int)(x * range + offset)
 		if (buttons[4])
 		{
-			if (x > 0)
-			{
-				aux = (int)(x * 64 + 127 + 64);
-			}
-			else
-			{
-				aux = (int)(x * 64 + 127 - 64);
-			}
+			aux = (int)(x * 10);
 		}
 		else
 		{
-			aux = (int)(x * 64 + 127);
+			aux = (int)(x * 40);
 		}
-
-	
-		// aux = (int)(x * 127 + 127); 
+	//	Saturacion
+		if ((aux + pwm_steering_const) < 0)
+		{
+			aux =   0;
+			pwm_steering_const = 0;
+		}
+		if ((aux + pwm_steering_const)>254) 
+		{
+			aux = 0;
+			pwm_steering_const = 254;
+		}
+		
+		if (buttons[1])
+		{
+			pwm_steering_const = pwm_steering_const + aux;
+			aux = pwm_steering_const;
+		}
+		else
+		{
+			aux = pwm_steering_const + aux;
+		}
 		msg_ui.data = aux;
 		ROS_INFO("PWM: %i ", aux);
 
