@@ -32,9 +32,9 @@ bool JoystickDriving::initialize()
 	}
 
 	{	// Pin DIR para pololu
-		std_msgs::Bool b_s;
-		b_s.data = true;
-		m_pub_rev_steering.publish(b_s);
+		std_msgs::Bool msg_b;
+		msg_b.data = true;
+		m_pub_rev_steering.publish(msg_b);
 	}
 
 	{
@@ -56,6 +56,7 @@ bool JoystickDriving::iterate()
 	float x,y,z;
 	int aux;
 	vector<bool> buttons;
+	bool rev;
 
 	bool ok = m_joy.getJoystickPosition(0, x,y,z, buttons);
 	if (!ok) {
@@ -74,13 +75,13 @@ bool JoystickDriving::iterate()
 
 	// Rev Steering button:
 	// ---------------
-	const bool reverse_steering_btn = (buttons.size()>=3 && !buttons[2]);
+/*	const bool reverse_steering_btn = (buttons.size()>=3 && !buttons[2]);
 	{
-		std_msgs::Bool b_s;
+		std_msgs::Bool msg_b;
 		b_s.data = reverse_steering_btn;
 		m_pub_rev_steering.publish(b_s);
 	}
-
+*/
 	// PWM steering:
 	// ----------------
 	// [-1,1] -> [-1,1]
@@ -96,10 +97,10 @@ bool JoystickDriving::iterate()
 			aux = (int)(x * 40);
 		}
 	//	Saturacion
-		if ((aux + pwm_steering_const) < 0)
+		if ((aux + pwm_steering_const) < -254)
 		{
 			aux =   0;
-			pwm_steering_const = 0;
+			pwm_steering_const = -254;
 		}
 		if ((aux + pwm_steering_const)>254) 
 		{
@@ -116,10 +117,25 @@ bool JoystickDriving::iterate()
 		{
 			aux = pwm_steering_const + aux;
 		}
-		msg_ui.data = aux;
 		ROS_INFO("PWM: %i ", aux);
-
+		if (aux < 0)
+		{
+			aux = -aux;
+			rev = false;
+		}
+		else 
+		{
+			rev = true;
+		}
+		msg_ui.data = aux;
 		m_pub_pwm_steering.publish(msg_ui);
+	}
+
+	const bool reverse_steering_btn = (rev);
+	{
+		std_msgs::Bool msg_b;
+		msg_b.data = reverse_steering_btn;
+		m_pub_rev_steering.publish(msg_b);
 	}
 
 	// Volt pedal:
