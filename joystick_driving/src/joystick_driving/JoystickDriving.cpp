@@ -13,6 +13,7 @@ using namespace mrpt::utils;
 
 int pwm_steering_const = 0;
 float steer_ref = 0;
+float speed_ref = 0;
 
 bool JoystickDriving::initialize()
 {
@@ -54,11 +55,12 @@ bool JoystickDriving::initialize()
 
 bool JoystickDriving::iterate()
 {
-	float x,y,z,aux_s;
+	float x,y,z,aux_s,aux_r;
 	int aux;
 	vector<bool> buttons;
 	bool rev, control_mode;
-	float Sat = 254;
+	float Sat_steer = 254;
+	float Sat_speed = 45;
 
 	bool ok = m_joy.getJoystickPosition(0, x,y,z, buttons);
 	if (!ok) {
@@ -75,25 +77,25 @@ bool JoystickDriving::iterate()
 	if (!control_mode)
 	{	
 		ROS_INFO("Controlador eCAR en modo automatico");
-		// Steer_ref:
+		// Steer_reference:
 		// ----------------
 		{
 			std_msgs::Float 64 msg_f;
 			//  Aumento de resolucion
 			if (buttons[4]) {
-				aux_s =x * 10;
+				aux_s = x * 10;
 			}
 			else {
 				aux_s = x * 40;
 			}
 			//	Saturacion
-			if ((aux_s + steer_ref) < -Sat) {
+			if ((aux_s + steer_ref) < -Sat_steer) {
 				aux_s =   0;
-				steer_ref = -Sat;
+				steer_ref = -Sat_steer;
 			}
-			if ((aux_s + steer_ref) > Sat) {
+			if ((aux_s + steer_ref) > Sat_steer) {
 				aux_s = 0;
-				steer_ref = 254;
+				steer_ref = Sat_steer;
 			}
 			
 			if (buttons[1]) {
@@ -103,10 +105,45 @@ bool JoystickDriving::iterate()
 			else {
 				aux_s = steer_ref + aux_s;
 			}
-			ROS_INFO("Steer reference: %f ", aux_s);
+			ROS_INFO("Steer reference: %.02f ", aux_s);
 
 			msg_f.data = aux_s;
 			m_pub_steer_ref.publish(msg_f);
+		}
+		// Speed reference
+		// ----------------
+		{
+			//  Aumento de resolucion
+			if (buttons[5]) {
+				aux_r =(float)((-y) * 5);
+			}
+			else {
+				aux_r =(float)((-y) * 10);
+			}
+			//	Saturacion
+			if ((aux_r + speed_ref) < -Sat_speed) {
+				aux_r =   0;
+				speed_ref = -Sat_speed;
+			}
+			if ((aux_r + speed_ref) > Sat_speed) {
+				aux_r = 0;
+				speed_ref = Sat_speed;
+			}
+			
+			if (buttons[0]) {
+				speed_ref = speed_ref + aux_r;
+				aux_r = speed_ref;
+			}
+			else {
+				aux_r = speed_ref + aux_r;
+			}
+
+			std_msgs::Float64 msg_f;
+			msg_f.data = speed_ref;
+			ROS_INFO("Speed reference: %.02f km/h", aux_r);
+
+			m_pub_speed_ref.publish(msg_f);
+
 		}
 		return true;
 	} 
