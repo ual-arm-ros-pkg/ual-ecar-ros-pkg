@@ -80,7 +80,7 @@ bool JoystickDriving::iterate()
 		// Steer_reference:
 		// ----------------
 		{
-			std_msgs::Float 64 msg_f;
+			std_msgs::Float64 msg_f;
 			//  Aumento de resolucion
 			if (buttons[4]) {
 				aux_s = x * 10;
