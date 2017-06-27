@@ -1,6 +1,5 @@
 
 #include <steer_controller/CSteerControllerLowLevel.h>
-#include <std_msgs/String.h>
 #include <ros/console.h>
 
 
@@ -13,7 +12,7 @@ int main(int argc, char **argv)
 		CSteerControllerLowLevel  steer_controller;
 		steer_controller.initialize();
 
-		ros::Rate loop_rate(100);
+		ros::Rate loop_rate(20);
 		while (ros::ok())
 		{
 			ros::spinOnce();

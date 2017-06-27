@@ -54,7 +54,6 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/public_include/
   ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 
