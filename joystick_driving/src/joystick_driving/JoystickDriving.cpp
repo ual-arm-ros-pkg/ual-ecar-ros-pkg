@@ -24,7 +24,7 @@ bool JoystickDriving::initialize()
 	m_pub_rev_relay     = m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output7", 10);
 	m_pub_eje_x			= m_nh.advertise<std_msgs::Float64>("joystick_eje_x", 10);
 	m_pub_eje_y			= m_nh.advertise<std_msgs::Float64>("joystick_eje_y", 10);
-	m_pub_contr_status	= m_nh.advertise<std_msgs::Bool>("steer_controller_status", 10
+	m_pub_contr_status	= m_nh.advertise<std_msgs::Bool>("steer_controller_status", 10);
 
 	{
 		std_msgs::Bool b;
