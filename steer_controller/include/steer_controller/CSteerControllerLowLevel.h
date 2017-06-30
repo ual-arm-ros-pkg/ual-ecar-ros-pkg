@@ -24,14 +24,17 @@ public:
 	ros::NodeHandle m_nh_params = ros::NodeHandle("~");
 
 	ros::Publisher  m_pub_rev_relay, m_pub_pwm_steering, m_pub_voltage_pedal,m_pub_rev_steering;
-/*	m_pub_rev_relay		:: Activa relé de marcha.
-	m_pub_pwm_steering	:: Señal PWM para la dirección
-	m_pub_voltage_pedal	:: Señal simulada del pedal de aceleración
-	m_pub_rev_steering	:: Activa el Pin DIR del pololu
-	m_pub_contr_status	:: Establece el modo de funcionamiento del controlador
+/*	m_pub_rev_relay		::	Activa relé de marcha.
+	m_pub_pwm_steering	::	Señal PWM para la dirección
+	m_pub_voltage_pedal	::	Señal simulada del pedal de aceleración
+	m_pub_rev_steering	::	Activa el Pin DIR del pololu
+	m_pub_contr_status	::	Establece el modo de funcionamiento del controlador
 */
-	ros::Subscriber m_sub_auto_pos, m_sub_pwm, m_sub_contr_status;
-/*	Definir todas las variables que tiene que leer del joystick
+	ros::Subscriber m_sub_rev_relay, m_sub_eje_x, m_sub_eje_y, m_sub_contr_status;
+/*	m_sub_rev_relay		::	Activa relé de marcha desde el control automático
+	m_sub_eje_x			::	Lectura de datos del joystick izq. Eje horizontal. Dirección
+	m_sub_eje_y			::	Lectura de datos del joystick izq. Eje vertical. Aceleración
+	m_sub_contr_status	::	Booleano para la determinación si se encuentra el control en modo manual o automático
 */
 
 	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
