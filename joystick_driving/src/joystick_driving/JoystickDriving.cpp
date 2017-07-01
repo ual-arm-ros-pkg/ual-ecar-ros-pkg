@@ -95,7 +95,7 @@ bool JoystickDriving::iterate()
 		
 		if (buttons[0]) {
 			eje_y = eje_y + aux_r;
-			aux_r = seje_y;
+			aux_r = eje_y;
 		}
 		else {
 			aux_r = eje_y + aux_r;
