@@ -115,7 +115,7 @@ bool JoystickDriving::iterate()
 		m_pub_rev_relay.publish(b);
 	}
 
-	ROS_INFO("Joy: x:%f y:%f nbut=%u B3=%i B6=%i", aux_s,aux_r, buttons[3] ? 1:0, buttons[6] ? 1:0);
+	ROS_INFO("Joy: x:%f y:%f B3=%i B6=%i", aux_s,aux_r, buttons[3] ? 1:0, buttons[6] ? 1:0);
 
 	return true;
 }
