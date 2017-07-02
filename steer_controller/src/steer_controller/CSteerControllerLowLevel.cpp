@@ -18,10 +18,11 @@ using namespace mrpt;
 using namespace mrpt::utils;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
-	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
-#ifdef HAVE_ROS
-m_nh_params("~"),
-#endif
+	mrpt::utils::COutputLogger("CSteerControllerLowLevel")
+
+
+m_nh_params("~")
+
 
 CSteerControllerLowLevel::~CSteerControllerLowLevel()
 {
