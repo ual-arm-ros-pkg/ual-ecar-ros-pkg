@@ -69,9 +69,9 @@ bool CSteerControllerLowLevel::iterate()
 	vector<float> error;
 	vector<float> controller_params;
 	vector<float> SP_params, SP_out;
-	int pwm_steering, b2,b1;
+	int pwm_steering;
 	float voltaje_pedal;
-
+	bool b2,b1;
 	// Lectura del modo de control
 	bool ok = m_sub_contr_status;
 
@@ -89,7 +89,7 @@ bool CSteerControllerLowLevel::iterate()
 		std_msgs::Bool msg_b2;
 
 		// PWM
-		pwm_steering = (int)(m_sub_eje_x * 254);
+		pwm_steering = (int)(Eje_x * 254);
 
 		msg_ui.data = pwm_steering;
 		m_pub_pwm_steering.publish(msg_ui);
@@ -97,7 +97,7 @@ bool CSteerControllerLowLevel::iterate()
 		ROS_INFO("PWM: %i ", pwm_steering);
 
 		// DAC
-		voltaje_pedal = 1.0 + m_sub_eje_y * 5.76;
+		voltaje_pedal = 1.0 + Eje_y * 5.76;
 
 		if (voltaje_pedal<0)
 		{
@@ -110,36 +110,17 @@ bool CSteerControllerLowLevel::iterate()
 		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
 
 		// Bool
-
-		msg_b1.data = m_sub_rev_relay;
+		
+		b1 = GPIO7;
+		msg_b1.data = GPIO7;
 		m_pub_rev_relay.publish(msg_b1);
-
-		if (m_sub_rev_relay != 0)
-		{
-			b1 = 1;
-			msg_b1.data = true;
-		}
-		else
-		{
-			b1 = 0;
-			msg_b1.data = false;
-		}
-		m_pub_rev_relay.publish(msg_b1);
-		if (pwm_steering < 0)
-		{
-			b2 = 1;
-			msg_b2.data = true;
-		}
-		else
-		{
-			b2 = 0;
-			msg_b2.data = false;
-		}
+		
+		b2 = Status_mode;
+		msg_b2.data = Status_mode;
 		m_pub_rev_steering.publish(msg_b2);
 
 
-		ROS_INFO("B1=%i B2=%i", b1, b2);
-		return true;
+		ROS_INFO("B1=%s B2=%s", b1 ? "true":"false" , b2 ? "true":"false");
 	}
 
 	// Modo automatico
@@ -156,7 +137,7 @@ bool CSteerControllerLowLevel::iterate()
 		//error[1] = R_steer - steer;
 	/*	Introduccion de la ecuacion del controlador (Dos controladores) */
 			//	Controlador Lazo 1:
-				
+
 
 	/*	Implementar saturacion y transferencia sin salto */
 
@@ -174,33 +155,38 @@ bool CSteerControllerLowLevel::iterate()
 	/*	Determinar la posición actual integrando o leyendo un encoder absoluto.*/
 
 	/*	Actualizar los valores de todos los vactores para la siguiente iteración*/
-			// Variable para determinar el sentido de giro 
-	
+			// Variable para determinar el sentido de giro
+
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
-		+-----------------------+ 
+		+-----------------------+
 	*/
 
 	}
+		return true;
 }
 
 
 void CSteerControllerLowLevel::status_Callback(const std_msgs::Bool::ConstPtr& msg)
 {
 	ROS_INFO("Status Mode: %s", msg->data ? "true":"false" );
+	bool Status_mode = msg->data;
 }
 
 void CSteerControllerLowLevel::eje_x_Callback(const std_msgs::Float64::ConstPtr& msg)
 {
 	ROS_INFO("Steer_axis %.02f", msg->data );
+	float Eje_x = msg->data;
 }
 
 void CSteerControllerLowLevel::eje_y_Callback(const std_msgs::Float64::ConstPtr& msg)
 {
 	ROS_INFO("Voltage pedal %.02f", msg->data );
+	float Eje_y = msg->data;
 }
 
 void CSteerControllerLowLevel::GPIO7_Callback(const std_msgs::Bool::ConstPtr& msg)
 {
 	ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
+	bool GPIO7 = msg->data;
 }
