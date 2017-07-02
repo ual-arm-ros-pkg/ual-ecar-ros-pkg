@@ -18,8 +18,8 @@ using namespace mrpt;
 using namespace mrpt::utils;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
-	//mrpt::utils::COutputLogger("CSteerControllerLowLevel")
-	m_nh_params("~"),
+	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
+	m_nh_params("~")
 {
 
 }
