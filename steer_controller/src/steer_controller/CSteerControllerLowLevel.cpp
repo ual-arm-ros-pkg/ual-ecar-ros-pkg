@@ -8,10 +8,20 @@
 #include <mrpt/system/threads.h> // for sleep()
 #include <ros/console.h>
 // #include <steer_controller/SteerControllerStatus.h>
+#include <functional>
+#include <cstring>
+#include <array>
+#include <iostream>
 
 using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
+
+CSteerControllerLowLevel::CSteerControllerLowLevel() :
+	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
+#ifdef HAVE_ROS
+m_nh_params("~"),
+#endif
 
 CSteerControllerLowLevel::~CSteerControllerLowLevel()
 {
