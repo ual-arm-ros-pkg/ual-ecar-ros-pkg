@@ -37,10 +37,10 @@ bool CSteerControllerLowLevel::initialize()
 	m_pub_pwm_steering	= m_nh.advertise<std_msgs::UInt8>("arduino_daq_pwm3", 10);
 	m_pub_voltage_pedal	= m_nh.advertise<std_msgs::Float64>("arduino_daq_dac0", 10);
 
-	m_sub_contr_status	= m_nh.subscribe("steer_controller_status", 10, &CSteerControllerLowLevel::status_Callback, this);
-	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &CSteerControllerLowLevel::eje_x_Callback, this);
-	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &CSteerControllerLowLevel::eje_y_Callback, this);
-	m_sub_rev_relay		= m_nh.subscribe("arduino_daq_GPIO_output7",10, &CSteerControllerLowLevel::GPIO7_Callback, this);
+	m_sub_contr_status	= m_nh.subscribe("steer_controller_status", 10, &CSteerControllerLowLevel::statusCallback, this);
+	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &CSteerControllerLowLevel::ejexCallback, this);
+	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &CSteerControllerLowLevel::ejeyCallback, this);
+	m_sub_rev_relay		= m_nh.subscribe("arduino_daq_GPIO_output7",10, &CSteerControllerLowLevel::GPIO7Callback, this);
 
 	// Inicialization
 	{
@@ -167,25 +167,25 @@ bool CSteerControllerLowLevel::iterate()
 }
 
 
-void CSteerControllerLowLevel::status_Callback(const std_msgs::Bool::ConstPtr& msg)
+void CSteerControllerLowLevel::statusCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	ROS_INFO("Status Mode: %s", msg->data ? "true":"false" );
 	bool Status_mode = msg->data;
 }
 
-void CSteerControllerLowLevel::eje_x_Callback(const std_msgs::Float64::ConstPtr& msg)
+void CSteerControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	ROS_INFO("Steer_axis %.02f", msg->data );
 	float Eje_x = msg->data;
 }
 
-void CSteerControllerLowLevel::eje_y_Callback(const std_msgs::Float64::ConstPtr& msg)
+void CSteerControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	ROS_INFO("Voltage pedal %.02f", msg->data );
 	float Eje_y = msg->data;
 }
 
-void CSteerControllerLowLevel::GPIO7_Callback(const std_msgs::Bool::ConstPtr& msg)
+void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg)
 {
 	ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
 	bool GPIO7 = msg->data;
