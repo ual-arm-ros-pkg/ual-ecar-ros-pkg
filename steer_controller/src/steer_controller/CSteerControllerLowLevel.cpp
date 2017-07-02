@@ -31,7 +31,7 @@ bool CSteerControllerLowLevel::initialize()
 {
 	ROS_INFO("CSteerControllerLowLevel::inicialize() ok.");
 	
-	m<std_msgs::Bool>("steer_controller_status", 10);
+	m_sub_contr_status  = m_nh.advertise<std_msgs::Bool>("steer_controller_status", 10);
 	m_pub_rev_relay		= m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output7", 10);
 	m_pub_rev_steering	= m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output4", 10);
 	m_pub_pwm_steering	= m_nh.advertise<std_msgs::UInt8>("arduino_daq_pwm3", 10);

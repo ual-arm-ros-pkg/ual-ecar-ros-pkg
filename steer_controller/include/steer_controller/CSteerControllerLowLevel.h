@@ -10,6 +10,9 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/UInt8.h>
+#include <mrpt/utils/COutputLogger.h>
+#include <functional>
+
 
 class CSteerControllerLowLevel
 {
