@@ -14,7 +14,7 @@
 #include <functional>
 
 
-class CSteerControllerLowLevel
+class CSteerControllerLowLevel : public mrpt::utils::COutputLogger
 {
 public:
 	CSteerControllerLowLevel();

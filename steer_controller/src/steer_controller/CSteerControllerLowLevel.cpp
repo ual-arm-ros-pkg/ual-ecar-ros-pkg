@@ -31,7 +31,6 @@ bool CSteerControllerLowLevel::initialize()
 {
 	ROS_INFO("CSteerControllerLowLevel::inicialize() ok.");
 	
-	m_sub_contr_status  = m_nh.advertise<std_msgs::Bool>("steer_controller_status", 10);
 	m_pub_rev_relay		= m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output7", 10);
 	m_pub_rev_steering	= m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output4", 10);
 	m_pub_pwm_steering	= m_nh.advertise<std_msgs::UInt8>("arduino_daq_pwm3", 10);
@@ -69,9 +68,8 @@ bool CSteerControllerLowLevel::iterate()
 	vector<float> error;
 	vector<float> controller_params;
 	vector<float> SP_params, SP_out;
-	int pwm_steering, b2;
+	int pwm_steering, b2,b1;
 	float voltaje_pedal;
-	bool b1;
 
 	// Lectura del modo de control
 	bool ok = m_sub_contr_status;
@@ -115,7 +113,17 @@ bool CSteerControllerLowLevel::iterate()
 		msg_b1.data = m_sub_rev_relay;
 		m_pub_rev_relay.publish(msg_b1);
 
-		b1 = (int) m_sub_rev_relay;
+		if (m_sub_rev_relay != 0)
+		{
+			b1 = 1;
+			msg_b1.data = true;
+		}
+		else
+		{
+			b1 = 0;
+			msg_b1.data = false;
+		}
+		m_pub_rev_relay.publish(msg_b1);
 		if (pwm_steering < 0)
 		{
 			b2 = 1;
@@ -133,33 +141,33 @@ bool CSteerControllerLowLevel::iterate()
 		return true;
 	}
 
-	// Modo automático
+	// Modo automatico
 	else
 	{
-		ROS_INFO("Controlador eCAR en modo automático");
+		ROS_INFO("Controlador eCAR en modo automatico");
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
 		+-------------------+ 
 	*/
-	/*	Lectura de la referencia de posición */
-		R_steer = m_sub_steer_ref;
-	/*	Cálculo del error al restar la restar el encoder de la interior iteración a la referencia de posición */
-		error[1] = R_steer - steer;
-	/*	Introducción de la ecuación del controlador (Dos controladores) */
+	/*	Lectura de la referencia de posicion */
+		//R_steer = m_sub_steer_ref;
+	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
+		//error[1] = R_steer - steer;
+	/*	Introduccion de la ecuacion del controlador (Dos controladores) */
 			//	Controlador Lazo 1:
 				
 
-	/*	Implementar saturación y transferencia sin salto */
+	/*	Implementar saturacion y transferencia sin salto */
 
 	/*	Registrar la señal de control de este lazo */
 
 	/*	Pasar la señal por un filtro (Trabajar con dos lineas) */
 
-	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteración anterior */
+	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
 
-	/*	Introducción de la ecuación del controlador */
+	/*	Introduccion de la ecuacion del controlador */
 
-	/*	Calcular el valor de la velocidad para la iteración siguiente mediante el predictor de Smith
+	/*	Calcular el valor de la velocidad para la iteracion siguiente mediante el predictor de Smith
 		Se puede implementar un filtro para comparar con la señal real*/
 
 	/*	Determinar la posición actual integrando o leyendo un encoder absoluto.*/
