@@ -77,13 +77,13 @@ bool CSteerControllerLowLevel::iterate()
 	float voltaje_pedal;
 	bool b2,b1;
 	// Lectura del modo de control
-	bool ok = m_sub_contr_status;
+	bool ok = Status_mode;
 
-	// If para la división de los modos de control
+	// If para la division de los modos de control
 	// --------------------------------------------
 
 	// Modo manual
-	if (!ok)
+	if (ok)
 	{
 		ROS_INFO("Controlador eCAR en modo manual");
 
@@ -124,7 +124,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_rev_steering.publish(msg_b2);
 
 
-		ROS_INFO("B1=%s B2=%s", b1 ? "true":"false" , b2 ? "true":"false");
+		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
 	}
 
 	// Modo automatico

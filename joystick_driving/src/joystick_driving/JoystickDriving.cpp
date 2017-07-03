@@ -79,6 +79,15 @@ bool JoystickDriving::iterate()
 		else {
 			aux_s = eje_x + aux_s;
 		}
+		// Saturacion
+		if (eje_x > 1)
+		{
+		eje_x = 1;
+		}
+		if (eje_x < -1)
+		{
+			eje_x = -1;
+		}
 
 		msg_f.data = aux_s;
 		m_pub_eje_x.publish(msg_f);
@@ -101,7 +110,7 @@ bool JoystickDriving::iterate()
 			aux_r = eje_y + aux_r;
 		}
 		std_msgs::Float64 msg_f;
-		msg_f.data = eje_y;
+		msg_f.data = aux_r;
 		
 		m_pub_eje_y.publish(msg_f);
 
