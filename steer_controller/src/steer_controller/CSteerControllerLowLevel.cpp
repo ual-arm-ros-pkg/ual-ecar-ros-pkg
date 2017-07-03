@@ -96,9 +96,8 @@ bool CSteerControllerLowLevel::iterate()
 		std_msgs::Float64 msg_f;
 		std_msgs::Bool msg_b;
 
-		m_pub_rev_steering.publish(msg_b);
 		// PWM
-		aux = Eje_x * 254;
+		aux = (float)(Eje_x * 254);
 		if (aux < 0)
 		{
 			aux = - aux;
@@ -109,7 +108,7 @@ bool CSteerControllerLowLevel::iterate()
 			aux = aux;
 			msg_b.data = true;
 		}
-		pwm_steering = (int)(aux * 254);
+		pwm_steering = (int)(aux);
 		m_pub_rev_steering.publish(msg_b);
 		msg_ui.data = pwm_steering;
 		m_pub_pwm_steering.publish(msg_ui);
@@ -117,7 +116,7 @@ bool CSteerControllerLowLevel::iterate()
 		ROS_INFO("PWM: %i ", pwm_steering);
 
 		// DAC
-		voltaje_pedal = 1.0 + Eje_y * 5.76;
+		voltaje_pedal = 1.0 + Eje_y * 4.76;
 
 		if (voltaje_pedal < 1)
 		{
@@ -134,11 +133,6 @@ bool CSteerControllerLowLevel::iterate()
 		b1 = GPIO7;
 		msg_b.data = GPIO7;
 		m_pub_rev_relay.publish(msg_b);
-		
-		b2 = Status_mode;
-		msg_b.data = Status_mode;
-		m_pub_rev_steering.publish(msg_b);
-
 
 		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
 	}
