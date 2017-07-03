@@ -17,6 +17,11 @@ using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
 
+float Eje_x = 0;
+float Eje_y = 0;
+bool Status_mode = false;
+bool GPIO7 = false;
+
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
 	m_nh_params("~")
@@ -169,23 +174,23 @@ bool CSteerControllerLowLevel::iterate()
 void CSteerControllerLowLevel::statusCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	ROS_INFO("Status Mode: %s", msg->data ? "true":"false" );
-	bool Status_mode = msg->data;
+	Status_mode = msg->data;
 }
 
 void CSteerControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	ROS_INFO("Steer_axis %.02f", msg->data );
-	float Eje_x = msg->data;
+	Eje_x = msg->data;
 }
 
 void CSteerControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	ROS_INFO("Voltage pedal %.02f", msg->data );
-	float Eje_y = msg->data;
+	Eje_y = msg->data;
 }
 
 void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg)
 {
 	ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
-	bool GPIO7 = msg->data;
+	GPIO7 = msg->data;
 }
