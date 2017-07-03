@@ -102,7 +102,7 @@ bool JoystickDriving::iterate()
 			aux_r =(float)((-y) * 0.5);
 		}
 		// Saturacion
-		if (eje_y + aux_y > 5.76)
+		if (eje_y + aux_r > 5.76)
 		{
 			aux_r = 5.76 - eje_y;
 		}
