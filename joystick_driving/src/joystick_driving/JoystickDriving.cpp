@@ -102,13 +102,14 @@ bool JoystickDriving::iterate()
 			aux_r =(float)((-y) * 0.5);
 		}
 		// Saturacion
+
 		if (eje_y + aux_r > 1)
 		{
 			aux_r = 1 - eje_y;
 		}
-		if (eje_y + aux_r < -1)
+		if (eje_y + aux_r < 0)
 		{
-			aux_r = -1 - eje_y;
+			aux_r = - eje_y;
 		}
 		// Cambio del valor central
 		if (buttons[0]) {
