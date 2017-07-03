@@ -109,7 +109,7 @@ bool CSteerControllerLowLevel::iterate()
 			aux = aux;
 			msg_b.data = true;
 		}
-		pwm_steering = (int)(Eje_x * 254);
+		pwm_steering = (int)(aux * 254);
 		m_pub_rev_steering.publish(msg_b);
 		msg_ui.data = pwm_steering;
 		m_pub_pwm_steering.publish(msg_ui);
