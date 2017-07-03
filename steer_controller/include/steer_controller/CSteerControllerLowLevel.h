@@ -48,4 +48,11 @@ public:
 	/** called when work is to be done */
 	bool iterate();
 
+	protected:
+
+	void statusCallback(const std_msgs::Bool::ConstPtr& msg);
+	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
+	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
+	void GPIO7Callback(const std_msgs::Bool::ConstPtr& msg);
+
 };
