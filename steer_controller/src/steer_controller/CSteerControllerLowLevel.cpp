@@ -21,6 +21,7 @@ float Eje_x = 0;
 float Eje_y = 0;
 bool Status_mode = false;
 bool GPIO7 = false;
+int dep = 0;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -84,8 +85,12 @@ bool CSteerControllerLowLevel::iterate()
 
 	// Modo manual
 	if (ok)
-	{
-		ROS_INFO("Controlador eCAR en modo manual");
+	{	// Este if es para que solo se muestre el mensaje la primera vez que entra en el controlador
+		if (dep == 0)
+		{
+			ROS_INFO("Controlador eCAR en modo manual");
+			dep = 1;
+		}
 
 		std_msgs::UInt8 msg_ui;
 		std_msgs::Float64 msg_f;
@@ -129,8 +134,13 @@ bool CSteerControllerLowLevel::iterate()
 
 	// Modo automatico
 	else
-	{
-		ROS_INFO("Controlador eCAR en modo automatico");
+	{	// Este if es para que solo se muestre el mensaje la primera vez que entra en el controlador
+		if (dep == 1)
+		{
+			ROS_INFO("Controlador eCAR en modo automatico");
+			dep = 0;
+		}
+		
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
 		+-------------------+ 
@@ -173,24 +183,24 @@ bool CSteerControllerLowLevel::iterate()
 
 void CSteerControllerLowLevel::statusCallback(const std_msgs::Bool::ConstPtr& msg)
 {
-	ROS_INFO("Status Mode: %s", msg->data ? "true":"false" );
+	//ROS_INFO("Status Mode: %s", msg->data ? "true":"false" );
 	Status_mode = msg->data;
 }
 
 void CSteerControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	ROS_INFO("Steer_axis %.02f", msg->data );
+	//ROS_INFO("Steer_axis %.02f", msg->data );
 	Eje_x = msg->data;
 }
 
 void CSteerControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	ROS_INFO("Voltage pedal %.02f", msg->data );
+	//ROS_INFO("Voltage pedal %.02f", msg->data );
 	Eje_y = msg->data;
 }
 
 void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg)
 {
-	ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
+	//ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
 	GPIO7 = msg->data;
 }

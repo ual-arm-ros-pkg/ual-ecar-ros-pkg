@@ -71,22 +71,21 @@ bool JoystickDriving::iterate()
 		else {
 			aux_s = x * 0.5;
 		}
-			
+		// Saturacion
+		if (eje_x + aux_s > 1)
+		{
+			aux_s = 1 - eje_x;
+		}
+		if (eje_x + aux_s < -1)
+		{
+			aux_s = -1 - eje_x;
+		}
 		if (buttons[1]) {
 			eje_x = eje_x + aux_s;
 			aux_s = eje_x;
 		}
 		else {
 			aux_s = eje_x + aux_s;
-		}
-		// Saturacion
-		if (eje_x > 1)
-		{
-		eje_x = 1;
-		}
-		if (eje_x < -1)
-		{
-			eje_x = -1;
 		}
 
 		msg_f.data = aux_s;
