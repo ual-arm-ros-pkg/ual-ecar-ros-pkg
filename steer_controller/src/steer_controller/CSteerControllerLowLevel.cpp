@@ -119,9 +119,9 @@ bool CSteerControllerLowLevel::iterate()
 		// DAC
 		voltaje_pedal = 1.0 + Eje_y * 5.76;
 
-		if (voltaje_pedal<0)
+		if (voltaje_pedal < 1)
 		{
-			voltaje_pedal = 0;
+			voltaje_pedal = 1;
 		}
 
 		msg_f.data = voltaje_pedal;
