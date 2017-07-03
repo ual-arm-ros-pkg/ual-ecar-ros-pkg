@@ -75,8 +75,8 @@ bool CSteerControllerLowLevel::iterate()
 	vector<float> controller_params;
 	vector<float> SP_params, SP_out;
 	int pwm_steering;
-	float voltaje_pedal;
-	bool b2,b1;
+	float voltaje_pedal,aux;
+	bool b2,b1,b3;
 	// Lectura del modo de control
 	bool ok = Status_mode;
 
@@ -94,12 +94,23 @@ bool CSteerControllerLowLevel::iterate()
 
 		std_msgs::UInt8 msg_ui;
 		std_msgs::Float64 msg_f;
-		std_msgs::Bool msg_b1;
-		std_msgs::Bool msg_b2;
+		std_msgs::Bool msg_b;
 
+		m_pub_rev_steering.publish(msg_b);
 		// PWM
+		aux = Eje_x * 254;
+		if (aux < 0)
+		{
+			aux = - aux;
+			msg_b.data = false;
+		}
+		else
+		{
+			aux = aux;
+			msg_b.data = true;
+		}
 		pwm_steering = (int)(Eje_x * 254);
-
+		m_pub_rev_steering.publish(msg_b);
 		msg_ui.data = pwm_steering;
 		m_pub_pwm_steering.publish(msg_ui);
 
@@ -121,12 +132,12 @@ bool CSteerControllerLowLevel::iterate()
 		// Bool
 		
 		b1 = GPIO7;
-		msg_b1.data = GPIO7;
-		m_pub_rev_relay.publish(msg_b1);
+		msg_b.data = GPIO7;
+		m_pub_rev_relay.publish(msg_b);
 		
 		b2 = Status_mode;
-		msg_b2.data = Status_mode;
-		m_pub_rev_steering.publish(msg_b2);
+		msg_b.data = Status_mode;
+		m_pub_rev_steering.publish(msg_b);
 
 
 		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
