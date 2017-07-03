@@ -21,7 +21,6 @@ CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
 	m_nh_params("~")
 {
-
 }
 
 CSteerControllerLowLevel::~CSteerControllerLowLevel()
