@@ -80,6 +80,7 @@ bool JoystickDriving::iterate()
 		{
 			aux_s = -1 - eje_x;
 		}
+		// Cambio del valor central
 		if (buttons[1]) {
 			eje_x = eje_x + aux_s;
 			aux_s = eje_x;
@@ -100,7 +101,16 @@ bool JoystickDriving::iterate()
 		else {
 			aux_r =(float)((-y) * 0.5);
 		}
-		
+		// Saturacion
+		if (eje_y + aux_y > 5.76)
+		{
+			aux_r = 5.76 - eje_y;
+		}
+		if (eje_y + aux_r < 1)
+		{
+			aux_r = 1 - eje_y;
+		}
+		// Cambio del valor central
 		if (buttons[0]) {
 			eje_y = eje_y + aux_r;
 			aux_r = eje_y;
