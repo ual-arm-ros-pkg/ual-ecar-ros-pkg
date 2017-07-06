@@ -80,6 +80,10 @@ bool CSteerControllerLowLevel::iterate()
 	// Lectura del modo de control
 	bool ok = Status_mode;
 
+	std_msgs::UInt8 msg_ui;
+	std_msgs::Float64 msg_f;
+	std_msgs::Bool msg_b;
+
 	// If para la division de los modos de control
 	// --------------------------------------------
 
@@ -91,10 +95,6 @@ bool CSteerControllerLowLevel::iterate()
 			ROS_INFO("Controlador eCAR en modo manual");
 			dep = 1;
 		}
-
-		std_msgs::UInt8 msg_ui;
-		std_msgs::Float64 msg_f;
-		std_msgs::Bool msg_b;
 
 		// PWM
 		aux = (float)(Eje_x * 254);
@@ -151,35 +151,48 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		//R_steer = m_sub_steer_ref;
+		//R_steer = (float)(Eje_x * MAX_ang);
+	
+	/*	Determinar el Predictor de Smith de la posición*/
+		// yp[1] = 1.7788 * yp[2] - 0.7788 * yp[3] + 0.0058 * up[5] + 0.0053 * up[6];
 	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
-		//error[1] = R_steer - steer;
+		//error[1] = R_steer - yp[1];
+
 	/*	Introduccion de la ecuacion del controlador (Dos controladores) */
-			//	Controlador Lazo 1:
+			//	Controlador Lazo interno
+			// up[1] = up[2] + q0 * error[1] + q1 * error[2] + q2 * error[3];
 
+	/*	Implementar saturacion */
 
-	/*	Implementar saturacion y transferencia sin salto */
-
-	/*	Registrar la señal de control de este lazo */
-
-	/*	Pasar la señal por un filtro (Trabajar con dos lineas) */
+	/*	Determinar el Predictor de Smith de la velocidad*/
+		// ys[1] = ys[2] * __
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
+		//error[4] = up[1] - (ys[1] + realimentación del encoder)
 
 	/*	Introduccion de la ecuacion del controlador */
+		// us[1] = us[2] + q0 * error[4] + q1 * error[5];
 
-	/*	Calcular el valor de la velocidad para la iteracion siguiente mediante el predictor de Smith
-		Se puede implementar un filtro para comparar con la señal real*/
-
-	/*	Determinar la posición actual integrando o leyendo un encoder absoluto.*/
+	/*	Implementar saturacion */
 
 	/*	Actualizar los valores de todos los vactores para la siguiente iteración*/
-			// Variable para determinar el sentido de giro
+
 
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
+		voltaje_pedal = 1.0 + Eje_y * 4.76;
+
+		if (voltaje_pedal < 1)
+		{
+			voltaje_pedal = 1;
+		}
+
+		msg_f.data = voltaje_pedal;
+		m_pub_voltage_pedal.publish(msg_f);
+
+		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
 
 	}
 		return true;
