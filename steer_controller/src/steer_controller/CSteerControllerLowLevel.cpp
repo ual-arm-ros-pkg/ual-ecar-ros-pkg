@@ -181,7 +181,7 @@ bool CSteerControllerLowLevel::iterate()
 		{
 			m_us[0] = -254;
 		}
-		ROS_INFO("Yp: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0], m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
+		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
 	/*	Actualizar los valores de todos los vactores para la siguiente iteración*/
 		for (int i=2;i>=1;i--)
 		{
@@ -220,7 +220,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
-		ROS_INFO("PWM: %i ", msg_ui);
+		ROS_INFO("PWM: %i ", msg_ui.data);
 
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
@@ -237,6 +237,13 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_voltage_pedal.publish(msg_f);
 
 		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
+		// Bool
+		
+		b1 = GPIO7;
+		msg_b.data = GPIO7;
+		m_pub_rev_relay.publish(msg_b);
+
+		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
 
 	}
 	return true;
