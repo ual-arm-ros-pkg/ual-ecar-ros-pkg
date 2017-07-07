@@ -56,7 +56,12 @@ public:
 	void GPIO7Callback(const std_msgs::Bool::ConstPtr& msg);
 	void encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 
-	double m_ep[3] = {0,0,0}, m_up[6] = {0,0,0,0,0,0}, m_es[2] = {0,0},m_yp[3] = {0,0,0}, m_ys[4] = {0,0,0,0}, m_Encoder[2] = {0,0};
+	double m_ep[3] = {0,0,0};
+	double m_up[6] = {0,0,0,0,0,0};
+	double m_es[2] = {0,0};
+	double m_yp[3] = {0,0,0};
+	double m_ys[4] = {0,0,0,0};
+	double m_Encoder[2] = {0,0};
 	int m_us[5] = {0,0,0,0,0};
 
 };

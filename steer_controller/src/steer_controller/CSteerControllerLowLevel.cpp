@@ -69,7 +69,6 @@ bool CSteerControllerLowLevel::initialize()
 	}
 
 
-	inic...
 
 }
 
