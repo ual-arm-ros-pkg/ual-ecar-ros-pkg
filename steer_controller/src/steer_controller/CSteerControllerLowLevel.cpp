@@ -17,6 +17,11 @@ using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
 
+float Eje_x = 0;
+float Eje_y = 0;
+bool Status_mode;
+bool GPIO7 = false;
+int dep = 0;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -41,6 +46,7 @@ bool CSteerControllerLowLevel::initialize()
 	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &CSteerControllerLowLevel::ejexCallback, this);
 	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &CSteerControllerLowLevel::ejeyCallback, this);
 	m_sub_rev_relay		= m_nh.subscribe("arduino_daq_GPIO_output7",10, &CSteerControllerLowLevel::GPIO7Callback, this);
+	m_sub_encoder		= m_nh.subscribe("arduino_daq_encoders", 10, &CSteerControllerLowLevel::encoderCallback, this);
 
 	// Inicialization
 	{
@@ -69,14 +75,8 @@ bool CSteerControllerLowLevel::initialize()
 
 bool CSteerControllerLowLevel::iterate()
 {
-	// Variables
-	float Eje_x = 0;
-	float Eje_y = 0;
-	bool Status_mode = false;
-	bool GPIO7 = false;
-	int dep = 0;
 	int pwm_steering;
-	float voltaje_pedal;
+	double voltaje_pedal,rpm;
 	bool b2,b1,b3;
 
 	// Lectura del modo de control
@@ -100,7 +100,7 @@ bool CSteerControllerLowLevel::iterate()
 
 		// PWM
 		pwm_steering = (int)(Eje_x * 254);
-		if (aux < 0)
+		if (pwm_steering < 0)
 		{
 			pwm_steering = - pwm_steering;
 			msg_b.data = false;
@@ -166,7 +166,9 @@ bool CSteerControllerLowLevel::iterate()
 		m_ys[0] = m_ys[1] * 0.1027 - 0.1099 * m_us[1+3];
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
-		m_es[0] = m_up[0] - m_ys[0];
+		
+		rpm = (m_Encoder[0] - m_Encoder[1]) * 35 / (50000 * 0.05)
+		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);
 
 	/*	Introduccion de la ecuacion del controlador */
 		m_us[0] = (int)(m_us[1] - 1.9171 * m_es[0] - 0.1237 * m_es[1]);
@@ -194,14 +196,17 @@ bool CSteerControllerLowLevel::iterate()
 		{
 			m_up[i] = m_up[i-1];
 		}
-		m_ys[1] = m_ys[0];
+		for (int i=3;i>=1;i--)
+		{
+			m_ys[i] = m_ys[i-1];
+		}
 		m_es[1] = m_es[0];
 	
 		for (int i=4;i>=1;i--)
 		{
 			m_us[i] = m_us[i-1];
 		}
-
+		m_Encoder[1] = m_Encoder[0];
 	/*	Envio de datos a los parametros correspondientes de ROS*/
 		if (us[1] < 0)
 		{
@@ -261,4 +266,9 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 {
 	//ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
 	GPIO7 = msg->data;
+}
+
+void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
+{
+	m_Encoder[0] = msg->data;
 }

@@ -34,7 +34,7 @@ public:
 	m_pub_rev_steering	::	Activa el Pin DIR del pololu
 	m_pub_contr_status	::	Establece el modo de funcionamiento del controlador
 */
-	ros::Subscriber m_sub_rev_relay, m_sub_eje_x, m_sub_eje_y, m_sub_contr_status;
+	ros::Subscriber m_sub_rev_relay, m_sub_eje_x, m_sub_eje_y, m_sub_contr_status, m_sub_encoder;
 /*	m_sub_rev_relay		::	Activa relé de marcha desde el control automático
 	m_sub_eje_x			::	Lectura de datos del joystick izq. Eje horizontal. Dirección
 	m_sub_eje_y			::	Lectura de datos del joystick izq. Eje vertical. Aceleración
@@ -54,8 +54,9 @@ public:
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void GPIO7Callback(const std_msgs::Bool::ConstPtr& msg);
+	void encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 
-	double m_ep[3] = {0,0,0}, m_up[6] = {0,0,0,0,0,0}, m_es[2] = {0,0},m_yp[3] = {0,0,0}, m_ys[2] = {0,0};
+	double m_ep[3] = {0,0,0}, m_up[6] = {0,0,0,0,0,0}, m_es[2] = {0,0},m_yp[3] = {0,0,0}, m_ys[4] = {0,0,0,0}, m_Encoder[2] = {0,0};
 	int m_us[5] = {0,0,0,0,0};
 
 };
