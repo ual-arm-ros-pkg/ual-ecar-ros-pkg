@@ -166,7 +166,7 @@ bool CSteerControllerLowLevel::iterate()
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
 		
-		rpm = (m_Encoder[0] - m_Encoder[1]) * 35 / (50000 * 0.05)
+		rpm = (m_Encoder[0] - m_Encoder[1]) * 35 / (50000 * 0.05);
 		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);
 
 	/*	Introduccion de la ecuacion del controlador */
@@ -207,7 +207,7 @@ bool CSteerControllerLowLevel::iterate()
 		}
 		m_Encoder[1] = m_Encoder[0];
 	/*	Envio de datos a los parametros correspondientes de ROS*/
-		if (us[1] < 0)
+		if (m_us[1] < 0)
 		{
 			msg_ui.data = - us[1];
 			msg_b.data = false;

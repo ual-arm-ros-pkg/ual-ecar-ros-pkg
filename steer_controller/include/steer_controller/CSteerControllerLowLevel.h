@@ -11,7 +11,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/UInt8.h>
 #include <mrpt/utils/COutputLogger.h>
-#include <arduino_daq/EncodersReading.msg>
+#include <arduino_daq/EncodersReading.h>
 #include <functional>
 
 
@@ -55,7 +55,7 @@ public:
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void GPIO7Callback(const std_msgs::Bool::ConstPtr& msg);
-	void encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
+	void encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg);
 
 	double m_ep[3] = {0,0,0};
 	double m_up[6] = {0,0,0,0,0,0};
