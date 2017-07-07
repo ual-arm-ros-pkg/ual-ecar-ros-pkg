@@ -152,6 +152,7 @@ bool CSteerControllerLowLevel::iterate()
 	*/
 	/*	Lectura de la referencia de posicion */
 		double R_steer = (double)(Eje_x * 35);
+		ROS_INFO("Referencia: %f ", R_steer);
 	
 	/*	Determinar el Predictor de Smith de la posición*/
 		m_yp[0] = 1.7788 * m_yp[1] - 0.7788 * m_yp[2] + 0.0058 * m_up[1+3] + 0.0053 * m_up[2+3];
@@ -179,6 +180,7 @@ bool CSteerControllerLowLevel::iterate()
 		{
 			m_us[0] = -254;
 		}
+		ROS_INFO("Yp: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0], m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
 	/*	Actualizar los valores de todos los vactores para la siguiente iteración*/
 		for (int i=2;i>=1;i--)
 		{

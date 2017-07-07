@@ -55,7 +55,7 @@ public:
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void GPIO7Callback(const std_msgs::Bool::ConstPtr& msg);
 
-	double m_ep[2] = {0,0,0}, m_up[5] = {0,0,0,0,0,0}, m_es[1] = {0,0},m_yp[2] = {0,0,0}, m_ys[1] = {0,0};
-	int m_us[4] = {0,0,0,0,0};
+	double m_ep[3] = {0,0,0}, m_up[6] = {0,0,0,0,0,0}, m_es[2] = {0,0},m_yp[3] = {0,0,0}, m_ys[2] = {0,0};
+	int m_us[5] = {0,0,0,0,0};
 
 };
