@@ -17,11 +17,6 @@ using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
 
-float Eje_x = 0;
-float Eje_y = 0;
-bool Status_mode = false;
-bool GPIO7 = false;
-int dep = 0;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -66,17 +61,24 @@ bool CSteerControllerLowLevel::initialize()
 		msg_f.data = 1.0;
 		m_pub_voltage_pedal.publish(msg_f);
 	}
+
+
+	inic...
+
 }
 
 bool CSteerControllerLowLevel::iterate()
 {
 	// Variables
-	vector<float> error;
-	vector<float> controller_params;
-	vector<float> SP_params, SP_out;
+	float Eje_x = 0;
+	float Eje_y = 0;
+	bool Status_mode = false;
+	bool GPIO7 = false;
+	int dep = 0;
 	int pwm_steering;
-	float voltaje_pedal,aux;
+	float voltaje_pedal;
 	bool b2,b1,b3;
+
 	// Lectura del modo de control
 	bool ok = Status_mode;
 
@@ -97,23 +99,21 @@ bool CSteerControllerLowLevel::iterate()
 		}
 
 		// PWM
-		aux = (float)(Eje_x * 254);
+		pwm_steering = (int)(Eje_x * 254);
 		if (aux < 0)
 		{
-			aux = - aux;
+			pwm_steering = - pwm_steering;
 			msg_b.data = false;
 		}
 		else
 		{
-			aux = aux;
 			msg_b.data = true;
 		}
-		pwm_steering = (int)(aux);
-		m_pub_rev_steering.publish(msg_b);
 		msg_ui.data = pwm_steering;
+		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
-		ROS_INFO("PWM: %i ", pwm_steering);
+		ROS_INFO("PWM: %i ", msg_ui);
 
 		// DAC
 		voltaje_pedal = 1.0 + Eje_y * 4.76;
@@ -151,32 +151,70 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		//R_steer = (float)(Eje_x * MAX_ang);
+		double R_steer = (double)(Eje_x * 35);
 	
 	/*	Determinar el Predictor de Smith de la posición*/
-		// yp[1] = 1.7788 * yp[2] - 0.7788 * yp[3] + 0.0058 * up[5] + 0.0053 * up[6];
+		m_yp[0] = 1.7788 * m_yp[1] - 0.7788 * m_yp[2] + 0.0058 * m_up[1+3] + 0.0053 * m_up[2+3];
 	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
-		//error[1] = R_steer - yp[1];
+		m_ep[0] = R_steer - m_yp[0]; /* Puede cambiar si se coloca el encoder absoluto*/
 
-	/*	Introduccion de la ecuacion del controlador (Dos controladores) */
-			//	Controlador Lazo interno
-			// up[1] = up[2] + q0 * error[1] + q1 * error[2] + q2 * error[3];
-
-	/*	Implementar saturacion */
+	/*	Controlador lazo externo */
+		m_up[0] = m_up[1] + 12.5 * m_ep[0] - 22.5 * m_ep[1] + 10 * m_ep[2];
 
 	/*	Determinar el Predictor de Smith de la velocidad*/
-		// ys[1] = ys[2] * __
+		m_ys[0] = m_ys[1] * 0.1027 - 0.1099 * m_us[1+3];
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
-		//error[4] = up[1] - (ys[1] + realimentación del encoder)
+		m_es[0] = m_up[0] - m_ys[0];
 
 	/*	Introduccion de la ecuacion del controlador */
-		// us[1] = us[2] + q0 * error[4] + q1 * error[5];
+		m_us[0] = (int)(m_us[1] - 1.9171 * m_es[0] - 0.1237 * m_es[1]);
 
 	/*	Implementar saturacion */
-
+		if (m_us[0] > 254)
+		{
+			m_us[0] = 254;
+		}
+		if (m_us[0] < -254)
+		{
+			m_us[0] = -254;
+		}
 	/*	Actualizar los valores de todos los vactores para la siguiente iteración*/
+		for (int i=2;i>=1;i--)
+		{
+			m_yp[i] = m_yp[i-1];
+		}
+		for (int i=2;i>=1;i--)
+		{
+			m_ep[i] = m_ep[i-1];
+		}
+		for (int i=5;i>=1;i--)
+		{
+			m_up[i] = m_up[i-1];
+		}
+		m_ys[1] = m_ys[0];
+		m_es[1] = m_es[0];
+	
+		for (int i=4;i>=1;i--)
+		{
+			m_us[i] = m_us[i-1];
+		}
 
+	/*	Envio de datos a los parametros correspondientes de ROS*/
+		if (us[1] < 0)
+		{
+			msg_ui.data = - us[1];
+			msg_b.data = false;
+		}
+		else
+		{
+			msg_ui.data = us[1];
+			msg_b.data = true;
+		}
+		m_pub_rev_steering.publish(msg_b);
+		m_pub_pwm_steering.publish(msg_ui);
+
+		ROS_INFO("PWM: %i ", msg_ui);
 
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
@@ -195,7 +233,7 @@ bool CSteerControllerLowLevel::iterate()
 		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
 
 	}
-		return true;
+	return true;
 }
 
 
