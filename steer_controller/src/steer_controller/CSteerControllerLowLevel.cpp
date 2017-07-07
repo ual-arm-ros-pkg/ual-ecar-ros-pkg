@@ -112,7 +112,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
-		ROS_INFO("PWM: %i ", msg_ui);
+		ROS_INFO("PWM: %i ", msg_ui.data);
 
 		// DAC
 		voltaje_pedal = 1.0 + Eje_y * 4.76;
@@ -209,12 +209,12 @@ bool CSteerControllerLowLevel::iterate()
 	/*	Envio de datos a los parametros correspondientes de ROS*/
 		if (m_us[1] < 0)
 		{
-			msg_ui.data = - us[1];
+			msg_ui.data = - m_us[1];
 			msg_b.data = false;
 		}
 		else
 		{
-			msg_ui.data = us[1];
+			msg_ui.data = m_us[1];
 			msg_b.data = true;
 		}
 		m_pub_rev_steering.publish(msg_b);
@@ -269,5 +269,5 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = msg->data;
+	m_Encoder[0] = msg->encoder_values[0];
 }
