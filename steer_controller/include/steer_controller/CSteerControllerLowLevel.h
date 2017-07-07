@@ -11,6 +11,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/UInt8.h>
 #include <mrpt/utils/COutputLogger.h>
+#include <arduino_daq/EncodersReading.msg>
 #include <functional>
 
 

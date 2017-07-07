@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
 	message_generation
   roscpp
   std_msgs
+  arduino_daq
 )
 
 # System dependencies are found with CMake's conventions
