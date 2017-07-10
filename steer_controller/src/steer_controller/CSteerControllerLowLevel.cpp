@@ -155,7 +155,7 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		double m_R_steer[0] = (double)(Eje_x * 35);
+		m_R_steer[0] = (double)(Eje_x * 35);
 		ROS_INFO("Referencia: %f ", m_R_steer[0]);
 
 	/*	Filtro en la referencia */
