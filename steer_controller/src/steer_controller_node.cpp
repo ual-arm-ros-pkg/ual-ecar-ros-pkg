@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 		CSteerControllerLowLevel  steer_controller;
 		steer_controller.initialize();
 
-		ros::Rate loop_rate(20);
+		ros::Rate loop_rate(50); /*50ms es el tiempo tomado para el diseño de los controladores*/
 		while (ros::ok())
 		{
 			ros::spinOnce();

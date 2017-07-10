@@ -86,7 +86,7 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::Bool msg_b;
 
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
-	rpm = (m_Encoder[0] - m_Encoder[1]) * 35 / (50000 * 0.05);
+	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
 	m_ys[0] = m_ys[1] * 0.1027 - 0.1099 * m_us[1+3];
 
 	// If para la division de los modos de control
@@ -155,29 +155,28 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		m_R_steer[0] = (double)(Eje_x * 35);
+		double m_R_steer = (double)(Eje_x * 35);
 		ROS_INFO("Referencia: %f ", m_R_steer[0]);
 
-	/*	Filtro en la referencia */
-		m_R_steer_f[0] = m_R_steer_f[1] * 0.7788 + m_R_steer[1] * 0.2212;
-
-	/*	Determinar el Predictor de Smith de la posición*/
+	/*	Determinar el Predictor de Smith de la posición.*/
+	/*	Sujeto a modificaciones si se coloca encoder absoluto*/
 		m_yp[0] = 1.7788 * m_yp[1] - 0.7788 * m_yp[2] + 0.0058 * m_up[1+3] + 0.0053 * m_up[2+3];
 
 	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
-		m_ep[0] = m_R_steer_f[0] - m_yp[0]; /* Puede cambiar si se coloca el encoder absoluto*/
+		m_ep[0] = m_R_steer - m_yp[0]; /*-(m_yp[0]-m_Encoder[0]); // Realimentación sin posición absoluta*/
 
 	/*	Controlador lazo externo */
-		m_up[0] = m_up[1] + 12.5 * m_ep[0] - 22.5 * m_ep[1] + 10 * m_ep[2];
+		m_up[0] = m_up[1] + 2.9082 * m_ep[0] - 2.8061 * m_ep[1];
 
 	/*	Mecanismo Anti-windup para protección*/
 
 	/*	Determinar el Predictor de Smith de la velocidad*/
+	/*	Calculado fuera del "else" para evitar transferencia en los controladores con salto*/
 		//m_ys[0] = m_ys[1] * 0.1027 - 0.1099 * m_us[1+3];
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
 		//rpm = (m_Encoder[0] - m_Encoder[1]) * 35 / (50000 * 0.05);
-		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);
+		m_es[0] = m_up[0] - m_ys[0];/* - (rpm - m_ys[3]);*/
 
 	/*	Introduccion de la ecuacion del controlador */
 		m_us[0] = (int)(m_us[1] - 1.9171 * m_es[0] - 0.1237 * m_es[1]);
@@ -192,22 +191,7 @@ bool CSteerControllerLowLevel::iterate()
 			m_us[0] = -254;
 		}
 		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
-	/*	Actualizar los valores de todos los vactores para la siguiente iteración.*
-	/*	COLOCAR FUERA DEL ELSE PARA QUE HAYA CONTINUIDAD EN EL CONTROL*/
-		m_R_steer_f[1] = m_R_steer_f[0];
-		m_R_steer[1] = m_R_steer[0];
-		for (int i=2;i>=1;i--)
-		{
-			m_yp[i] = m_yp[i-1];
-			m_ep[i] = m_ep[i-1];
-		}
-		for (int i=5;i>=1;i--)
-		{
-			m_up[i] = m_up[i-1];
-		}
-		m_es[1] = m_es[0];
 	
-		m_Encoder[1] = m_Encoder[0];
 	/*	Envio de datos a los parametros correspondientes de ROS*/
 		if (m_us[0] < 0)
 		{
@@ -249,6 +233,17 @@ bool CSteerControllerLowLevel::iterate()
 
 	}
 	/* Actualizacion de valores*/
+	for (int i=2;i>=1;i--)
+	{
+		m_yp[i] = m_yp[i-1];
+		m_ep[i] = m_ep[i-1];
+	}
+	for (int i=5;i>=1;i--)
+	{
+		m_up[i] = m_up[i-1];
+	}
+	m_es[1] = m_es[0];
+	m_Encoder[1] = m_Encoder[0];
 	for (int i=3;i>=1;i--)
 	{
 		m_ys[i] = m_ys[i-1];
@@ -288,5 +283,5 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = msg->encoder_values[0];
+	m_Encoder[0] = (msg->encoder_values[0]) * 35 / 50000;
 }
