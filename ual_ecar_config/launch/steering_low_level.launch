@@ -1,9 +1,20 @@
 <launch>
   <node name="steer_controller" pkg="steer_controller" type="steer_controller_node" output="screen">
-    <param name="CURRENT_LIMIT_THRESHOLD_VOLT" value="1.45" />
   </node>
 
   <node name="arduino_daq" pkg="arduino_daq" type="arduino_daq_node" output="screen">
+<!-- rosrun arduino_daq arduino_daq_node _ENC0_PIN_A:=2 _ENC0_PIN_B:=5 _ENC0_PIN_Z:=0 _ENC_MEASURE_PERIOD_MS:=50 
+_ADC_INTERNAL_REFVOLT:=0 _ADC_MEASURE_PERIOD_MS:=100 _ADC_CHANNEL0:=0 -->
+	<param name="ENC0_PIN_A" value="2" />
+	<param name="ENC0_PIN_B" value="5" />
+	<param name="ENC0_PIN_Z" value="0" />
+<!--	<param name="ENC1_PIN_A" value="3" /> -->
+	<param name="ENC_MEASURE_PERIOD_MS" value="50" />
+
+	<param name="ADC_INTERNAL_REFVOLT" value="0" />
+	<param name="ADC_MEASURE_PERIOD_MS" value="100" />
+	<param name="ADC_CHANNEL0" value="0" />
+
   </node>
 
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
