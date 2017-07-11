@@ -36,7 +36,7 @@ CSteerControllerLowLevel::~CSteerControllerLowLevel()
 bool CSteerControllerLowLevel::initialize()
 {
 	ROS_INFO("CSteerControllerLowLevel::inicialize() ok.");
-	
+
 	m_pub_rev_relay		= m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output7", 10);
 	m_pub_rev_steering	= m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output4", 10);
 	m_pub_pwm_steering	= m_nh.advertise<std_msgs::UInt8>("arduino_daq_pwm3", 10);
@@ -133,7 +133,7 @@ bool CSteerControllerLowLevel::iterate()
 		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
 
 		// Bool
-		
+
 		b1 = GPIO7;
 		msg_b.data = GPIO7;
 		m_pub_rev_relay.publish(msg_b);
@@ -149,14 +149,14 @@ bool CSteerControllerLowLevel::iterate()
 			ROS_INFO("Controlador eCAR en modo automatico");
 			dep = 0;
 		}
-		
+
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
 		double m_R_steer = (double)(Eje_x * 35);
-		ROS_INFO("Referencia: %f ", m_R_steer[0]);
+		ROS_INFO("Referencia: %f ", m_R_steer);
 
 	/*	Determinar el Predictor de Smith de la posición.*/
 	/*	Sujeto a modificaciones si se coloca encoder absoluto*/
