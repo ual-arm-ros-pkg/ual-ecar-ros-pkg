@@ -66,10 +66,10 @@ bool JoystickDriving::iterate()
 		std_msgs::Float64 msg_f;
 		//  Aumento de resolucion
 		if (buttons[4]) {
-			aux_s = x * 0.2;
+			aux_s = z * 0.2;
 		}
 		else {
-			aux_s = x * 0.5;
+			aux_s = z * 0.5;
 		}
 		// Saturacion
 		if (eje_x + aux_s > 1)
