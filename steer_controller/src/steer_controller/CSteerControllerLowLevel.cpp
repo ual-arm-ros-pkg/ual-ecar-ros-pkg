@@ -163,7 +163,7 @@ bool CSteerControllerLowLevel::iterate()
 		// m_yp[0] = 1.7788 * m_yp[1] - 0.7788 * m_yp[2] + 0.0058 * m_up[1+3] + 0.0053 * m_up[2+3];
 
 	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
-		m_ep[0] = m_R_steer - m_Encoder0; //- m_yp[0] -(m_yp[0]-m_Encoder[0]); Realimentación para predictor de Smith
+		m_ep[0] = m_R_steer - m_Encoder[0]; //- m_yp[0] -(m_yp[0]-m_Encoder[0]); Realimentación para predictor de Smith
 
 	/*	Controlador lazo externo */
 		m_up[0] = m_up[1] + 1.8903 * m_ep[0] - 1.8240 * m_ep[1];
