@@ -118,6 +118,8 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_pwm_steering.publish(msg_ui);
 
 		ROS_INFO("PWM: %i ", msg_ui.data);
+		ROS_INFO("Encoder: %f ", m_Encoder[0]);
+		// m_R_steer_f[0] = m_Encoder[0]
 
 		// DAC
 		voltaje_pedal = 1.0 + Eje_y * 4.76;
@@ -155,8 +157,18 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		double m_R_steer = (double)(Eje_x * 35);
+		m_R_steer_f[0] = (double)(Eje_x * 35);
+
+	/*	Saturación de la referencia para protección contra sobrecorrientes*/
+		double sat_ref = 4.55;
+		double pendiente = (m_R_steer_f[0] - m_R_steer_f[1]) / 0.05;
+		if (pendiente >= sat_ref)
+		{
+			m_R_steer = m_R_steer_f[0] + sat_ref;
+			m_R_steer_f[0] = m_R_steer;
+		}
 		ROS_INFO("Referencia: %f ", m_R_steer);
+		ROS_INFO("Encoder: %f ", m_Encoder[0]);
 
 	/*	Determinar el Predictor de Smith de la posición.*/
 	/*	Sujeto a modificaciones si se coloca encoder absoluto o se implementan otras estrategias de control*/
@@ -228,6 +240,7 @@ bool CSteerControllerLowLevel::iterate()
 
 	}
 	/* Actualizacion de valores*/
+	m_R_steer_f[1] = m_R_steer_f[0];
 	for (int i=2;i>=1;i--)
 	{
 		m_yp[i] = m_yp[i-1];
@@ -278,6 +291,6 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = (msg->encoder_values[0]) / 1824.9;
+	m_Encoder[0] = - (msg->encoder_values[0]) / 1824.9;
 	// m_Enc_motor[0] = (msg->encoder_values[1]);
 }
