@@ -119,7 +119,7 @@ bool CSteerControllerLowLevel::iterate()
 
 		ROS_INFO("PWM: %i ", msg_ui.data);
 		ROS_INFO("Encoder: %f ", m_Encoder[0]);
-		// m_R_steer_f[0] = m_Encoder[0]
+		// m_R_steer_f[0] = m_Encoder[0]; // Para implementar mecanismo de transferencia sin salto
 
 		// DAC
 		voltaje_pedal = 1.0 + Eje_y * 4.76;
