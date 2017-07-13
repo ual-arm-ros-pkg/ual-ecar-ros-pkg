@@ -199,6 +199,10 @@ bool CSteerControllerLowLevel::iterate()
 		}
 		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
 	
+	/*	Implementar protección que detecte que el encoder está en el límite y solo permita girar en el sentido contrario*/
+
+	//	..............
+
 	/*	Envio de datos a los parametros correspondientes de ROS*/
 		if (m_us[0] < 0)
 		{
