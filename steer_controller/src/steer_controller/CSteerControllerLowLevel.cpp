@@ -164,7 +164,7 @@ bool CSteerControllerLowLevel::iterate()
 		double pendiente = (m_R_steer_f[0] - m_R_steer_f[1]) / 0.05;
 		if (pendiente >= sat_ref)
 		{
-			m_R_steer = m_R_steer_f[0] + sat_ref;
+			m_R_steer = - (m_R_steer_f[0] + sat_ref);
 			m_R_steer_f[0] = m_R_steer;
 		}
 		ROS_INFO("Referencia: %f ", m_R_steer);
