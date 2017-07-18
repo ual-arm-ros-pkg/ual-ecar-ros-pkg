@@ -157,28 +157,30 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		m_R_steer_f[0] = (double)(Eje_x * 35);
+		double m_R_steer_f[0] = (double)(Eje_x * 40);
+
+	/*	Filtro en la referencia para disminuir la sobreoscilación en la señal de salida */
+		m_R_steer[0] = 0.9649 * m_R_steer[1] + 0.0351 * m_R_steer_f[0];
 
 	/*	Saturación de la referencia para protección contra sobrecorrientes*/
-		double sat_ref = 4.55;
-		double pendiente = (m_R_steer_f[0] - m_R_steer_f[1]) / 0.05;
+	/*	double sat_ref = 4.55;
+		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
 		if (pendiente >= sat_ref)
 		{
-			m_R_steer = - (m_R_steer_f[0] + sat_ref);
-			m_R_steer_f[0] = m_R_steer;
+			m_R_steer[0] = (m_R_steer[1] + sat_ref);
 		}
-		ROS_INFO("Referencia: %f ", m_R_steer);
+	*/
+	/*	Corrección del sentido de las ruedas*/
+		m_R_steer[0] = - m_R_steer[0];
+
+		ROS_INFO("Referencia: %f ", m_R_steer[0]);
 		ROS_INFO("Encoder: %f ", m_Encoder[0]);
 
-	/*	Determinar el Predictor de Smith de la posición.*/
-	/*	Sujeto a modificaciones si se coloca encoder absoluto o se implementan otras estrategias de control*/
-		// m_yp[0] = 1.7788 * m_yp[1] - 0.7788 * m_yp[2] + 0.0058 * m_up[1+3] + 0.0053 * m_up[2+3];
-
-	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
-		m_ep[0] = m_R_steer - m_Encoder[0]; //- m_yp[0] -(m_yp[0]-m_Encoder[0]); Realimentación para predictor de Smith
+	/*	Calculo del error al restar la restar el encoder a la referencia de posicion */
+		m_ep[0] = m_R_steer[0] - m_Encoder[0];
 
 	/*	Controlador lazo externo */
-		m_up[0] = m_up[1] + 1.8903 * m_ep[0] - 1.8240 * m_ep[1];
+		m_up[0] = m_up[1] + 2.9082 * m_ep[0] - 2.8061 * m_ep[1];
 
 	/*	Mecanismo Anti-windup para protección*/
 
@@ -186,7 +188,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_es[0] = m_up[0] - m_ys[0];/* - (rpm - m_ys[3]);*/
 
 	/*	Introduccion de la ecuacion del controlador */
-		m_us[0] = (int)(m_us[1] - 2.85 * m_es[0] - 0.1765 * m_es[1]);
+		m_us[0] = (int)(m_us[1] - 2.8261 * m_es[0] - 0.1750 * m_es[1]);
 
 	/*	Implementar saturacion */
 		if (m_us[0] > 254)
@@ -244,6 +246,7 @@ bool CSteerControllerLowLevel::iterate()
 
 	}
 	/* Actualizacion de valores*/
+	m_R_steer[1] = m_R_steer[0];
 	m_R_steer_f[1] = m_R_steer_f[0];
 	for (int i=2;i>=1;i--)
 	{

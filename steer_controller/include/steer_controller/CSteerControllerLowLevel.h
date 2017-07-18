@@ -64,6 +64,7 @@ public:
 	double m_ys[4] = {0,0,0,0};
 	double m_Encoder[2] = {0,0};
 	double m_R_steer_f[2] = {0,0};
+	double m_R_steer[2] = {0,0};
 	// double m_Enc_motor[2] = {0,0};
 	int m_us[5] = {0,0,0,0,0};
 
