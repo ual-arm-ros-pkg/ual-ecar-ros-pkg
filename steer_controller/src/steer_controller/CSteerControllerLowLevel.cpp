@@ -5,7 +5,7 @@
    +---------------------------------------------------------------------------+ */
 
 #include <steer_controller/CSteerControllerLowLevel.h>
-#include <mrpt/system/threads.h> // for sleep()
+#include <thread>
 #include <ros/console.h>
 #include <steer_controller/SteerControllerStatus.h>
 #include <functional>
@@ -157,7 +157,7 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		double m_R_steer_f[0] = (double)(Eje_x * 40);
+		m_R_steer_f[0] = (double)(Eje_x * 40);
 
 	/*	Filtro en la referencia para disminuir la sobreoscilación en la señal de salida */
 		m_R_steer[0] = 0.9649 * m_R_steer[1] + 0.0351 * m_R_steer_f[0];
