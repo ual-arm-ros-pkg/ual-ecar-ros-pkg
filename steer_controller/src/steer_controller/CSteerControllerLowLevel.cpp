@@ -159,10 +159,10 @@ bool CSteerControllerLowLevel::iterate()
 	/*	Lectura de la referencia de posicion */
 		double m_R_steer_f[0] = (double)(Eje_x * 40);
 
-	/*	Filtro en la referencia para disminuir la sobreoscilaciÛn en la seÒal de salida */
+	/*	Filtro en la referencia para disminuir la sobreoscilaci√≥n en la se√±al de salida */
 		m_R_steer[0] = 0.9649 * m_R_steer[1] + 0.0351 * m_R_steer_f[0];
 
-	/*	SaturaciÛn de la referencia para protecciÛn contra sobrecorrientes*/
+	/*	Saturaci√≥n de la referencia para protecci√≥n contra sobrecorrientes*/
 	/*	double sat_ref = 4.55;
 		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
 		if (pendiente >= sat_ref)
@@ -170,7 +170,7 @@ bool CSteerControllerLowLevel::iterate()
 			m_R_steer[0] = (m_R_steer[1] + sat_ref);
 		}
 	*/
-	/*	CorrecciÛn del sentido de las ruedas*/
+	/*	Correcci√≥n del sentido de las ruedas*/
 		m_R_steer[0] = - m_R_steer[0];
 
 		ROS_INFO("Referencia: %f ", m_R_steer[0]);
@@ -182,7 +182,7 @@ bool CSteerControllerLowLevel::iterate()
 	/*	Controlador lazo externo */
 		m_up[0] = m_up[1] + 2.9082 * m_ep[0] - 2.8061 * m_ep[1];
 
-	/*	Mecanismo Anti-windup para protecciÛn*/
+	/*	Mecanismo Anti-windup para protecci√≥n*/
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
 		m_es[0] = m_up[0] - m_ys[0];/* - (rpm - m_ys[3]);*/
@@ -201,7 +201,7 @@ bool CSteerControllerLowLevel::iterate()
 		}
 		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
 	
-	/*	Implementar protecciÛn que detecte que el encoder est· en el lÌmite y solo permita girar en el sentido contrario*/
+	/*	Implementar protecci√≥n que detecte que el encoder est√° en el l√≠mite y solo permita girar en el sentido contrario*/
 
 	//	..............
 
