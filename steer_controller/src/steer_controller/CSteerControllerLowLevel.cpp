@@ -22,6 +22,7 @@ float Eje_y = 0;
 bool Status_mode;
 bool GPIO7 = false;
 int dep = 0;
+int lim = 0;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -47,6 +48,7 @@ bool CSteerControllerLowLevel::initialize()
 	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &CSteerControllerLowLevel::ejeyCallback, this);
 	m_sub_rev_relay		= m_nh.subscribe("arduino_daq_GPIO_output7",10, &CSteerControllerLowLevel::GPIO7Callback, this);
 	m_sub_encoder		= m_nh.subscribe("arduino_daq_encoders", 10, &CSteerControllerLowLevel::encoderCallback, this);
+	m_sub_encoder_abs	= m_nh.subscribe("arduino_daq_abs_encoder", 10, &CSteerControllerLowLevel::encoderAbsCallback, this);
 
 	// Inicialization
 	{
@@ -77,6 +79,7 @@ bool CSteerControllerLowLevel::iterate()
 	int pwm_steering;
 	double voltaje_pedal,rpm;
 	bool b2,b1,b3;
+	int max_p = 40;		// Valor máximo que puede alcanzar la dirección
 
 	// Lectura del modo de control
 	bool ok = Status_mode;
@@ -103,6 +106,7 @@ bool CSteerControllerLowLevel::iterate()
 
 		// PWM
 		pwm_steering = (int)(Eje_x * 254);
+		m_us[0] = pwm_steering;
 		if (pwm_steering < 0)
 		{
 			pwm_steering = - pwm_steering;
@@ -112,35 +116,12 @@ bool CSteerControllerLowLevel::iterate()
 		{
 			msg_b.data = true;
 		}
-		m_us[0] = pwm_steering;
 		msg_ui.data = pwm_steering;
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
 		ROS_INFO("PWM: %i ", msg_ui.data);
 		ROS_INFO("Encoder: %f ", m_Encoder[0]);
-		// m_R_steer_f[0] = m_Encoder[0]; // Para implementar mecanismo de transferencia sin salto
-
-		// DAC
-		voltaje_pedal = 1.0 + Eje_y * 4.76;
-
-		if (voltaje_pedal < 1)
-		{
-			voltaje_pedal = 1;
-		}
-
-		msg_f.data = voltaje_pedal;
-		m_pub_voltage_pedal.publish(msg_f);
-
-		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
-
-		// Bool
-
-		b1 = GPIO7;
-		msg_b.data = GPIO7;
-		m_pub_rev_relay.publish(msg_b);
-
-		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
 	}
 
 	// Modo automatico
@@ -157,13 +138,13 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		m_R_steer_f[0] = (double)(Eje_x * 40);
-
+		m_R_steer[0]	= (double)(Eje_x * 40);		//Implemenctación para la referencia sin filtro
+	//	m_R_steer_f[0]	= (double)(Eje_x * 40);		// Implementación para la referencia con filtro
 	/*	Filtro en la referencia para disminuir la sobreoscilación en la señal de salida */
-		m_R_steer[0] = 0.9649 * m_R_steer[1] + 0.0351 * m_R_steer_f[0];
+	//	m_R_steer[0] = 0.9649 * m_R_steer[1] + 0.0351 * m_R_steer_f[0];
 
 	/*	Saturación de la referencia para protección contra sobrecorrientes*/
-	/*	double sat_ref = 4.55;
+	/*	double sat_ref = 10;
 		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
 		if (pendiente >= sat_ref)
 		{
@@ -180,15 +161,29 @@ bool CSteerControllerLowLevel::iterate()
 		m_ep[0] = m_R_steer[0] - m_Encoder[0];
 
 	/*	Controlador lazo externo */
-		m_up[0] = m_up[1] + 2.9082 * m_ep[0] - 2.8061 * m_ep[1];
-
-	/*	Mecanismo Anti-windup para protección*/
+		m_up[0] = m_up[1] + 11.1420 * m_ep[0] - 19.9691 * m_ep[1] - 8.8889 * m_ep[2];
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
-		m_es[0] = m_up[0] - m_ys[0];/* - (rpm - m_ys[3]);*/
+		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);*/
 
 	/*	Introduccion de la ecuacion del controlador */
 		m_us[0] = (int)(m_us[1] - 2.8261 * m_es[0] - 0.1750 * m_es[1]);
+
+		int m_v= m_us[0] + m_u[1]; // Variable para el mecanismo antiwindup
+
+	/*	Protección que detecta que el encoder está en el límite y solo permite girar en el sentido contrario*/
+		if (abs(m_Encoder[0]) >= max_p)
+		lim = 1;
+		if (abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
+		lim = 0;
+		if (lim ==1)
+		{
+			ROS_INFO("El mecanismo se encuentra próximo al extremo, reduzca la referencia");
+			if(m_Encoder[0] > 0 && m_us[0] > 0)
+				m_us[0] = 0;
+			if(m_Encoder[0] < 0 && m_us[0] < 0)
+				m_us[0] = 0;
+		}
 
 	/*	Implementar saturacion */
 		if (m_us[0] > 254)
@@ -199,28 +194,34 @@ bool CSteerControllerLowLevel::iterate()
 		{
 			m_us[0] = -254;
 		}
-		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
-	
-	/*	Implementar protección que detecte que el encoder está en el límite y solo permita girar en el sentido contrario*/
-
-	//	..............
-
-	/*	Envio de datos a los parametros correspondientes de ROS*/
-		if (m_us[0] < 0)
+		
+	/*	Mecanismo Anti-windup para protección*/
+		if(m_us[0] - m_v != 0)
 		{
-			msg_ui.data = - m_us[0];
-			msg_b.data = false;
+			ROS_INFO("Activacion del mecanismo anti-windup");
+			m_antiwindup[0] = (m_us[0] - m_v) / sqrt(0.0283);
 		}
 		else
 		{
-			msg_ui.data = m_us[0];
-			msg_b.data = true;
+			m_antiwindup[0] = 0;
 		}
+		m_u[0] = int(0.5 * (2 * m_u[1] + 0.05 * (m_antiwindup[0] + m_antiwindup[1])));
+
+		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
+	
+	/*	Envio de datos a los parametros correspondientes de ROS*/
+		if (m_us[0] < 0)
+			msg_b.data = false;
+		else
+			msg_b.data = true;
+
+		msg_ui.data = abs(m_us[0]);
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
 		ROS_INFO("PWM: %i ", msg_ui.data);
 
+	}
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
@@ -243,11 +244,11 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_rev_relay.publish(msg_b);
 
 		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
-
-	}
 	/* Actualizacion de valores*/
 	m_R_steer[1] = m_R_steer[0];
 	m_R_steer_f[1] = m_R_steer_f[0];
+	m_u[1] = m_u[0];
+	m_antiwindup[1] = m_antiwindup[0];
 	for (int i=2;i>=1;i--)
 	{
 		m_yp[i] = m_yp[i-1];
@@ -292,12 +293,15 @@ void CSteerControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& m
 
 void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg)
 {
-	//ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
+	//ROS_INFO("Reverse throttle direction : %s", msg->data ? "true":"false" );
 	GPIO7 = msg->data;
 }
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
 	m_Encoder[0] = - (msg->encoder_values[0]) / 1824.9;
-	// m_Enc_motor[0] = (msg->encoder_values[1]);
+}
+void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
+{
+	m_Encoder_Abs[0] = - (msg->encoder_value) * 360 / 1024;
 }
