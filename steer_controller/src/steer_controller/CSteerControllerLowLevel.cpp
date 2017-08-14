@@ -23,6 +23,8 @@ bool Status_mode;
 bool GPIO7 = false;
 int dep = 0;
 int lim = 0;
+bool red = true;
+double ang_inicial = 0;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -88,6 +90,21 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::Float64 msg_f;
 	std_msgs::Bool msg_b;
 
+	//Calibracion inicial de la posicion del encoder relativo.
+	if (red)
+	{
+		double ang_inicial = m_Encoder_Abs[0];
+		double aux = m_Encoder[0];
+		red = false;
+	}
+	m_Encoder[0] = m_Encoder[0] - aux + ang_inicial;
+
+	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
+	if (abs(m_Encoder[0]-m_Encoder_Abs[0])>2)
+	{
+		red = true;
+		ROS_INFO("WARNING: La diferencia entre encoders es mayor de 2 grados. Se produce recalibracion");
+	}
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
 	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
 	m_ys[0] = m_ys[1] * 0.1709 - 0.0775 * m_us[1+3];
