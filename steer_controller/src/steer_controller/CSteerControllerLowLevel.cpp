@@ -80,7 +80,7 @@ bool CSteerControllerLowLevel::iterate()
 {
 	int pwm_steering;
 	double voltaje_pedal,rpm;
-	bool b2,b1,b3;
+	bool b2,b3;
 	int max_p = 40;		// Valor máximo que puede alcanzar la dirección
 
 	// Lectura del modo de control
@@ -243,11 +243,15 @@ bool CSteerControllerLowLevel::iterate()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
-		voltaje_pedal = 1.0 + Eje_y * 4.76;
+		voltaje_pedal = 1.0 + abs(Eje_y) * 4.76;
 
-		if (voltaje_pedal < 1)
+		if (Eje_y<0)
 		{
-			voltaje_pedal = 1;
+			GPIO7 = true;
+		}
+		else
+		{
+			GPIO7 = false;
 		}
 
 		msg_f.data = voltaje_pedal;
@@ -256,11 +260,10 @@ bool CSteerControllerLowLevel::iterate()
 		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
 		// Bool
 		
-		b1 = GPIO7;
 		msg_b.data = GPIO7;
 		m_pub_rev_relay.publish(msg_b);
 
-		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
+		ROS_INFO("Rev Relay = %s", GPIO7 ? "true":"false");
 	/* Actualizacion de valores*/
 	m_R_steer[1] = m_R_steer[0];
 	m_R_steer_f[1] = m_R_steer_f[0];
