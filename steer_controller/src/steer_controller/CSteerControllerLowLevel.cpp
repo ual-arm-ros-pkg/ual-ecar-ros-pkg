@@ -23,8 +23,6 @@ bool Status_mode;
 bool GPIO7 = false;
 int dep = 0;
 int lim = 0;
-bool red = true;
-double ang_inicial = 0;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -55,7 +53,7 @@ bool CSteerControllerLowLevel::initialize()
 	// Inicialization
 	{
 		std_msgs::Bool b;
-		b.data = true;
+		b.data = false;
 		m_pub_rev_relay.publish(b);
 		m_pub_rev_steering.publish(b);
 	}
@@ -78,10 +76,9 @@ bool CSteerControllerLowLevel::initialize()
 
 bool CSteerControllerLowLevel::iterate()
 {
-	int pwm_steering;
-	double voltaje_pedal,rpm;
-	bool b2,b3;
-	int max_p = 40;		// Valor máximo que puede alcanzar la dirección
+	double voltaje_pedal,rpm,ang_inicial;
+	bool b2,b3,red;
+	int max_p = 50;		// Valor máximo que puede alcanzar la dirección
 
 	// Lectura del modo de control
 	bool ok = Status_mode;
@@ -90,24 +87,27 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::Float64 msg_f;
 	std_msgs::Bool msg_b;
 
-	//Calibracion inicial de la posicion del encoder relativo.
-	if (red)
-	{
-		double ang_inicial = m_Encoder_Abs[0];
-		double aux = m_Encoder[0];
-		red = false;
-	}
-	m_Encoder[0] = m_Encoder[0] - aux + ang_inicial;
-
 	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
-	if (abs(m_Encoder[0]-m_Encoder_Abs[0])>2)
+	if (abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
 	{
 		red = true;
 		ROS_INFO("WARNING: La diferencia entre encoders es mayor de 2 grados. Se produce recalibracion");
 	}
+
+	//Calibracion inicial de la posicion del encoder relativo.
+	ROS_INFO("RED = %s", red ? "true":"false");
+	if (red)
+	{
+		ang_inicial = m_Encoder_Abs[0];
+		red = false;
+	}
+	m_Encoder[0] = m_Encoder[0] - m_Encoder[1] + ang_inicial;
+	ROS_INFO("Encoder: %f ", m_Encoder[0]);
+	ROS_INFO("Encoder Abs: %f ", m_Encoder_Abs[0]);
+	
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
 	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
-	m_ys[0] = m_ys[1] * 0.1709 - 0.0775 * m_us[1+3];
+	m_ys[0] = m_ys[1] * 0.1709 - 0.0939 * m_us[0];
 
 	// If para la division de los modos de control
 	// --------------------------------------------
@@ -122,23 +122,34 @@ bool CSteerControllerLowLevel::iterate()
 		}
 
 		// PWM
-		pwm_steering = (int)(Eje_x * 254);
-		m_us[0] = pwm_steering;
-		if (pwm_steering < 0)
+		m_us[0] = (int)(Eje_x * 254);
+		/*	Protección que detecta que el encoder está en el límite y solo permite girar en el sentido contrario*/
+		if (abs(m_Encoder[0]) >= max_p)
+			lim = 1;
+		if (abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
+			lim = 0;
+		if (lim ==1)
 		{
-			pwm_steering = - pwm_steering;
+			ROS_INFO("El mecanismo se encuentra próximo al extremo");
+			if(m_Encoder[0] > 0 && m_us[0] > 0)
+				m_us[0] = 0;
+			if(m_Encoder[0] < 0 && m_us[0] < 0)
+				m_us[0] = 0;
+		}
+		if (m_us[0] < 0)
+		{
+			m_us[0] = - m_us[0];
 			msg_b.data = false;
 		}
 		else
 		{
 			msg_b.data = true;
 		}
-		msg_ui.data = pwm_steering;
+		msg_ui.data = m_us[0];
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
 		ROS_INFO("PWM: %i ", msg_ui.data);
-		ROS_INFO("Encoder: %f ", m_Encoder[0]);
 	}
 
 	// Modo automatico
@@ -155,8 +166,8 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		m_R_steer[0]	= (double)(Eje_x * 40);		//Implemenctación para la referencia sin filtro
-	//	m_R_steer_f[0]	= (double)(Eje_x * 40);		// Implementación para la referencia con filtro
+		m_R_steer[0]	= (double)(Eje_x * 50);		//Implemenctación para la referencia sin filtro
+	//	m_R_steer_f[0]	= (double)(Eje_x * 50);		// Implementación para la referencia con filtro
 	/*	Filtro en la referencia para disminuir la sobreoscilación en la señal de salida */
 	//	m_R_steer[0] = 0.9649 * m_R_steer[1] + 0.0351 * m_R_steer_f[0];
 
@@ -172,23 +183,22 @@ bool CSteerControllerLowLevel::iterate()
 		m_R_steer[0] = - m_R_steer[0];
 
 		ROS_INFO("Referencia: %f ", m_R_steer[0]);
-		ROS_INFO("Encoder: %f ", m_Encoder[0]);
 
 	/*	Calculo del error al restar la restar el encoder a la referencia de posicion */
 		m_ep[0] = m_R_steer[0] - m_Encoder[0];
 
 	/*	Controlador lazo externo */
-		m_up[0] = m_up[1] + 11.1420 * m_ep[0] - 19.9691 * m_ep[1] - 8.8889 * m_ep[2];
+		m_up[0] = m_up[1] + 11.1420 * m_ep[0] - 19.9691 * m_ep[1] + 8.8889 * m_ep[2];
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
-		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);*/
+		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);
 
 	/*	Introduccion de la ecuacion del controlador */
-		m_us[0] = (int)(m_us[1] - 2.8261 * m_es[0] - 0.1750 * m_es[1]);
+		m_us[0] = (int)(m_us[1] - 2.3522 * m_es[0] - 0.1420 * m_es[1]);
 
 		int m_v= m_us[0] + m_u[1]; // Variable para el mecanismo antiwindup
 
-	/*	Protección que detecta que el encoder está en el límite y solo permite girar en el sentido contrario*/
+	/*	Protección que detecta que el encoder esta en el limite y solo permite girar en el sentido contrario*/
 		if (abs(m_Encoder[0]) >= max_p)
 		lim = 1;
 		if (abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
@@ -212,7 +222,7 @@ bool CSteerControllerLowLevel::iterate()
 			m_us[0] = -254;
 		}
 		
-	/*	Mecanismo Anti-windup para protección*/
+	/*	Mecanismo Anti-windup para proteccion*/
 		if(m_us[0] - m_v != 0)
 		{
 			ROS_INFO("Activacion del mecanismo anti-windup");
@@ -244,7 +254,7 @@ bool CSteerControllerLowLevel::iterate()
 		+-----------------------+
 	*/
 		voltaje_pedal = 1.0 + abs(Eje_y) * 4.76;
-
+/*
 		if (Eje_y<0)
 		{
 			GPIO7 = true;
@@ -253,10 +263,10 @@ bool CSteerControllerLowLevel::iterate()
 		{
 			GPIO7 = false;
 		}
-
+*/
 		msg_f.data = voltaje_pedal;
 		m_pub_voltage_pedal.publish(msg_f);
-
+/*
 		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
 		// Bool
 		
@@ -319,9 +329,10 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = - (msg->encoder_values[0]) / 1824.9;
+	m_Encoder[0] = - (msg->encoder_values[0]) / ((500 * 100 * 3.3)/109.0909); //(ppv * reductor * nºvueltas)/ang_max ==(500ppv * 100:1 * 3.3v)/109.0909º
+//	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
 {
-	m_Encoder_Abs[0] = - (msg->encoder_value) * 360 / 1024;
+	m_Encoder_Abs[0] = - (msg->encoder_value) * 360 / (1024*3.3);
 }
