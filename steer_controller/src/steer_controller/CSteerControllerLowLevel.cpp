@@ -95,7 +95,6 @@ bool CSteerControllerLowLevel::iterate()
 	}
 
 	//Calibracion inicial de la posicion del encoder relativo.
-	ROS_INFO("RED = %s", red ? "true":"false");
 	if (red)
 	{
 		ang_inicial = m_Encoder_Abs[0];
@@ -130,7 +129,7 @@ bool CSteerControllerLowLevel::iterate()
 			lim = 0;
 		if (lim ==1)
 		{
-			ROS_INFO("El mecanismo se encuentra próximo al extremo");
+			ROS_INFO("El mecanismo se encuentra proximo al extremo");
 			if(m_Encoder[0] > 0 && m_us[0] > 0)
 				m_us[0] = 0;
 			if(m_Encoder[0] < 0 && m_us[0] < 0)
@@ -334,5 +333,5 @@ void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReadin
 }
 void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
 {
-	m_Encoder_Abs[0] = - (msg->encoder_value) * 360 / (1024*3.3);
+	m_Encoder_Abs[0] = - (msg->encoder_value - 303 - 512) * 360 / (1024*3.3); // 303 = Offset // 512 = Centro
 }
