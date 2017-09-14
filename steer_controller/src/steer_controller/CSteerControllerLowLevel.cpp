@@ -23,7 +23,10 @@ bool Status_mode;
 bool GPIO7 = false;
 int dep = 0;
 int lim = 0;
-
+double aux = 0;
+double ang_inicial = 0;
+double m_enc_inc = 0;
+bool red = true;
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
 	m_nh_params("~")
@@ -76,8 +79,8 @@ bool CSteerControllerLowLevel::initialize()
 
 bool CSteerControllerLowLevel::iterate()
 {
-	double voltaje_pedal,rpm,ang_inicial;
-	bool b2,b3,red;
+	double voltaje_pedal,rpm;
+	bool b2,b3;
 	int max_p = 50;		// Valor máximo que puede alcanzar la dirección
 
 	// Lectura del modo de control
@@ -87,6 +90,18 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::Float64 msg_f;
 	std_msgs::Bool msg_b;
 
+	//Calibracion inicial de la posicion del encoder relativo.
+	if (red)
+	{
+		ang_inicial = m_Encoder_Abs[0];
+		aux = m_enc_inc;
+		red = false;
+	}
+	m_Encoder[0] = m_enc_inc - aux + ang_inicial;
+	ROS_INFO("Encoder Inc: %f ", m_enc_inc);
+	ROS_INFO("Encoder: %f ", m_Encoder[0]);
+	ROS_INFO("Encoder Abs: %f ", m_Encoder_Abs[0]);
+
 	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
 	if (abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
 	{
@@ -94,16 +109,6 @@ bool CSteerControllerLowLevel::iterate()
 		ROS_INFO("WARNING: La diferencia entre encoders es mayor de 2 grados. Se produce recalibracion");
 	}
 
-	//Calibracion inicial de la posicion del encoder relativo.
-	if (red)
-	{
-		ang_inicial = m_Encoder_Abs[0];
-		red = false;
-	}
-	m_Encoder[0] = m_Encoder[0] - m_Encoder[1] + ang_inicial;
-	ROS_INFO("Encoder: %f ", m_Encoder[0]);
-	ROS_INFO("Encoder Abs: %f ", m_Encoder_Abs[0]);
-	
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
 	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
 	m_ys[0] = m_ys[1] * 0.1709 - 0.0939 * m_us[0];
@@ -220,7 +225,7 @@ bool CSteerControllerLowLevel::iterate()
 		{
 			m_us[0] = -254;
 		}
-		
+
 	/*	Mecanismo Anti-windup para proteccion*/
 		if(m_us[0] - m_v != 0)
 		{
@@ -234,7 +239,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_u[0] = int(0.5 * (2 * m_u[1] + 0.05 * (m_antiwindup[0] + m_antiwindup[1])));
 
 		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
-	
+
 	/*	Envio de datos a los parametros correspondientes de ROS*/
 		if (m_us[0] < 0)
 			msg_b.data = false;
@@ -328,7 +333,7 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = - (msg->encoder_values[0]) / ((500 * 100 * 3.3)/109.0909); //(ppv * reductor * nºvueltas)/ang_max ==(500ppv * 100:1 * 3.3v)/109.0909º
+	m_enc_inc = - (msg->encoder_values[0]) / ((500 * 100 * 3.3)/109.0909); //(ppv * reductor * nºvueltas)/ang_max ==(500ppv * 100:1 * 3.3v)/109.0909º
 //	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
