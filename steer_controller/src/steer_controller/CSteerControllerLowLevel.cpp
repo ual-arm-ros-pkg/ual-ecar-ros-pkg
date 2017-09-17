@@ -17,16 +17,21 @@ using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
 
-float Eje_x = 0;
-float Eje_y = 0;
-bool Status_mode;
-bool GPIO7 = false;
-int dep = 0;
-int lim = 0;
-double aux = 0;
-double ang_inicial = 0;
-double m_enc_inc = 0;
-bool red = true;
+/*Comentar funciones*/
+float Eje_x = 0;		/*Variable para la lectura del joystick derecho del mando*/
+float Eje_y = 0;		/*Variable para la lectura del joystick izquierdo del mando*/
+bool Status_mode;		/*Variable para la comprobacion del modo de control*/
+bool GPIO7 = false;		/*Variable asosciada al rele de la marcha del vehículo*/
+int dep = 0;			/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
+int lim = 0;			/*Variable auxiliar indicadora si el mecanismo se encuentra proximo al extremo y evitar que continue avanzando*/
+double aux = 0;			/*Variable auxiliar indicadora de la posicion del encoder incremental en el momento de la recalibracion*/
+double ang_inicial = 0;	/*Variable auxiliar indicadora de la posicion del encoder absoluto en el momento de la recalibracion*/
+double m_enc_inc = 0;	/*Valor actual del encoder incremental*/
+bool red = true;		/*Variable auxiliar indicadora si es necesaria la recalibracion*/
+
+double pos_ant = 0;		/*Valor de la posicion en la iteracion anterior del encoder absoluto*/
+bool paso = false;		/*Variable auxiliar indicadora de si el encoder absoluto ha pasado del valor 1024*/
+
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
 	m_nh_params("~")
@@ -81,7 +86,7 @@ bool CSteerControllerLowLevel::iterate()
 {
 	double voltaje_pedal,rpm;
 	bool b2,b3;
-	int max_p = 50;		// Valor máximo que puede alcanzar la dirección
+	int max_p = 50;		// Valor maximo que puede alcanzar la direccion
 
 	// Lectura del modo de control
 	bool ok = Status_mode;
@@ -337,6 +342,30 @@ void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReadin
 //	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
+
+	double enc_pos = (msg->encoder_value);				/*Lectura del encoder incremental*/
+	double encoder_value;								/*Definicion del valor final asociado al encoder*/
+
+	if(pos_ant == 0 && enc_pos < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
+	{
+		paso = true;
+	}
+
+	if(enc_pos - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
+	{													/* se produce un salto durante la operacion desde 1024 a 0*/
+		encoder_value = enc_pos - 303 + 1024;			/*Correccion del valor del encoder y del offset*/
+		paso = true;									/*Variable que indica que el encoder opera en posiciones superiores a 1024*/
+		if(enc_pos + 1024 > 1536)						
+		{
+			paso = false;
+		}
+	}
+	if(paso == false)
+	{
+		encoder_value = enc_pos - 303;
+	}
+
+	pos_ant = data.enc_pos;
 {
-	m_Encoder_Abs[0] = - (msg->encoder_value - 303 - 512) * 360 / (1024*3.3); // 303 = Offset // 512 = Centro
+	m_Encoder_Abs[0] = encoder_value * 360 / (1024*3.3);// 303 = Offset // 512 = Centro
 }
