@@ -342,7 +342,7 @@ void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReadin
 //	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
-
+{
 	double enc_pos = (msg->encoder_value);				/*Lectura del encoder incremental*/
 	double encoder_value;								/*Definicion del valor final asociado al encoder*/
 
@@ -365,7 +365,7 @@ void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsR
 		encoder_value = enc_pos - 303;
 	}
 
-	pos_ant = data.enc_pos;
-{
+	pos_ant = enc_pos;
+
 	m_Encoder_Abs[0] = encoder_value * 360 / (1024*3.3);// 303 = Offset // 512 = Centro
 }
