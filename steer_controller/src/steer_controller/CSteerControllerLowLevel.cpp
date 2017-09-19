@@ -31,6 +31,7 @@ bool red = true;		/*Variable auxiliar indicadora si es necesaria la recalibracio
 
 double pos_ant = 0;		/*Valor de la posicion en la iteracion anterior del encoder absoluto*/
 bool paso = false;		/*Variable auxiliar indicadora de si el encoder absoluto ha pasado del valor 1024*/
+double m_Encoder_Absoluto;
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -84,7 +85,7 @@ bool CSteerControllerLowLevel::initialize()
 
 bool CSteerControllerLowLevel::iterate()
 {
-	double voltaje_pedal,rpm;
+	double voltaje_pedal,rpm,encoder_value;
 	bool b2,b3;
 	int max_p = 50;		// Valor maximo que puede alcanzar la direccion
 
@@ -95,6 +96,28 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::Float64 msg_f;
 	std_msgs::Bool msg_b;
 
+	//Calibracion encoder Absoluto
+		if(pos_ant == 0 && enc_pos < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
+		{
+			paso = true;
+		}
+
+		if(enc_pos - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
+		{													/* se produce un salto durante la operacion desde 1024 a 0*/
+			encoder_value = m_Encoder_Absoluto - 303 + 1024;			/*Correccion del valor del encoder y del offset*/
+			paso = true;									/*Variable que indica que el encoder opera en posiciones superiores a 1024*/
+			if(m_Encoder_Absoluto + 1024 > 1400)
+			{
+				paso = false;
+			}
+		}
+		if(paso == false)
+		{
+			encoder_value = m_Encoder_Absoluto - 303;
+		}
+		pos_ant = m_Encoder_Absoluto;
+
+		m_Encoder_Abs[0] = - (encoder_value - 512) * 360 / (1024*3.3);// 303 = Offset // 512 = Centro
 	//Calibracion inicial de la posicion del encoder relativo.
 	if (red)
 	{
@@ -343,29 +366,6 @@ void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReadin
 }
 void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
 {
-	double enc_pos = (msg->encoder_value);				/*Lectura del encoder incremental*/
-	double encoder_value;								/*Definicion del valor final asociado al encoder*/
+	m_Encoder_Absoluto = (msg->encoder_value);
 
-	if(pos_ant == 0 && enc_pos < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
-	{
-		paso = true;
-	}
-
-	if(enc_pos - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
-	{													/* se produce un salto durante la operacion desde 1024 a 0*/
-		encoder_value = enc_pos - 303 + 1024;			/*Correccion del valor del encoder y del offset*/
-		paso = true;									/*Variable que indica que el encoder opera en posiciones superiores a 1024*/
-		if(enc_pos + 1024 > 1536)						
-		{
-			paso = false;
-		}
-	}
-	if(paso == false)
-	{
-		encoder_value = enc_pos - 303;
-	}
-
-	pos_ant = enc_pos;
-
-	m_Encoder_Abs[0] = encoder_value * 360 / (1024*3.3);// 303 = Offset // 512 = Centro
 }
