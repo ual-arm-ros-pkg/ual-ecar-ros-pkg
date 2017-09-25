@@ -17,21 +17,31 @@ using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
 
-/*Comentar funciones*/
-float Eje_x = 0;		/*Variable para la lectura del joystick derecho del mando*/
-float Eje_y = 0;		/*Variable para la lectura del joystick izquierdo del mando*/
-bool Status_mode;		/*Variable para la comprobacion del modo de control*/
-bool GPIO7 = false;		/*Variable asosciada al rele de la marcha del vehículo*/
-int dep = 0;			/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
-int lim = 0;			/*Variable auxiliar indicadora si el mecanismo se encuentra proximo al extremo y evitar que continue avanzando*/
-double aux = 0;			/*Variable auxiliar indicadora de la posicion del encoder incremental en el momento de la recalibracion*/
-double ang_inicial = 0;	/*Variable auxiliar indicadora de la posicion del encoder absoluto en el momento de la recalibracion*/
-double m_enc_inc = 0;	/*Valor actual del encoder incremental*/
-bool red = true;		/*Variable auxiliar indicadora si es necesaria la recalibracion*/
+/* +------------------------+
+   |		VARIABLES		|
+   +------------------------+*/
 
-double pos_ant = 0;		/*Valor de la posicion en la iteracion anterior del encoder absoluto*/
-bool paso = false;		/*Variable auxiliar indicadora de si el encoder absoluto ha pasado del valor 1024*/
+/*AUXILIARES*/
+float Eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
+float Eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
+bool Status_mode;			/*Variable para la comprobacion del modo de control*/
+bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehículo*/
+int dep = 0;				/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
+int lim = 0;				/*Variable auxiliar indicadora si el mecanismo se encuentra proximo al extremo y evitar que continue avanzando*/
+double aux = 0;				/*Variable auxiliar indicadora de la posicion del encoder incremental en el momento de la recalibracion*/
+double ang_inicial = 0;		/*Variable auxiliar indicadora de la posicion del encoder absoluto en el momento de la recalibracion*/
+double m_enc_inc = 0;		/*Valor actual del encoder incremental*/
+bool red = true;			/*Variable auxiliar indicadora si es necesaria la recalibracion*/
+
+double pos_ant = 0;			/*Valor de la posicion en la iteracion anterior del encoder absoluto*/
+bool paso = false;			/*Variable auxiliar indicadora de si el encoder absoluto ha pasado del valor 1024*/
 double m_Encoder_Absoluto;
+
+/*CONTROLADOR*/
+
+
+/*PROTECCIONES*/
+
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -90,7 +100,7 @@ bool CSteerControllerLowLevel::iterate()
 	int max_p = 50;		// Valor maximo que puede alcanzar la direccion
 
 	// Lectura del modo de control
-	bool ok = Status_mode;
+	bool Manual_Control = Status_mode;
 
 	std_msgs::UInt8 msg_ui;
 	std_msgs::Float64 msg_f;
@@ -98,23 +108,18 @@ bool CSteerControllerLowLevel::iterate()
 
 	//Calibracion encoder Absoluto
 		if(pos_ant == 0 && enc_pos < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
-		{
 			paso = true;
-		}
 
 		if(enc_pos - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
 		{													/* se produce un salto durante la operacion desde 1024 a 0*/
-			encoder_value = m_Encoder_Absoluto - 303 + 1024;			/*Correccion del valor del encoder y del offset*/
+			encoder_value = m_Encoder_Absoluto - 303 + 1024;/*Correccion del valor del encoder y del offset*/
 			paso = true;									/*Variable que indica que el encoder opera en posiciones superiores a 1024*/
 			if(m_Encoder_Absoluto + 1024 > 1400)
-			{
 				paso = false;
-			}
 		}
 		if(paso == false)
-		{
 			encoder_value = m_Encoder_Absoluto - 303;
-		}
+
 		pos_ant = m_Encoder_Absoluto;
 
 		m_Encoder_Abs[0] = - (encoder_value - 512) * 360 / (1024*3.3);// 303 = Offset // 512 = Centro
@@ -126,146 +131,136 @@ bool CSteerControllerLowLevel::iterate()
 		red = false;
 	}
 	m_Encoder[0] = m_enc_inc - aux + ang_inicial;
-	ROS_INFO("Encoder Inc: %f ", m_enc_inc);
+	// ROS_INFO("Encoder Inc: %f ", m_enc_inc);
 	ROS_INFO("Encoder: %f ", m_Encoder[0]);
-	ROS_INFO("Encoder Abs: %f ", m_Encoder_Abs[0]);
+	// ROS_INFO("Encoder Abs: %f ", m_Encoder_Abs[0]);
 
 	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
-	if (abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
+	if (std::abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
 	{
 		red = true;
-		ROS_INFO("WARNING: La diferencia entre encoders es mayor de 2 grados. Se produce recalibracion");
+		ROS_WARN("La diferencia entre encoders es mayor de 2 grados. Se produce recalibracion");
 	}
 
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
 	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
-	m_ys[0] = m_ys[1] * 0.1709 - 0.0939 * m_us[0];
+	// m_ys[0] = m_ys[1] * 0.1709 - 0.0775 * m_us[1+3]; //Versión 17/7/18
+	m_ys[0] = m_ys[1] * 0.1709 - 0.0939 * m_us[1+3];// Versión 17/9/25
 
 	// If para la division de los modos de control
 	// --------------------------------------------
 
 	// Modo manual
-	if (ok)
-	{	// Este if es para que solo se muestre el mensaje la primera vez que entra en el controlador
-		if (dep == 0)
-		{
-			ROS_INFO("Controlador eCAR en modo manual");
-			dep = 1;
-		}
+	if (Manual_Control)
+	{
+			ROS_INFO_THROTTLE(1.0,"Controlador eCAR en modo manual"); /*Sustituir por ROS_THROTTLE_INFO???*/
 
 		// PWM
-		m_us[0] = (int)(Eje_x * 254);
+		m_us[0] = round(Eje_x * 254);
 		/*	Protección que detecta que el encoder está en el límite y solo permite girar en el sentido contrario*/
-		if (abs(m_Encoder[0]) >= max_p)
+		if (std::abs(m_Encoder[0]) >= max_p)
 			lim = 1;
-		if (abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
+		if (std::abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
 			lim = 0;
-		if (lim ==1)
+		if (lim == 1)
 		{
-			ROS_INFO("El mecanismo se encuentra proximo al extremo");
+			ROS_WARN("El mecanismo se encuentra proximo al extremo");
 			if(m_Encoder[0] > 0 && m_us[0] > 0)
 				m_us[0] = 0;
 			if(m_Encoder[0] < 0 && m_us[0] < 0)
 				m_us[0] = 0;
 		}
+
 		if (m_us[0] < 0)
-		{
-			m_us[0] = - m_us[0];
 			msg_b.data = false;
-		}
 		else
-		{
 			msg_b.data = true;
-		}
-		msg_ui.data = m_us[0];
+
+		msg_ui.data = abs(m_us[0]);
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
-		ROS_INFO("PWM: %i ", msg_ui.data);
+		ROS_INFO_COND_NAMED( m_us[0] !=  m_us[1], " test only " , "PWM: %i ", m_us[0]);
 	}
 
 	// Modo automatico
 	else
-	{	// Este if es para que solo se muestre el mensaje la primera vez que entra en el controlador
-		if (dep == 1)
-		{
-			ROS_INFO("Controlador eCAR en modo automatico");
-			dep = 0;
-		}
+	{
+		ROS_INFO_THROTTLE(1.0,"Controlador eCAR en modo automatico"); /*Sustituir por ROS_THROTTLE_INFO(1.0,"")???*/
 
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
-		+-------------------+ 
-	*/
+		+-------------------+ */
+
 	/*	Lectura de la referencia de posicion */
 		m_R_steer[0]	= (double)(Eje_x * 50);		//Implemenctación para la referencia sin filtro
 	//	m_R_steer_f[0]	= (double)(Eje_x * 50);		// Implementación para la referencia con filtro
 	/*	Filtro en la referencia para disminuir la sobreoscilación en la señal de salida */
 	//	m_R_steer[0] = 0.9649 * m_R_steer[1] + 0.0351 * m_R_steer_f[0];
 
-	/*	Saturación de la referencia para protección contra sobrecorrientes*/
-	/*	double sat_ref = 10;
+	/*	Saturación de la referencia para protección contra sobrecorrientes*/ //Versión 17/7/18
+		double sat_ref = 4.55;
 		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
 		if (pendiente >= sat_ref)
-		{
-			m_R_steer[0] = (m_R_steer[1] + sat_ref);
-		}
-	*/
+			m_R_steer[0] = - (m_R_steer[1] + sat_ref);
+
 	/*	Corrección del sentido de las ruedas*/
-		m_R_steer[0] = - m_R_steer[0];
+//		m_R_steer[0] = - m_R_steer[0];
 
 		ROS_INFO("Referencia: %f ", m_R_steer[0]);
 
-	/*	Calculo del error al restar la restar el encoder a la referencia de posicion */
+	/*	Calculo del error al restar el encoder a la referencia de posicion */
 		m_ep[0] = m_R_steer[0] - m_Encoder[0];
 
 	/*	Controlador lazo externo */
-		m_up[0] = m_up[1] + 11.1420 * m_ep[0] - 19.9691 * m_ep[1] + 8.8889 * m_ep[2];
+		m_up[0] = m_up[1] + 1.8903 * m_ep[0] - 1.8240 * m_ep[1]; //Versión 17/7/18
+		//m_up[0] = m_up[1] + 11.1420 * m_ep[0] - 19.9691 * m_ep[1] - 8.8889 * m_ep[2];  // Versión 17/9/25
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
-		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);
+		m_es[0] = m_up[0] - m_ys[0]; // - (rpm - m_ys[3]);
 
 	/*	Introduccion de la ecuacion del controlador */
-		m_us[0] = (int)(m_us[1] - 2.3522 * m_es[0] - 0.1420 * m_es[1]);
+		m_us[0] = round(m_us[1] - 2.85 * m_es[0] - 0.1765 * m_es[1]);//Versión 17/7/18
+		//m_us[0] = round(m_us[1] - 2.3522 * m_es[0] - 0.1420 * m_es[1]);// Versión 17/9/25
 
-		int m_v= m_us[0] + m_u[1]; // Variable para el mecanismo antiwindup
+		int m_v= m_us[0]; // Variable para el mecanismo antiwindup // Versión 17/9/25
 
 	/*	Protección que detecta que el encoder esta en el limite y solo permite girar en el sentido contrario*/
-		if (abs(m_Encoder[0]) >= max_p)
+		if (std::abs(m_Encoder[0]) >= max_p)
 		lim = 1;
-		if (abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
+		if (std::abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
 		lim = 0;
 		if (lim ==1)
 		{
-			ROS_INFO("El mecanismo se encuentra próximo al extremo, reduzca la referencia");
+			ROS_WARN("El mecanismo se encuentra próximo al extremo, reduzca la referencia");
 			if(m_Encoder[0] > 0 && m_us[0] > 0)
 				m_us[0] = 0;
 			if(m_Encoder[0] < 0 && m_us[0] < 0)
 				m_us[0] = 0;
 		}
-
+		ROS_INFO("Señal de control: %f ", m_us[0]);
 	/*	Implementar saturacion */
 		if (m_us[0] > 254)
 		{
+			ROS_WARN("Saturacion superior");
 			m_us[0] = 254;
 		}
 		if (m_us[0] < -254)
 		{
+			ROS_WARN("Saturacion inferior");
 			m_us[0] = -254;
 		}
-
 	/*	Mecanismo Anti-windup para proteccion*/
 		if(m_us[0] - m_v != 0)
 		{
-			ROS_INFO("Activacion del mecanismo anti-windup");
+			ROS_WARN("Activacion del mecanismo anti-windup");
 			m_antiwindup[0] = (m_us[0] - m_v) / sqrt(0.0283);
 		}
 		else
-		{
 			m_antiwindup[0] = 0;
-		}
-		m_u[0] = int(0.5 * (2 * m_u[1] + 0.05 * (m_antiwindup[0] + m_antiwindup[1])));
 
+		m_u[0] = round(0.5 * (2 * m_u[1] + 0.05 * (m_antiwindup[0] + m_antiwindup[1])));
+		ROS_INFO("Señal de control + Antiwindup: %f ", m_u[0]);
 		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
 
 	/*	Envio de datos a los parametros correspondientes de ROS*/
@@ -285,7 +280,7 @@ bool CSteerControllerLowLevel::iterate()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
-		voltaje_pedal = 1.0 + abs(Eje_y) * 4.76;
+		voltaje_pedal = 1.0 + std::abs(Eje_y) * 4.76;
 /*
 		if (Eje_y<0)
 		{
@@ -306,6 +301,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_rev_relay.publish(msg_b);
 
 		ROS_INFO("Rev Relay = %s", GPIO7 ? "true":"false");
+
 	/* Actualizacion de valores*/
 	m_R_steer[1] = m_R_steer[0];
 	m_R_steer_f[1] = m_R_steer_f[0];
