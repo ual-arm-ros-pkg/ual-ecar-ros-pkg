@@ -107,10 +107,10 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::Bool msg_b;
 
 	//Calibracion encoder Absoluto
-		if(pos_ant == 0 && enc_pos < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
+		if(pos_ant == 0 && m_Encoder_Absoluto < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
 			paso = true;
 
-		if(enc_pos - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
+		if(m_Encoder_Absoluto - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
 		{													/* se produce un salto durante la operacion desde 1024 a 0*/
 			encoder_value = m_Encoder_Absoluto - 303 + 1024;/*Correccion del valor del encoder y del offset*/
 			paso = true;									/*Variable que indica que el encoder opera en posiciones superiores a 1024*/
@@ -132,7 +132,7 @@ bool CSteerControllerLowLevel::iterate()
 	}
 	m_Encoder[0] = m_enc_inc - aux + ang_inicial;
 	// ROS_INFO("Encoder Inc: %f ", m_enc_inc);
-	ROS_INFO("Encoder: %f ", m_Encoder[0]);
+	ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder: %f ", m_Encoder[0]);
 	// ROS_INFO("Encoder Abs: %f ", m_Encoder_Abs[0]);
 
 	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
@@ -153,7 +153,7 @@ bool CSteerControllerLowLevel::iterate()
 	// Modo manual
 	if (Manual_Control)
 	{
-			ROS_INFO_THROTTLE(1.0,"Controlador eCAR en modo manual"); /*Sustituir por ROS_THROTTLE_INFO???*/
+			ROS_INFO_ONCE("Controlador eCAR en modo manual"); /*Sustituir por ROS_THROTTLE_INFO???*/
 
 		// PWM
 		m_us[0] = round(Eje_x * 254);
@@ -186,7 +186,7 @@ bool CSteerControllerLowLevel::iterate()
 	// Modo automatico
 	else
 	{
-		ROS_INFO_THROTTLE(1.0,"Controlador eCAR en modo automatico"); /*Sustituir por ROS_THROTTLE_INFO(1.0,"")???*/
+		ROS_INFO_ONCE("Controlador eCAR en modo automatico");
 
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
@@ -202,10 +202,10 @@ bool CSteerControllerLowLevel::iterate()
 		double sat_ref = 4.55;
 		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
 		if (pendiente >= sat_ref)
-			m_R_steer[0] = - (m_R_steer[1] + sat_ref);
+			m_R_steer[0] = (m_R_steer[1] + sat_ref);
 
 	/*	Corrección del sentido de las ruedas*/
-//		m_R_steer[0] = - m_R_steer[0];
+		m_R_steer[0] = - m_R_steer[0];
 
 		ROS_INFO("Referencia: %f ", m_R_steer[0]);
 
@@ -213,14 +213,14 @@ bool CSteerControllerLowLevel::iterate()
 		m_ep[0] = m_R_steer[0] - m_Encoder[0];
 
 	/*	Controlador lazo externo */
-		m_up[0] = m_up[1] + 1.8903 * m_ep[0] - 1.8240 * m_ep[1]; //Versión 17/7/18
+		m_up[0] = m_up[1] + 2.9082 * m_ep[0] - 1.8240 * m_ep[1]; //Versión 17/7/18
 		//m_up[0] = m_up[1] + 11.1420 * m_ep[0] - 19.9691 * m_ep[1] - 8.8889 * m_ep[2];  // Versión 17/9/25
 
 	/*	Calcular el error del segundo lazo restando el valor de la velocidad determinada en la iteracion anterior */
 		m_es[0] = m_up[0] - m_ys[0]; // - (rpm - m_ys[3]);
 
 	/*	Introduccion de la ecuacion del controlador */
-		m_us[0] = round(m_us[1] - 2.85 * m_es[0] - 0.1765 * m_es[1]);//Versión 17/7/18
+		m_us[0] = round(m_us[1] - 2.8261 * m_es[0] - 0.1750 * m_es[1]);//Versión 17/7/18
 		//m_us[0] = round(m_us[1] - 2.3522 * m_es[0] - 0.1420 * m_es[1]);// Versión 17/9/25
 
 		int m_v= m_us[0]; // Variable para el mecanismo antiwindup // Versión 17/9/25
@@ -238,7 +238,7 @@ bool CSteerControllerLowLevel::iterate()
 			if(m_Encoder[0] < 0 && m_us[0] < 0)
 				m_us[0] = 0;
 		}
-		ROS_INFO("Señal de control: %f ", m_us[0]);
+		ROS_INFO("Señal de control: %i ", m_us[0]);
 	/*	Implementar saturacion */
 		if (m_us[0] > 254)
 		{
@@ -260,7 +260,7 @@ bool CSteerControllerLowLevel::iterate()
 			m_antiwindup[0] = 0;
 
 		m_u[0] = round(0.5 * (2 * m_u[1] + 0.05 * (m_antiwindup[0] + m_antiwindup[1])));
-		ROS_INFO("Señal de control + Antiwindup: %f ", m_u[0]);
+		ROS_INFO("Señal de control + Antiwindup: %i ", m_u[0]);
 		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
 
 	/*	Envio de datos a los parametros correspondientes de ROS*/
