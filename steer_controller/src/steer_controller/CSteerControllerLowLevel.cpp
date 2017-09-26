@@ -25,7 +25,7 @@ using namespace mrpt::utils;
 float Eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
 float Eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
 bool Status_mode;			/*Variable para la comprobacion del modo de control*/
-bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehï¿½culo*/
+bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehículo*/
 int dep = 0;				/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
 double m_Encoder_Absoluto;	/*Variable para la lectura del encoder absoluto*/
 
@@ -289,6 +289,7 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
+	m_Encoder[0] = (msg->encoder_values[0]) / 1824.9; //( ppv * reductor * n vueltas ) / ang_max == ( 500ppv * 100:1 * 3.39v ) / 93
 	//	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 
