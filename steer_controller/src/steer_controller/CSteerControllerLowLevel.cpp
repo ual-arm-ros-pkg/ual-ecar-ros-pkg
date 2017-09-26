@@ -5,7 +5,7 @@
    +---------------------------------------------------------------------------+ */
 
 #include <steer_controller/CSteerControllerLowLevel.h>
-#include <mrpt/system/threads.h> // for sleep()
+#include <thread>
 #include <ros/console.h>
 #include <steer_controller/SteerControllerStatus.h>
 #include <functional>
@@ -17,11 +17,17 @@ using namespace std;
 using namespace mrpt;
 using namespace mrpt::utils;
 
-float Eje_x = 0;
-float Eje_y = 0;
-bool Status_mode;
-bool GPIO7 = false;
-int dep = 0;
+/* +------------------------+
+   |		VARIABLES		|
+   +------------------------+*/
+
+/*AUXILIARES*/
+float Eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
+float Eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
+bool Status_mode;			/*Variable para la comprobacion del modo de control*/
+bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehï¿½culo*/
+int dep = 0;				/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
+double m_Encoder_Absoluto;	/*Variable para la lectura del encoder absoluto*/
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -47,6 +53,7 @@ bool CSteerControllerLowLevel::initialize()
 	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &CSteerControllerLowLevel::ejeyCallback, this);
 	m_sub_rev_relay		= m_nh.subscribe("arduino_daq_GPIO_output7",10, &CSteerControllerLowLevel::GPIO7Callback, this);
 	m_sub_encoder		= m_nh.subscribe("arduino_daq_encoders", 10, &CSteerControllerLowLevel::encoderCallback, this);
+	m_sub_encoder_abs	= m_nh.subscribe("arduino_daq_abs_encoder", 10, &CSteerControllerLowLevel::encoderAbsCallback, this);
 
 	// Inicialization
 	{
@@ -155,7 +162,7 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		double m_R_steer = (double)(Eje_x * 35);
+		double m_R_steer = (double)(- Eje_x * 35);
 		ROS_INFO("Referencia: %f ", m_R_steer);
 
 	/*	Determinar el Predictor de Smith de la posición.*/
@@ -207,7 +214,7 @@ bool CSteerControllerLowLevel::iterate()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
-		voltaje_pedal = 1.0 + Eje_y * 4.76;
+		voltaje_pedal = 1.0 + std::abs(Eje_y) * 4.76;
 
 		if (voltaje_pedal < 1)
 		{
@@ -228,6 +235,10 @@ bool CSteerControllerLowLevel::iterate()
 
 	}
 	/* Actualizacion de valores*/
+	m_R_steer[1] = m_R_steer[0];
+	//m_R_steer_f[1] = m_R_steer_f[0];
+	//m_u[1] = m_u[0];
+	//m_antiwindup[1] = m_antiwindup[0];
 	for (int i=2;i>=1;i--)
 	{
 		m_yp[i] = m_yp[i-1];
@@ -278,6 +289,10 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = (msg->encoder_values[0]) / 1824.9;
-	// m_Enc_motor[0] = (msg->encoder_values[1]);
+	//	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
+}
+
+void CSteerControllerLowLevel::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
+{
+	m_Encoder_Absoluto = (msg->encoder_value);
 }
