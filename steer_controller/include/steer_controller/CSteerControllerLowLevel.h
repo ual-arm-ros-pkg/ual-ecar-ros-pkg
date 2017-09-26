@@ -12,7 +12,6 @@
 #include <std_msgs/UInt8.h>
 #include <mrpt/utils/COutputLogger.h>
 #include <arduino_daq/EncodersReading.h>
-#include <arduino_daq/EncoderAbsReading.h>
 #include <functional>
 
 
@@ -36,14 +35,15 @@ public:
 	m_pub_rev_steering	::	Activa el Pin DIR del pololu
 	m_pub_contr_status	::	Establece el modo de funcionamiento del controlador
 */
-	ros::Subscriber m_sub_rev_relay, m_sub_eje_x, m_sub_eje_y, m_sub_contr_status, m_sub_encoder, m_sub_encoder_abs;
+	ros::Subscriber m_sub_rev_relay, m_sub_eje_x, m_sub_eje_y, m_sub_contr_status, m_sub_encoder;
 /*	m_sub_rev_relay		::	Activa relé de marcha desde el control automático
 	m_sub_eje_x			::	Lectura de datos del joystick izq. Eje horizontal. Dirección
 	m_sub_eje_y			::	Lectura de datos del joystick izq. Eje vertical. Aceleración
 	m_sub_contr_status	::	Booleano para la determinación si se encuentra el control en modo manual o automático
-	m_sub_encoder_abs	::	Lectura del encoder absoluto
 */
 
+	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
+	  * \return false on error */
 	bool initialize();
 
 	/** called when work is to be done */
@@ -56,7 +56,6 @@ public:
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void GPIO7Callback(const std_msgs::Bool::ConstPtr& msg);
 	void encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg);
-	void encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg);
 
 	double m_ep[3] = {0,0,0};
 	double m_up[6] = {0,0,0,0,0,0};
@@ -64,11 +63,7 @@ public:
 	double m_yp[3] = {0,0,0};
 	double m_ys[4] = {0,0,0,0};
 	double m_Encoder[2] = {0,0};
-	double m_Encoder_Abs[2] = {0,0};
-	double m_R_steer_f[2] = {0,0};
-	double m_R_steer[2] = {0,0};
+	// double m_Enc_motor[2] = {0,0};
 	int m_us[5] = {0,0,0,0,0};
-	int m_u[2] = {0,0};
-	double m_antiwindup[2] = {0,0};
 
 };
