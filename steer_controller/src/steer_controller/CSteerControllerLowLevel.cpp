@@ -29,6 +29,11 @@ bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehículo*/
 int dep = 0;				/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
 double m_Encoder_Absoluto;	/*Variable para la lectura del encoder absoluto*/
 
+/*CONTROLADOR*/
+
+
+/*PROTECCIONES*/
+
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
 	m_nh_params("~")
@@ -86,7 +91,7 @@ bool CSteerControllerLowLevel::iterate()
 	bool b2,b1,b3;
 
 	// Lectura del modo de control
-	bool ok = Status_mode;
+	bool Manual_control = Status_mode;
 
 	std_msgs::UInt8 msg_ui;
 	std_msgs::Float64 msg_f;
@@ -100,52 +105,27 @@ bool CSteerControllerLowLevel::iterate()
 	// --------------------------------------------
 
 	// Modo manual
-	if (ok)
+	if (Manual_control)
 	{	// Este if es para que solo se muestre el mensaje la primera vez que entra en el controlador
 		if (dep == 0)
 		{
-			ROS_INFO("Controlador eCAR en modo manual");
+			ROS_INFO_ONCE("Controlador eCAR en modo manual");
 			dep = 1;
 		}
 
 		// PWM
-		pwm_steering = (int)(Eje_x * 254);
-		if (pwm_steering < 0)
-		{
-			pwm_steering = - pwm_steering;
+		m_us[0] = round(Eje_x * 254);
+		if (m_us[0] < 0)
 			msg_b.data = false;
-		}
 		else
-		{
 			msg_b.data = true;
-		}
-		m_us[0] = pwm_steering;
-		msg_ui.data = pwm_steering;
+
+		msg_ui.data = abs(m_us[0]);
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
-		ROS_INFO("PWM: %i ", msg_ui.data);
+		ROS_INFO_COND_NAMED( m_us[0] !=  m_us[1], " test only " , "PWM: %i ", msg_ui.data);
 
-		// DAC
-		voltaje_pedal = 1.0 + Eje_y * 4.76;
-
-		if (voltaje_pedal < 1)
-		{
-			voltaje_pedal = 1;
-		}
-
-		msg_f.data = voltaje_pedal;
-		m_pub_voltage_pedal.publish(msg_f);
-
-		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
-
-		// Bool
-
-		b1 = GPIO7;
-		msg_b.data = GPIO7;
-		m_pub_rev_relay.publish(msg_b);
-
-		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
 	}
 
 	// Modo automatico
@@ -209,7 +189,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_pwm_steering.publish(msg_ui);
 
 		ROS_INFO("PWM: %i ", msg_ui.data);
-
+	}
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
@@ -217,9 +197,8 @@ bool CSteerControllerLowLevel::iterate()
 		voltaje_pedal = 1.0 + std::abs(Eje_y) * 4.76;
 
 		if (voltaje_pedal < 1)
-		{
 			voltaje_pedal = 1;
-		}
+
 
 		msg_f.data = voltaje_pedal;
 		m_pub_voltage_pedal.publish(msg_f);
@@ -233,7 +212,6 @@ bool CSteerControllerLowLevel::iterate()
 
 		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
 
-	}
 	/* Actualizacion de valores*/
 	m_R_steer[1] = m_R_steer[0];
 	//m_R_steer_f[1] = m_R_steer_f[0];
@@ -265,31 +243,27 @@ bool CSteerControllerLowLevel::iterate()
 
 void CSteerControllerLowLevel::statusCallback(const std_msgs::Bool::ConstPtr& msg)
 {
-	//ROS_INFO("Status Mode: %s", msg->data ? "true":"false" );
 	Status_mode = msg->data;
 }
 
 void CSteerControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	//ROS_INFO("Steer_axis %.02f", msg->data );
 	Eje_x = msg->data;
 }
 
 void CSteerControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	//ROS_INFO("Voltage pedal %.02f", msg->data );
 	Eje_y = msg->data;
 }
 
 void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg)
 {
-	//ROS_INFO("Reverse throttle direcction : %s", msg->data ? "true":"false" );
 	GPIO7 = msg->data;
 }
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = (msg->encoder_values[0]) / 1824.9; //( ppv * reductor * n vueltas ) / ang_max == ( 500ppv * 100:1 * 3.39v ) / 93
+	m_Encoder[0] = (msg->encoder_values[0]) / 1824.9; //( ppv * reductor * n vueltas ) / ang_max 
 	//	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 
