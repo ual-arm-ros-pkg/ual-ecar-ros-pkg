@@ -29,10 +29,14 @@ bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehículo*/
 int dep = 0;				/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
 double m_Encoder_Absoluto;	/*Variable para la lectura del encoder absoluto*/
 
+double pos_ant = 0;			/*Valor de la posicion en la iteracion anterior del encoder absoluto*/
+bool paso = false;			/*Variable auxiliar indicadora de si el encoder absoluto ha pasado del valor 1024*/
+
 /*CONTROLADOR*/
 
 
 /*PROTECCIONES*/
+	int max_p = 50;		// Valor maximo que puede alcanzar la direccion
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -86,8 +90,7 @@ bool CSteerControllerLowLevel::initialize()
 
 bool CSteerControllerLowLevel::iterate()
 {
-	int pwm_steering;
-	double voltaje_pedal,rpm;
+	double voltaje_pedal,rpm,encoder_value;
 	bool b2,b1,b3;
 
 	// Lectura del modo de control
@@ -96,6 +99,27 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::UInt8 msg_ui;
 	std_msgs::Float64 msg_f;
 	std_msgs::Bool msg_b;
+
+	//Calibracion encoder Absoluto
+	if(pos_ant == 0 && m_Encoder_Absoluto < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
+		paso = true;
+
+	if(m_Encoder_Absoluto - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
+	{																/* se produce un salto durante la operacion desde 1024 a 0*/
+		encoder_value = m_Encoder_Absoluto - 303 + 1024;			/*Correccion del valor del encoder y del offset*/
+		paso = true;												/*Variable que indica que el encoder opera en posiciones superiores a 1024*/
+		if(m_Encoder_Absoluto + 1024 > 1500)
+		paso = false;
+	}
+	if(paso == false)
+		encoder_value = m_Encoder_Absoluto - 303;
+
+	pos_ant = m_Encoder_Absoluto;
+	// 150.6995 se corresponde a la correlación entre un paso del encoder relativo y el encoder incremental
+	// 1824.9 se corresponde con (ppv * reductor * nºvueltas)/ang_max
+	m_Encoder_Abs[0] = - (encoder_value - 512) * 150.6995 / 1824.9;// 303 = Offset // 512 = Centro
+	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
+	ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder_Inc: %f ", m_Encoder[0]);
 
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
 	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
