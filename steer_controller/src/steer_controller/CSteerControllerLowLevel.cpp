@@ -28,6 +28,11 @@ bool Status_mode;			/*Variable para la comprobacion del modo de control*/
 bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehículo*/
 int dep = 0;				/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
 double m_Encoder_Absoluto;	/*Variable para la lectura del encoder absoluto*/
+int lim = 0;				/*Variable auxiliar indicadora si el mecanismo se encuentra proximo al extremo y evitar que continue avanzando*/
+double aux = 0;				/*Variable auxiliar indicadora de la posicion del encoder incremental en el momento de la recalibracion*/
+double ang_inicial = 0;		/*Variable auxiliar indicadora de la posicion del encoder absoluto en el momento de la recalibracion*/
+double m_enc_inc = 0;		/*Valor actual del encoder incremental*/
+bool red = true;			/*Variable auxiliar indicadora si es necesaria la recalibracion*/
 
 double pos_ant = 0;			/*Valor de la posicion en la iteracion anterior del encoder absoluto*/
 bool paso = false;			/*Variable auxiliar indicadora de si el encoder absoluto ha pasado del valor 1024*/
@@ -115,11 +120,27 @@ bool CSteerControllerLowLevel::iterate()
 		encoder_value = m_Encoder_Absoluto - 303;
 
 	pos_ant = m_Encoder_Absoluto;
-	// 150.6995 se corresponde a la correlación entre un paso del encoder relativo y el encoder incremental
+	// 150.6995 se corresponde a la correlación entre un paso del encoder absoluto y el encoder incremental
 	// 1824.9 se corresponde con (ppv * reductor * nºvueltas)/ang_max
 	m_Encoder_Abs[0] = - (encoder_value - 512) * 150.6995 / 1824.9;// 303 = Offset // 512 = Centro
 	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
-	ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder_Inc: %f ", m_Encoder[0]);
+	
+	//Calibracion inicial de la posicion del encoder relativo.
+	if (red)
+	{
+		ang_inicial = m_Encoder_Abs[0];
+		aux = m_enc_inc;
+		red = false;
+	}
+	m_Encoder[0] = m_enc_inc - aux + ang_inicial;
+	ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder: %f ", m_Encoder[0]);
+
+	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
+	if (std::abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
+	{
+		red = true;
+		ROS_WARN("La diferencia entre encoders es mayor de 2 grados. Se produce recalibracion");
+	}
 
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
 	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
@@ -287,7 +308,7 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_Encoder[0] = (msg->encoder_values[0]) / 1824.9; //( ppv * reductor * n vueltas ) / ang_max 
+	m_enc_inc = (msg->encoder_values[0]) / 1824.9; //( ppv * reductor * n vueltas ) / ang_max 
 	//	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 
