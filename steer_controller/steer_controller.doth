@@ -6,8 +6,11 @@
 steer_controller [shape=box];
 
 // Pub topics:
+steer_controller -> arduino_daq_GPIO_output7;
 // ...
 
 // Sub topics:
 steer_controller_is_joystick -> steer_controller;
+arduino_daq_GPIO_output7 -> steer_controller;
+{joystick_eje_x, joystick_eje_y, steer_controller_is_joystick} -> steer_controller;
 // ...

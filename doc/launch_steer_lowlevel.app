@@ -2,5 +2,6 @@
 // Format: just like a regular graphviz dot file, but without the opening
 // and ending braces "{ }". Used from ual-ecar-ros-pkgs/docs/Makefile
 
+#include "arduino_daq.doth"
 #include "../joystick_driving/joystick_driving.doth"
 #include "../steer_controller/steer_controller.doth"
