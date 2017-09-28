@@ -1,0 +1,13 @@
+// documentation for ROS node & Pub/Sub topics.
+// Format: just like a regular graphviz dot file, but without the opening
+// and ending braces "{ }". Used from ual-ecar-ros-pkgs/docs/Makefile
+
+// Node:
+steer_controller [shape=box];
+
+// Pub topics:
+// ...
+
+// Sub topics:
+steer_controller_is_joystick -> steer_controller;
+// ...

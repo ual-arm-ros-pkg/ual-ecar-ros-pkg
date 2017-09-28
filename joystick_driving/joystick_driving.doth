@@ -1,0 +1,17 @@
+// documentation for ROS node & Pub/Sub topics.
+// Format: just like a regular graphviz dot file, but without the opening
+// and ending braces "{ }". Used from ual-ecar-ros-pkgs/docs/Makefile
+
+// Node:
+joystick_driving [shape=box];
+
+// Pub topics:
+joystick_eje_x [label="joystick_eje_x \n Rango: [-1,1]"];
+joystick_eje_y [label="joystick_eje_y \n Rango: [-1,1]"];
+steer_controller_is_joystick [label="steer_controller_is_joystick \n 1=joystick; 0=auto"];
+
+joystick_driving -> joystick_eje_x;
+joystick_driving -> joystick_eje_y;
+joystick_driving -> steer_controller_is_joystick;
+
+// Sub topics:

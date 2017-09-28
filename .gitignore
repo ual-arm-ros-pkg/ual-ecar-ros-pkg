@@ -12,3 +12,4 @@ steer_controller/firmware/Release/makedep.mk
 *.eep
 steer_controller/firmware/Release/SteeringControlFirmware.lss
 *.map
+*.dot
