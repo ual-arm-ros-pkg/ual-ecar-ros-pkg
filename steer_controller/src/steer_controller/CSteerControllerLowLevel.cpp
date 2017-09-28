@@ -124,24 +124,25 @@ bool CSteerControllerLowLevel::iterate()
 	// 1824.9 se corresponde con (ppv * reductor * nºvueltas)/ang_max
 	m_Encoder_Abs[0] = - (encoder_value - 512) * 150.6995 / 1824.9;// 303 = Offset // 512 = Centro
 	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
-	
+
 	//Calibracion inicial de la posicion del encoder relativo.
-	if (red)
+/*	if (red)
 	{
 		ang_inicial = m_Encoder_Abs[0];
 		aux = m_enc_inc;
 		red = false;
 	}
-	m_Encoder[0] = m_enc_inc - aux + ang_inicial;
+	m_Encoder[0] = m_enc_inc - aux + ang_inicial; */
+	m_Encoder[0] = m_enc_inc;
 	ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder: %f ", m_Encoder[0]);
 
 	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
-	if (std::abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
+/*	if (std::abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
 	{
 		red = true;
 		ROS_WARN("La diferencia entre encoders es mayor de 2 grados. Se produce recalibracion");
 	}
-
+*/
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
 	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
 	m_ys[0] = m_ys[1] * 0.1709 - 0.0775 * m_us[1+3];
@@ -151,15 +152,25 @@ bool CSteerControllerLowLevel::iterate()
 
 	// Modo manual
 	if (Manual_control)
-	{	// Este if es para que solo se muestre el mensaje la primera vez que entra en el controlador
-		if (dep == 0)
-		{
-			ROS_INFO_ONCE("Controlador eCAR en modo manual");
-			dep = 1;
-		}
-
+	{	
+		ROS_INFO_ONCE("Controlador eCAR en modo manual");
 		// PWM
 		m_us[0] = round(Eje_x * 254);
+
+		/*	Protección que detecta que el encoder está en el límite y solo permite girar en el sentido contrario*/
+		if (std::abs(m_Encoder[0]) >= max_p)
+		lim = 1;
+		if (std::abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
+		lim = 0;
+		if (lim == 1)
+		{
+			ROS_WARN("El mecanismo se encuentra proximo al extremo");
+			if(m_Encoder[0] > 0 && m_us[0] > 0)
+			m_us[0] = 0;
+			if(m_Encoder[0] < 0 && m_us[0] < 0)
+			m_us[0] = 0;
+		}
+
 		if (m_us[0] < 0)
 			msg_b.data = false;
 		else
