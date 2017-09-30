@@ -195,7 +195,7 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		double m_R_steer = (double)(- Eje_x * 35);
+		m_R_steer[0] = (double)(- Eje_x * 35);
 
 		/*	Saturación de la referencia para protección contra sobrecorrientes*/ //Versión 17/7/18
 		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
