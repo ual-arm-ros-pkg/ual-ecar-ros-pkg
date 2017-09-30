@@ -205,10 +205,10 @@ bool CSteerControllerLowLevel::iterate()
 		/*	Corrección del sentido de las ruedas*/
 		m_R_steer[0] = - m_R_steer[0];
 
-		ROS_INFO("Referencia: %f ", m_R_steer);
+		ROS_INFO("Referencia: %f ", m_R_steer[0]);
 
 	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
-		m_ep[0] = m_R_steer - m_Encoder[0]; //- m_yp[0] -(m_yp[0]-m_Encoder[0]); Realimentación para predictor de Smith
+		m_ep[0] = m_R_steer[0] - m_Encoder[0]; //- m_yp[0] -(m_yp[0]-m_Encoder[0]); Realimentación para predictor de Smith
 
 	/*	Controlador lazo externo */
 		m_up[0] = m_up[1] + 1.8903 * m_ep[0] - 1.8240 * m_ep[1];
