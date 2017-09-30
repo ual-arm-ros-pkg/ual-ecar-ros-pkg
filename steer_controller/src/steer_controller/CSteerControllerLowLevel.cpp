@@ -42,6 +42,7 @@ bool paso = false;			/*Variable auxiliar indicadora de si el encoder absoluto ha
 
 /*PROTECCIONES*/
 	int max_p = 50;		// Valor maximo que puede alcanzar la direccion
+	double sat_ref = 4.55;	// Valor maximo que puede variar la referencia de posicion entre iteraciones
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -186,12 +187,8 @@ bool CSteerControllerLowLevel::iterate()
 
 	// Modo automatico
 	else
-	{	// Este if es para que solo se muestre el mensaje la primera vez que entra en el controlador
-		if (dep == 1)
-		{
-			ROS_INFO("Controlador eCAR en modo automatico");
-			dep = 0;
-		}
+	{	
+		ROS_INFO_ONCE("Controlador eCAR en modo automatico");
 
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
@@ -199,11 +196,16 @@ bool CSteerControllerLowLevel::iterate()
 	*/
 	/*	Lectura de la referencia de posicion */
 		double m_R_steer = (double)(- Eje_x * 35);
-		ROS_INFO("Referencia: %f ", m_R_steer);
 
-	/*	Determinar el Predictor de Smith de la posición.*/
-	/*	Sujeto a modificaciones si se coloca encoder absoluto o se implementan otras estrategias de control*/
-		// m_yp[0] = 1.7788 * m_yp[1] - 0.7788 * m_yp[2] + 0.0058 * m_up[1+3] + 0.0053 * m_up[2+3];
+		/*	Saturación de la referencia para protección contra sobrecorrientes*/ //Versión 17/7/18
+		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
+		if (pendiente >= sat_ref)
+			m_R_steer[0] = (m_R_steer[1] + sat_ref);
+
+		/*	Corrección del sentido de las ruedas*/
+		m_R_steer[0] = - m_R_steer[0];
+
+		ROS_INFO("Referencia: %f ", m_R_steer);
 
 	/*	Calculo del error al restar la restar el encoder de la interior iteracion a la referencia de posicion */
 		m_ep[0] = m_R_steer - m_Encoder[0]; //- m_yp[0] -(m_yp[0]-m_Encoder[0]); Realimentación para predictor de Smith
