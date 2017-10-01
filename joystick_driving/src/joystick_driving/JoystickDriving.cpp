@@ -14,6 +14,9 @@ using namespace mrpt::utils;
 int pwm_steering_const = 0;
 float eje_x = 0;
 float eje_y = 0;
+bool rev_btn = false;
+bool control_btn = true;
+
 
 bool JoystickDriving::initialize()
 {
@@ -119,12 +122,12 @@ bool JoystickDriving::iterate()
 		m_pub_rev_relay.publish(b);
 	}
 
-	ROS_INFO("Joy: x:%f y:%f B3=%i B6=%i", aux_s,aux_r, buttons[3] ? 1:0, buttons[6] ? 1:0);
-	ROS_INFO_COND_NAMED( aux_s[0] !=  aux_s[1] || aux_r[0] !=  aux_r[1] || rev_btn != reverse_btn || mode_btn != control_btn, " test only " ,"Joy: x:%f y:%f B3=%i B6=%i", aux_s,aux_r, buttons[3] ? 1:0, buttons[6] ? 1:0);
+	// ROS_INFO("Joy: x:%f y:%f B3=%i B6=%i", aux_s,aux_r, buttons[3] ? 1:0, buttons[6] ? 1:0);
+	ROS_INFO_COND_NAMED( aux_s[0] !=  aux_s[1] || aux_r[0] !=  aux_r[1] || rev_btn != reverse_btn || mode_btn != control_btn, " test only " ,"Joy: x:%f y:%f B3=%i B6=%i", aux_s[0],aux_r[0], buttons[3] ? 1:0, buttons[6] ? 1:0);
 	aux_s[1] = aux_s[0];
 	aux_r[1] = aux_r[0];
-	bool rev_btn = reverse_btn;
-	bool control_btn = mode_btn;
+	rev_btn = reverse_btn;
+	control_btn = mode_btn;
 
 	return true;
 }
