@@ -44,7 +44,7 @@ bool JoystickDriving::initialize()
 
 bool JoystickDriving::iterate()
 {
-	float x,y,z,aux_s,aux_r;
+	float x,y,z;
 	vector<bool> buttons;
 	bool rev, control_mode;
 
@@ -65,65 +65,50 @@ bool JoystickDriving::iterate()
 		{
 		std_msgs::Float64 msg_f;
 		//  Aumento de resolucion
-		if (buttons[4]) {
-			aux_s = z * 0.2;
-		}
-		else {
-			aux_s = z * 0.5;
-		}
+		if (buttons[4])
+			aux_s[0] = z * 0.2;
+		else
+			aux_s[0] = z * 0.5;
 		// Saturacion
-		if (eje_x + aux_s > 1)
-		{
-			aux_s = 1 - eje_x;
-		}
-		if (eje_x + aux_s < -1)
-		{
-			aux_s = -1 - eje_x;
-		}
+		if (eje_x + aux_s[0] > 1)
+			aux_s[0] = 1 - eje_x;
+		if (eje_x + aux_s[0] < -1)
+			aux_s[0] = -1 - eje_x;
 		// Cambio del valor central
 		if (buttons[1]) {
-			eje_x = eje_x + aux_s;
-			aux_s = eje_x;
+			eje_x = eje_x + aux_s[0];
+			aux_s[0] = eje_x;
 		}
-		else {
-			aux_s = eje_x + aux_s;
-		}
+		else 
+			aux_s[0] = eje_x + aux_s[0];
 
-		msg_f.data = aux_s;
+		msg_f.data = aux_s[0];
 		m_pub_eje_x.publish(msg_f);
 	}
 	// Eje y
 	{
 		//  Aumento de resolucion
-		if (buttons[5]) {
-			aux_r =(float)((-y) * 0.2);
-		}
-		else {
-			aux_r =(float)((-y) * 0.5);
-		}
+		if (buttons[5])
+			aux_r[0] =(float)((-y) * 0.2);
+		else
+			aux_r[0] =(float)((-y) * 0.5);
 		// Saturacion
-
-		if (eje_y + aux_r > 1)
-		{
-			aux_r = 1 - eje_y;
-		}
-		if (eje_y + aux_r < 0)
-		{
-			aux_r = - eje_y;
-		}
+		if (eje_y + aux_r[0] > 1)
+			aux_r[0] = 1 - eje_y;
+		if (eje_y + aux_r[0] < 0)
+			aux_r[0] = - eje_y;
 		// Cambio del valor central
 		if (buttons[0]) {
-			eje_y = eje_y + aux_r;
-			aux_r = eje_y;
+			eje_y = eje_y + aux_r[0];
+			aux_r[0] = eje_y;
 		}
-		else {
-			aux_r = eje_y + aux_r;
-		}
+		else 
+			aux_r[0] = eje_y + aux_r[0];
+
 		std_msgs::Float64 msg_f;
-		msg_f.data = aux_r;
+		msg_f.data = aux_r[0];
 		
 		m_pub_eje_y.publish(msg_f);
-
 	}
 	// Rev button:
 	// ---------------
@@ -135,6 +120,11 @@ bool JoystickDriving::iterate()
 	}
 
 	ROS_INFO("Joy: x:%f y:%f B3=%i B6=%i", aux_s,aux_r, buttons[3] ? 1:0, buttons[6] ? 1:0);
+	ROS_INFO_COND_NAMED( aux_s[0] !=  aux_s[1] || aux_r[0] !=  aux_r[1] || rev_btn != reverse_btn || mode_btn != control_btn, " test only " ,"Joy: x:%f y:%f B3=%i B6=%i", aux_s,aux_r, buttons[3] ? 1:0, buttons[6] ? 1:0);
+	aux_s[1] = aux_s[0];
+	aux_r[1] = aux_r[0];
+	bool rev_btn = reverse_btn;
+	bool control_btn = mode_btn;
 
 	return true;
 }
