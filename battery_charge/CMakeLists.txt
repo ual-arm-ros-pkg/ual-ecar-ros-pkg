@@ -3,12 +3,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 set (CMAKE_CXX_STANDARD 14)  # Require C++14
 project(battery_charge)
 
-option(BUILD_ROS "Build ROS node" ON)
-option(BUILD_STANDALONE_LIB "Build standalone C++ library" OFF)
-option(BUILD_STANDALONE_APP "Build standalone example app" OFF)
-
-
-IF (BUILD_ROS)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -16,7 +10,6 @@ IF (BUILD_ROS)
 find_package(catkin REQUIRED COMPONENTS
 	message_generation
   roscpp
-  std_msgs
 )
 
 add_definitions(-DHAVE_ROS) # used to tell between building standalone lib vs. ROS node
@@ -58,7 +51,7 @@ CATKIN_DEPENDS std_msgs
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${${PROJECT_NAME}_SOURCE_DIR}/arduino_firmware/arduino_daq/arduino_daq/
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware # Path del .h comun de la estructura de datos
   ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 
@@ -140,10 +133,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-ENDIF() # BUILD_ROS
-
-
-IF(BUILD_STANDALONE_APP)
-	ADD_SUBDIRECTORY(example_app)
-ENDIF()

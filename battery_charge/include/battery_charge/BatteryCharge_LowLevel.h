@@ -37,14 +37,12 @@
 
 #include <mrpt/hwdrivers/CSerialPort.h>
 
-#ifdef HAVE_ROS
 #include <ros/ros.h>
-#include <std_msgs/Bool.h>
-#include <std_msgs/Float64.h>
-#endif
+
 
 #include <mrpt/utils/COutputLogger.h>
 #include <functional>
+//#include <arduinodaq2pc-structs.h>
 
 
 class BatteryCharge_LowLevel : public mrpt::utils::COutputLogger
@@ -53,7 +51,6 @@ public:
 	BatteryCharge_LowLevel();
 	virtual ~BatteryCharge_LowLevel();
 
-#ifdef HAVE_ROS
 	/**
 	* NodeHandle is the main access point to communications with the ROS system.
 	* The first NodeHandle constructed will fully initialize this node, and the last
@@ -64,7 +61,7 @@ public:
 
 	std::vector<ros::Subscriber> m_sub_OPTO_outputs;
 	ros::Publisher  m_pub_battery_charge;
-#endif
+
 
 	void setSerialPort(const std::string &sSerialName) {
 		m_serial_port_name = sSerialName;
