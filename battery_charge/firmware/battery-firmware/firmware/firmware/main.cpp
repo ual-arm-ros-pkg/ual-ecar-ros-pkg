@@ -22,8 +22,6 @@ void loop()
 {
 
 	/* add main program code here, this code starts again each time it ends */
-    while (1) 
-    {
-    }
+
 }
 
