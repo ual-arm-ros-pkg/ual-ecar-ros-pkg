@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Atmel Studio Solution File, Format Version 11.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "firmware", "firmware\firmware.cppproj", "{C81EAF1A-0A54-410B-B45E-6B0DB2E92897}"
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "ArduinoCore", "firmware\ArduinoCore\ArduinoCore.cppproj", "{B4A5AFC6-F235-4CF4-8735-530012177675}"
+EndProject
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "firmware", "firmware\firmware\firmware.cppproj", "{C81EAF1A-0A54-410B-B45E-6B0DB2E92897}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,6 +13,10 @@ Global
 		Release|AVR = Release|AVR
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4A5AFC6-F235-4CF4-8735-530012177675}.Debug|AVR.ActiveCfg = Debug|AVR
+		{B4A5AFC6-F235-4CF4-8735-530012177675}.Debug|AVR.Build.0 = Debug|AVR
+		{B4A5AFC6-F235-4CF4-8735-530012177675}.Release|AVR.ActiveCfg = Release|AVR
+		{B4A5AFC6-F235-4CF4-8735-530012177675}.Release|AVR.Build.0 = Release|AVR
 		{C81EAF1A-0A54-410B-B45E-6B0DB2E92897}.Debug|AVR.ActiveCfg = Debug|AVR
 		{C81EAF1A-0A54-410B-B45E-6B0DB2E92897}.Debug|AVR.Build.0 = Debug|AVR
 		{C81EAF1A-0A54-410B-B45E-6B0DB2E92897}.Release|AVR.ActiveCfg = Release|AVR
