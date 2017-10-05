@@ -51,7 +51,7 @@ CATKIN_DEPENDS std_msgs
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${${PROJECT_NAME}_SOURCE_DIR}/firmware # Path del .h comun de la estructura de datos
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/battery-firmware/firmware/firmware # Path del .h comun de la estructura de datos
   ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 

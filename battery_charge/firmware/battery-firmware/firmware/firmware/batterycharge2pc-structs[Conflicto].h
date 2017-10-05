@@ -134,3 +134,46 @@ struct TFrameCMD_OPTO_read : public TBaseFrame<TFrameCMD_OPTO_read_payload_t>
 	}
 };
 
+struct TFrameCMD_BATTERY_start_payload_t
+{
+	static const uint8_t NUM_BATTERIES = 6;
+
+	uint16_t sampling_period_ms;
+
+	TFrameCMD_BATTERY_start_payload_t() :
+		sampling_period_ms(250)
+
+};
+struct TFrameCMD_BATTERY_start : public TBaseFrame<TFrameCMD_BATTERY_start_payload_t>
+{
+	// Defaults:
+	TFrameCMD_BATTERY_start() : TBaseFrame(OP_START_BAT)
+	{
+	}
+};
+
+struct TFrameCMD_BATTERY_stop_payload_t
+{
+};
+struct TFrameCMD_BATTERY_stop : public TBaseFrame<TFrameCMD_BATTERY_stop_payload_t>
+{
+	// Defaults:
+	TFrameCMD_BATTERY_stop() : TBaseFrame(OP_STOP_BAT)
+	{
+	}
+};
+
+
+struct TFrame_BATTERY_readings_payload_t
+{
+	uint32_t timestamp_ms;
+	int32_t  batteries[6];
+	uint32_t period_ms;
+};
+struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_payload_t>
+{
+	// Defaults:
+	TFrame_BATTERY_readings() : TBaseFrame(RESP_BAT_READINGS)
+	{
+	}
+};
