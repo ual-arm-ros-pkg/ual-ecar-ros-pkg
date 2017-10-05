@@ -1,10 +1,4 @@
-﻿/*
- * serial.cpp
- *
- * Created: 04/10/2017 12:15:59
- *  Author: Francisco José Mañas
- */ 
- /*
+﻿ /*
  * Software License Agreement (BSD License)
  *
  *  Copyright (c) 2016-17, Universidad de Almeria

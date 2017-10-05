@@ -20,8 +20,11 @@ void setup()
 
 void loop()
 {
+	processIncommingPkts();
 
-	/* add main program code here, this code starts again each time it ends */
+	processBattery();
 
+	// Handle possible timeouts of previous commands:
+	process_timeouts();
 }
 
