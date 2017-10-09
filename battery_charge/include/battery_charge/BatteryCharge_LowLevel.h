@@ -38,11 +38,13 @@
 #include <mrpt/hwdrivers/CSerialPort.h>
 
 #include <ros/ros.h>
-
+#include <std_msgs/UInt8.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Float64.h>
 
 #include <mrpt/utils/COutputLogger.h>
+#include <batterycharge2pc-structs.h>
 #include <functional>
-//#include <arduinodaq2pc-structs.h>
 
 
 class BatteryCharge_LowLevel : public mrpt::utils::COutputLogger

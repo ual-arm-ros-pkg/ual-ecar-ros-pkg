@@ -10,9 +10,9 @@ project(battery_charge)
 find_package(catkin REQUIRED COMPONENTS
 	message_generation
   roscpp
+  std_msgs
 )
 
-add_definitions(-DHAVE_ROS) # used to tell between building standalone lib vs. ROS node
 
 # System dependencies are found with CMake's conventions
 find_package(MRPT REQUIRED hwdrivers)
@@ -51,7 +51,7 @@ CATKIN_DEPENDS std_msgs
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/battery-firmware/firmware/firmware # Path del .h comun de la estructura de datos
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/battery-firmware/firmware/firmware/ # Path del .h comun de la estructura de datos
   ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 
