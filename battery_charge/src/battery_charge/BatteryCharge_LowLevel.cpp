@@ -40,9 +40,7 @@
 #include <thread>
 #include <chrono>
 
-#ifdef HAVE_ROS
 #include <ros/console.h>
-#endif
 
 #include <iostream>
 
@@ -52,28 +50,18 @@ using namespace mrpt::utils;
 
 #define DEBUG_TRACES
 
-#ifdef HAVE_ROS
 void log_callback(const std::string &msg, const mrpt::utils::VerbosityLevel level, const std::string &loggerName, const mrpt::system::TTimeStamp timestamp, void *userParam)
 {
 	ROS_INFO("%s",msg.c_str());
 }
-#endif
 
 BatteryCharge_LowLevel::BatteryCharge_LowLevel() :
 	mrpt::utils::COutputLogger("BatteryCharge_LowLevel"),
-#ifdef HAVE_ROS
 	m_nh_params("~"),
-#endif
-#ifndef _WIN32
 	m_serial_port_name("/dev/serial/by-id/usb-Ual-ARM-eCAMR_Monitor_de_baterías_AL1L20Ez-if00-port0"), //Cambiar
-#else
-	m_serial_port_name("COM3"), //Cambiar
-#endif
 	m_serial_port_baudrate(115200)
 {
-#ifdef HAVE_ROS
 	this->logRegisterCallback(&log_callback, this);
-#endif
 
 #ifdef DEBUG_TRACES
 	this->setMinLoggingLevel(mrpt::utils::LVL_DEBUG);
@@ -86,10 +74,8 @@ BatteryCharge_LowLevel::~BatteryCharge_LowLevel()
 
 bool BatteryCharge_LowLevel::initialize()
 {
-#ifdef HAVE_ROS
 	m_nh_params.getParam("SERIAL_PORT",m_serial_port_name);
 	m_nh_params.getParam("SERIAL_PORT_BAUDRATE",m_serial_port_baudrate);
-#endif
 
 	// Try to connect...
 	if (this->AttemptConnection())
@@ -102,7 +88,6 @@ bool BatteryCharge_LowLevel::initialize()
 		return false;
 	}
 
-#ifdef HAVE_ROS
 	// Subscribers: OPTO outputs
 	m_sub_OPTO_outputs.resize(6);
 	for (int i=0;i<6;i++) {
@@ -113,7 +98,6 @@ bool BatteryCharge_LowLevel::initialize()
 	// Publisher: battery_charge data
 	m_pub_battery_charge = m_nh.advertise<std_msgs::Float64>("m_pub_battery_charge", 10);
 
-#endif
 
 return true;
 }
@@ -158,7 +142,6 @@ bool BatteryCharge_LowLevel::iterate()
 	return true;
 }
 
-#ifdef HAVE_ROS
 void BatteryCharge_LowLevel::daqSetDigitalPinCallback(int pin, const std_msgs::Bool::ConstPtr& msg)
 {
     ROS_INFO("OPTO: output[%i]=%s", pin, msg->data ? "true":"false" );
@@ -184,9 +167,6 @@ void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BAT_readings_paylo
 	m_pub_battery_charge.publish(msg);
 }
 
-
-
-#endif
 
 bool BatteryCharge_LowLevel::AttemptConnection()
 {
@@ -345,12 +325,11 @@ bool BatteryCharge_LowLevel::ReceiveFrameFromController(std::vector<uint8_t> &rx
 }
 
 
-bool BatteryCharge_LowLevel::CMD_OPTO_output(int pin_index, uint8_t opto_value)
+bool BatteryCharge_LowLevel::CMD_OPTO_output(int pin_index, bool opto_value)
 {
-	TFrameCMD_SET_OPTO cmd;
+	TFrameCMD_OPTO_output cmd;
 	cmd.payload.pin_index = pin_index;
-	cmd.payload.analog_value = opto_value;
-	cmd.payload.flag_enable_timeout = true;
+	cmd.payload.pin_value = opto_value;
 	cmd.calc_and_update_checksum();
 
 	return WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
@@ -361,7 +340,7 @@ bool BatteryCharge_LowLevel::IsConnected() const
 	return m_serial.isOpen();
 }
 
-bool BatteryCharge_LowLevel::CMD_BAT_START(const TFrameCMD_ADC_start_payload_t &adc_config)
+bool BatteryCharge_LowLevel::CMD_BAT_START(const TFrameCMD_BAT_start_payload_t &bat_config)
 {
 	TFrameCMD_BAT_start cmd;
 	cmd.payload = bat_config;

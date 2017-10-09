@@ -38,11 +38,14 @@
 #include <mrpt/hwdrivers/CSerialPort.h>
 
 #include <ros/ros.h>
-
+#include <std_msgs/UInt8.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Float64.h>
+#include <battery_charge/BatReading.h>
 
 #include <mrpt/utils/COutputLogger.h>
+#include <batterycharge2pc-structs.h>
 #include <functional>
-//#include <arduinodaq2pc-structs.h>
 
 
 class BatteryCharge_LowLevel : public mrpt::utils::COutputLogger
@@ -80,7 +83,7 @@ public:
 	bool CMD_OPTO_output(int opto, bool optoState);
 	bool CMD_BAT_START(const TFrameCMD_BAT_start_payload_t &enc_config);
 	bool CMD_BAT_STOP();
-	
+
 	void set_BAT_readings_callback(const std::function<void(TFrame_BAT_readings_payload_t)> &f) {
 		m_bat_callback = f;
 	}
