@@ -134,50 +134,48 @@ struct TFrameCMD_OPTO_read : public TBaseFrame<TFrameCMD_OPTO_read_payload_t>
 	}
 };
 
-struct TFrameCMD_BAT_start_payload_t
+struct TFrameCMD_BATTERY_start_payload_t
 {
-	static const uint8_t NUM_BAT = 6;
-	int8_t bat_num[NUM_BAT];
+	static const uint8_t NUM_BATTERIES = 6;
+
 	uint16_t sampling_period_ms;
 
-	TFrameCMD_BAT_start_payload_t() :
+	TFrameCMD_BATTERY_start_payload_t() :
 		sampling_period_ms(250)
-	{
-		for (uint8_t i=0;i<NUM_BAT;i++) {
-			bat_num[i] = 0;
+		{
 		}
-	}
+
 };
-struct TFrameCMD_BAT_start : public TBaseFrame<TFrameCMD_BAT_start_payload_t>
+struct TFrameCMD_BATTERY_start : public TBaseFrame<TFrameCMD_BATTERY_start_payload_t>
 {
 	// Defaults:
-	TFrameCMD_BAT_start() : TBaseFrame(OP_START_BAT)
+	TFrameCMD_BATTERY_start() : TBaseFrame(OP_START_BAT)
 	{
 	}
 };
 
-struct TFrameCMD_BAT_stop_payload_t
+struct TFrameCMD_BATTERY_stop_payload_t
 {
 };
-struct TFrameCMD_BAT_stop : public TBaseFrame<TFrameCMD_BAT_stop_payload_t>
+struct TFrameCMD_BATTERY_stop : public TBaseFrame<TFrameCMD_BATTERY_stop_payload_t>
 {
 	// Defaults:
-	TFrameCMD_BAT_stop() : TBaseFrame(OP_STOP_BAT)
+	TFrameCMD_BATTERY_stop() : TBaseFrame(OP_STOP_BAT)
 	{
 	}
 };
 
 
-struct TFrame_BAT_readings_payload_t
+struct TFrame_BATTERY_readings_payload_t
 {
 	uint32_t timestamp_ms;
-	int32_t  bat_volt[6];
+	int32_t  batteries[6];
 	uint32_t period_ms;
 };
-struct TFrame_BAT_readings : public TBaseFrame<TFrame_BAT_readings_payload_t>
+struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_payload_t>
 {
 	// Defaults:
-	TFrame_BAT_readings() : TBaseFrame(RESP_BAT_READINGS)
+	TFrame_BATTERY_readings() : TBaseFrame(RESP_BAT_READINGS)
 	{
 	}
 };
