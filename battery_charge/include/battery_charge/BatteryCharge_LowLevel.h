@@ -81,10 +81,10 @@ public:
 	bool iterate();
 
 	bool CMD_OPTO_output(int opto, bool optoState);
-	bool CMD_BAT_START(const TFrameCMD_BAT_start_payload_t &enc_config);
+	bool CMD_BAT_START(const TFrameCMD_BATTERY_start_payload_t &enc_config);
 	bool CMD_BAT_STOP();
 
-	void set_BAT_readings_callback(const std::function<void(TFrame_BAT_readings_payload_t)> &f) {
+	void set_BAT_readings_callback(const std::function<void(TFrame_BATTERY_readings_payload_t)> &f) {
 		m_bat_callback = f;
 	}
 
@@ -100,9 +100,9 @@ protected:
 	bool ReceiveFrameFromController(std::vector<uint8_t> &rx_data); //!< Tries to get a framed chunk of data from the controller.
 	bool WriteBinaryFrame( const uint8_t *full_frame, const size_t full_frame_len); //!< Sends a binary packet, in the expected format  (returns false on COMMS error)
 
-	std::function<void(TFrame_BAT_readings_payload_t)> m_bat_callback;
+	std::function<void(TFrame_BATTERY_readings_payload_t)> m_bat_callback;
 	void daqSetDigitalPinCallback(int index, const std_msgs::Bool::ConstPtr& msg);
 
-	void daqOnNewBATCallback(const TFrame_BAT_readings_payload_t &data);
+	void daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data);
 
 };
