@@ -118,7 +118,7 @@ bool BatteryCharge_LowLevel::iterate()
 		//MRPT_LOG_INFO_STREAM  << "Rx frame, len=" << rxFrame.size();
 		if (rxFrame.size() >= 5)
 		{
-			TFrame_BAT_readings rx;
+			TFrame_BATTERY_readings rx;
 			::memcpy((uint8_t*)&rx, &rxFrame[0], sizeof(rx));
 
 			if (m_bat_callback)
@@ -151,7 +151,7 @@ void BatteryCharge_LowLevel::daqSetDigitalPinCallback(int pin, const std_msgs::B
     }
 }
 
-void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BAT_readings_payload_t &data)
+void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data)
 {
 	battery_charge::BatReading msg;
 
@@ -340,9 +340,9 @@ bool BatteryCharge_LowLevel::IsConnected() const
 	return m_serial.isOpen();
 }
 
-bool BatteryCharge_LowLevel::CMD_BAT_START(const TFrameCMD_BAT_start_payload_t &bat_config)
+bool BatteryCharge_LowLevel::CMD_BAT_START(const TFrameCMD_BATTERY_start_payload_t &bat_config)
 {
-	TFrameCMD_BAT_start cmd;
+	TFrameCMD_BATTERY_start cmd;
 	cmd.payload = bat_config;
 	cmd.calc_and_update_checksum();
 
@@ -350,7 +350,7 @@ bool BatteryCharge_LowLevel::CMD_BAT_START(const TFrameCMD_BAT_start_payload_t &
 }
 bool BatteryCharge_LowLevel::CMD_BAT_STOP()
 {
-	TFrameCMD_BAT_stop cmd;
+	TFrameCMD_BATTERY_stop cmd;
 	cmd.calc_and_update_checksum();
 
 	return WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
