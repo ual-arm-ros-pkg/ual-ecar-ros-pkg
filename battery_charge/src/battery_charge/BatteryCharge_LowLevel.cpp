@@ -153,15 +153,12 @@ void BatteryCharge_LowLevel::daqSetDigitalPinCallback(int pin, const std_msgs::B
 
 void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data)
 {
-	battery_charge::BatReading msg;
+	battery_charge::double msg;
 
 	msg.timestamp_ms = data.timestamp_ms;
-	msg.period_ms = data.period_ms;
-	const int N =sizeof(data.bat)/sizeof(data.bat[0]);
 
-	msg.bat_values.resize(N);
-	for (int i=0;i<N;i++) {
-		 msg.bat_values[i] = data.bat[i];
+	for (int i=0;i<sizeof(data.batteries)/sizeof(data.batteries[0]);i++) {
+		msg.batteries[i] = data.batteries[i];
 	}
 
 	m_pub_battery_charge.publish(msg);
