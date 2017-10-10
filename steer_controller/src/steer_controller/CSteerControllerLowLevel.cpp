@@ -108,7 +108,6 @@ bool CSteerControllerLowLevel::iterate()
 		m_q_int[0] = - 2.85;
 		m_q_int[1] = - 0.1765;
 		m_q_int[2] = 0;
-		m_us[0] = (int)(m_us[1] + m_q_int[0] * m_es[0] - 0.1765 * m_es[1]);
 
 	// Lectura del modo de control
 	bool Manual_control = Status_mode;
