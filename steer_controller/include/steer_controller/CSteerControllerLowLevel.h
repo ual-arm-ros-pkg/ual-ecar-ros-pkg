@@ -60,7 +60,7 @@ public:
 
 	double m_ep[3] = {0,0,0};
 	double m_up[6] = {0,0,0,0,0,0};
-	double m_es[2] = {0,0};
+	double m_es[3] = {0,0,0};
 	double m_yp[3] = {0,0,0};
 	double m_ys[4] = {0,0,0,0};
 	double m_Encoder[2] = {0,0};
@@ -69,6 +69,8 @@ public:
 	double m_R_steer[2] = {0,0};
 	int m_us[5] = {0,0,0,0,0};
 	int m_u[2] = {0,0};
+	double m_q_ext[3] = {0,0,0};
+	double m_q_int[3] = {0,0,0};
 	double m_antiwindup[2] = {0,0};
 
 };

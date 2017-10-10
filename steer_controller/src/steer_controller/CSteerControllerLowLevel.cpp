@@ -24,6 +24,7 @@ using namespace mrpt::utils;
 /*AUXILIARES*/
 float Eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
 float Eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
+float Tm = 0.05;			/*Tiempo entre iteraciones en segundos*/
 bool Status_mode;			/*Variable para la comprobacion del modo de control*/
 bool GPIO7 = false;			/*Variable asosciada al rele de la marcha del vehículo*/
 int dep = 0;				/*Variable auxiliar para mostrar mensaje del modo de control en consola*/
@@ -38,11 +39,14 @@ double pos_ant = 0;			/*Valor de la posicion en la iteracion anterior del encode
 bool paso = false;			/*Variable auxiliar indicadora de si el encoder absoluto ha pasado del valor 1024*/
 
 /*CONTROLADOR*/
-
+// Predictor
+float a1_p = - 0.1709;
+float b1_p = - 0.0775;
 
 /*PROTECCIONES*/
-	int max_p = 50;		// Valor maximo que puede alcanzar la direccion
-	double sat_ref = 4.55;	// Valor maximo que puede variar la referencia de posicion entre iteraciones
+	int max_p = 50;			/*Valor maximo que puede alcanzar la direccion sin sufrir daños*/
+	double sat_ref = 4.55;	/*Valor maximo que puede variar la referencia de posicion entre iteraciones*/
+	int sat_abs = 254;		/*Valor máximo que puede alcanzar la señal de control introducida en el sistema*/
 
 CSteerControllerLowLevel::CSteerControllerLowLevel() :
 	mrpt::utils::COutputLogger("CSteerControllerLowLevel"),
@@ -90,14 +94,21 @@ bool CSteerControllerLowLevel::initialize()
 		m_pub_voltage_pedal.publish(msg_f);
 	}
 
-
-
 }
 
 bool CSteerControllerLowLevel::iterate()
 {
 	double voltaje_pedal,rpm,encoder_value;
 	bool b2,b1,b3;
+
+	//Pendiente de crear el nodo correpondiente que comunique estos parametros
+		m_q_ext[0] = 1.8903;
+		m_q_ext[1] = - 1.8240;
+		m_q_ext[2] = 0;
+		m_q_int[0] = - 2.85;
+		m_q_int[1] = - 0.1765;
+		m_q_int[2] = 0;
+		m_us[0] = (int)(m_us[1] + m_q_int[0] * m_es[0] - 0.1765 * m_es[1]);
 
 	// Lectura del modo de control
 	bool Manual_control = Status_mode;
@@ -126,7 +137,7 @@ bool CSteerControllerLowLevel::iterate()
 	m_Encoder_Abs[0] = - (encoder_value - 512) * 150.6995 / 1824.9;// 303 = Offset // 512 = Centro
 	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
 
-	//Calibracion inicial de la posicion del encoder relativo.
+	//Calibracion inicial de la posicion del encoder relativo. Produce errores
 /*	if (red)
 	{
 		ang_inicial = m_Encoder_Abs[0];
@@ -135,7 +146,7 @@ bool CSteerControllerLowLevel::iterate()
 	}
 	m_Encoder[0] = m_enc_inc - aux + ang_inicial; */
 	m_Encoder[0] = m_enc_inc;
-	ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder: %f ", m_Encoder[0]);
+	// ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder: %f ", m_Encoder[0]);
 
 	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
 /*	if (std::abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
@@ -145,8 +156,8 @@ bool CSteerControllerLowLevel::iterate()
 	}
 */
 	/*Lectura del encoder de la direccion y predictor de smith de la velocidad*/
-	rpm = (m_Encoder[0] - m_Encoder[1]) / 0.05;
-	m_ys[0] = m_ys[1] * 0.1709 - 0.0775 * m_us[1+3];
+	rpm = (m_Encoder[0] - m_Encoder[1]) / Tm;
+	m_ys[0] = - m_ys[1] * a1_p + b1_p * m_us[1+3];
 
 	// If para la division de los modos de control
 	// --------------------------------------------
@@ -156,7 +167,7 @@ bool CSteerControllerLowLevel::iterate()
 	{	
 		ROS_INFO_ONCE("Controlador eCAR en modo manual");
 		// PWM
-		m_us[0] = round(Eje_x * 254);
+		m_us[0] = round(Eje_x * sat_abs);
 
 		/*	Protección que detecta que el encoder está en el límite y solo permite girar en el sentido contrario*/
 		if (std::abs(m_Encoder[0]) >= max_p)
@@ -181,7 +192,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_rev_steering.publish(msg_b);
 		m_pub_pwm_steering.publish(msg_ui);
 
-		ROS_INFO_COND_NAMED( m_us[0] !=  m_us[1], " test only " , "PWM: %i ", msg_ui.data);
+		ROS_INFO_COND_NAMED( m_us[0] !=  m_us[1] || m_Encoder[0] !=  m_Encoder[1], " test only " , "PWM: %i & Encoder: %f", msg_ui.data, m_Encoder[0]);
 
 	}
 
@@ -195,10 +206,10 @@ bool CSteerControllerLowLevel::iterate()
 		+-------------------+ 
 	*/
 	/*	Lectura de la referencia de posicion */
-		m_R_steer[0] = (double)(- Eje_x * 35);
+		m_R_steer[0] = (double)(- Eje_x * (max_p - 10));	/* El valor -10 es temporal hasta verificar el correcto y robusto funcionamiento del sistema
 
 		/*	Saturación de la referencia para protección contra sobrecorrientes*/ //Versión 17/7/18
-		double pendiente = (m_R_steer[0] - m_R_steer[1]) / 0.05;
+		double pendiente = (m_R_steer[0] - m_R_steer[1]) / Tm;
 		if (pendiente >= sat_ref)
 			m_R_steer[0] = (m_R_steer[1] + sat_ref);
 
@@ -211,7 +222,7 @@ bool CSteerControllerLowLevel::iterate()
 		m_ep[0] = m_R_steer[0] - m_Encoder[0]; //- m_yp[0] -(m_yp[0]-m_Encoder[0]); Realimentación para predictor de Smith
 
 	/*	Controlador lazo externo */
-		m_up[0] = m_up[1] + 1.8903 * m_ep[0] - 1.8240 * m_ep[1];
+		m_up[0] = m_up[1] + m_q_ext[0] * m_ep[0] + m_q_ext[1] * m_ep[1] + m_q_ext[2] * m_ep[2];
 
 	/*	Mecanismo Anti-windup para protección*/
 
@@ -219,16 +230,16 @@ bool CSteerControllerLowLevel::iterate()
 		m_es[0] = m_up[0] - m_ys[0];/* - (rpm - m_ys[3]);*/
 
 	/*	Introduccion de la ecuacion del controlador */
-		m_us[0] = (int)(m_us[1] - 2.85 * m_es[0] - 0.1765 * m_es[1]);
+		m_us[0] = (int)(m_us[1] + m_q_int[0] * m_es[0] + m_q_int[1] * m_es[1] + m_q_int[2] * m_es[2]);
 
 	/*	Implementar saturacion */
-		if (m_us[0] > 254)
+		if (m_us[0] > sat_abs)
 		{
-			m_us[0] = 254;
+			m_us[0] = sat_abs;
 		}
-		if (m_us[0] < -254)
+		if (m_us[0] < -sat_abs)
 		{
-			m_us[0] = -254;
+			m_us[0] = -sat_abs;
 		}
 		ROS_INFO("Yp: %f, Encoder: %f, Ep: %f, Up: %f, Ys: %f, Es: %f, Us: %i", m_yp[0],rpm, m_ep[0], m_up[0],m_ys[0],m_es[0],m_us[0]);
 	
@@ -248,6 +259,7 @@ bool CSteerControllerLowLevel::iterate()
 
 		ROS_INFO("PWM: %i ", msg_ui.data);
 	}
+	// Este sistema se debe desarrollar en un nodo nuevo
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
