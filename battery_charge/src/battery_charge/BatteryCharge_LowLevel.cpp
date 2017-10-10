@@ -39,6 +39,7 @@
 #include <array>
 #include <thread>
 #include <chrono>
+#include <battery_charge/BatReading.h>
 
 #include <ros/console.h>
 
@@ -96,7 +97,7 @@ bool BatteryCharge_LowLevel::initialize()
 	}
 
 	// Publisher: battery_charge data
-	m_pub_battery_charge = m_nh.advertise<std_msgs::Float64>("m_pub_battery_charge", 10);
+	m_pub_battery_charge = m_nh.advertise<battery_charge::BatReading>("m_pub_battery_charge", 10);
 
 
 return true;
@@ -153,14 +154,14 @@ void BatteryCharge_LowLevel::daqSetDigitalPinCallback(int pin, const std_msgs::B
 
 void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data)
 {
-	battery_charge::double msg;
+	battery_charge::BatReading msg;
 
 	msg.timestamp_ms = data.timestamp_ms;
 
-	for (int i=0;i<sizeof(data.batteries)/sizeof(data.batteries[0]);i++) {
-		msg.batteries[i] = data.batteries[i];
+	for (int i=0;i<sizeof(data.bat_volts)/sizeof(data.bat_volts[0]);i++) {
+		msg.bat_volts[i] = data.bat_volts[i];
 	}
-
+	
 	m_pub_battery_charge.publish(msg);
 }
 

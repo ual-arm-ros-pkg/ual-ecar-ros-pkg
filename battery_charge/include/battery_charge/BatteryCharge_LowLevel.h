@@ -41,7 +41,6 @@
 #include <std_msgs/UInt8.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
-#include <battery_charge/BatReading.h>
 
 #include <mrpt/utils/COutputLogger.h>
 #include <batterycharge2pc-structs.h>

@@ -169,7 +169,8 @@ struct TFrameCMD_BATTERY_stop : public TBaseFrame<TFrameCMD_BATTERY_stop_payload
 struct TFrame_BATTERY_readings_payload_t
 {
 	uint32_t timestamp_ms;
-	int32_t  batteries[6];
+	double  bat_volts[6]; /*Float64[]*/
+	double  bat_current;  /*Float64*/
 	uint32_t period_ms;
 };
 struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_payload_t>
