@@ -23,8 +23,8 @@ using namespace mrpt::utils;
    +------------------------+*/
 
 /*AUXILIARES*/
-float Eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
-float Eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
+float m_eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
+float m_eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
 float Tm = 0.05;			/*Tiempo entre iteraciones en segundos*/
 double m_Encoder_Absoluto;	/*Variable para la lectura del encoder absoluto*/
 double m_enc_inc = 0;		/*Valor actual del encoder incremental*/
@@ -53,6 +53,8 @@ bool SystemIdentification::initialize()
 	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &SystemIdentification::ejeyCallback, this);
 	m_sub_encoder		= m_nh.subscribe("arduino_daq_encoders", 10, &SystemIdentification::encoderCallback, this);
 	m_sub_encoder_abs	= m_nh.subscribe("arduino_daq_abs_encoder", 10, &SystemIdentification::encoderAbsCallback, this);
+	m_sub_pwm_steering	= m_nh.subscribe("arduino_daq_pwm6", 10, &SystemIdentification::PWMCallback, this);
+	m_sub_voltage_pedal	= m_nh.subscribe("arduino_daq_dac0", 10, &SystemIdentification::DACCallback, this);
 
 	// Inicialization
 /*	{
@@ -99,12 +101,12 @@ bool SystemIdentification::iterate()
 
 void SystemIdentification::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	Eje_x = msg->data;
+	m_eje_x = msg->data;
 }
 
 void SystemIdentification::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	Eje_y = msg->data;
+	m_eje_y = msg->data;
 }
 
 void SystemIdentification::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
@@ -116,4 +118,14 @@ void SystemIdentification::encoderCallback(const arduino_daq::EncodersReading::C
 void SystemIdentification::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
 {
 	m_Encoder_Absoluto = (msg->encoder_value);
+}
+
+void SystemIdentification::PWMCallback(const std_msgs::UInt8::ConstPtr& msg)
+{
+	int m_pwm_steering = msg->data;
+}
+
+void SystemIdentification::DACCallback(const std_msgs::Float64::ConstPtr& msg)
+{
+	double m_dac_pedal = msg->data;
 }

@@ -34,7 +34,7 @@ public:
 	m_pub_controller_speed	::	Parametros del controlador definido para la velocidad.
 	m_pub_systemparameters	::	Parámetros obtenidos de la identificación del sistema.
 */
-	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_encoder, m_sub_encoder_abs;
+	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_encoder, m_sub_encoder_abs, m_sub_pwm_steering, m_sub_voltage_pedal;
 /*	m_sub_rev_relay		::	Activa relé de marcha desde el control automático
 	m_sub_eje_x			::	Lectura de datos del joystick izq. Eje horizontal. Dirección
 	m_sub_eje_y			::	Lectura de datos del joystick izq. Eje vertical. Aceleración
@@ -53,6 +53,8 @@ public:
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg);
 	void encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg);
+	void PWMCallback(const std_msgs::UInt8::ConstPtr& msg);
+	void DACCallback(const std_msgs::Float64::ConstPtr& msg);
 
 
 	double m_Encoder[2] = {0,0};
