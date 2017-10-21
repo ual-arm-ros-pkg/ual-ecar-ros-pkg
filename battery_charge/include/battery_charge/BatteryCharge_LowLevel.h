@@ -35,7 +35,14 @@
 
 #pragma once
 
-#include <mrpt/hwdrivers/CSerialPort.h>
+#include <mrpt/version.h>
+#if MRPT_VERSION>=0x199
+# include <mrpt/comms/CSerialPort.h>
+using mrpt::comms::CSerialPort;
+#else
+# include <mrpt/hwdrivers/CSerialPort.h>
+using mrpt::hwdrivers::CSerialPort;
+#endif
 
 #include <ros/ros.h>
 #include <std_msgs/UInt8.h>
@@ -91,7 +98,7 @@ protected:
 	// Local class members:
 	std::string m_serial_port_name;
 	int         m_serial_port_baudrate;
-	mrpt::hwdrivers::CSerialPort m_serial;  //!< The serial COMMS object
+	CSerialPort m_serial;  //!< The serial COMMS object
 
 	// Local methods:
 	bool AttemptConnection();   //!< Returns true if connected OK, false on error.
