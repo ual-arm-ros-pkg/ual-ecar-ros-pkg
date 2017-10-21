@@ -15,6 +15,11 @@ _ADC_INTERNAL_REFVOLT:=0 _ADC_MEASURE_PERIOD_MS:=100 _ADC_CHANNEL0:=0 -->
 	<param name="ADC_MEASURE_PERIOD_MS" value="100" />
 	<param name="ADC_CHANNEL0" value="0" />
 
+	<param name="ENCABS0_PIN_CS"  value="15" /> <!-- A1=15 -->
+        <param name="ENCABS0_PIN_CLK" value="17" /> <!-- A3=17 -->
+        <param name="ENCABS0_PIN_DO"  value="16" /> <!-- A2=16 -->
+	<param name="ENCABS_MEASURE_PERIOD_MS" value="100" />
+
   </node>
 
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
