@@ -13,3 +13,5 @@ steer_controller/firmware/Release/makedep.mk
 steer_controller/firmware/Release/SteeringControlFirmware.lss
 *.map
 *.dot
+steer_controller/firmware/.vs/steer_controller_firmware/v14/.atsuo
+steer_controller/firmware/.vs/steer_controller_firmware_6_0/v14/.atsuo
