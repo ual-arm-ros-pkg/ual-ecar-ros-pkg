@@ -19,3 +19,6 @@ steer_controller/firmware/.vs/steer_controller_firmware_6_0/v14/.atsuo
 *.lss
 *.srec
 steer_controller/firmware/Release/Makefile
+steer_controller/firmware/Release/steer_controller_firmware.lss
+steer_controller/firmware/Debug/Makefile
+steer_controller/firmware/Debug/Makefile

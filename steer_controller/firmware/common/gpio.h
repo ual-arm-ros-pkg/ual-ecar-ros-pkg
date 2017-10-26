@@ -32,18 +32,19 @@ extern const uint16_t PROGMEM port_to_output_PGM[];
 //extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
 //extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 
+// Pin numbers: PORTA: 0x10-0x17; PORTB: 0x20-0x27, etc.
 inline uint8_t digitalPinToPort(const uint8_t pin_no)
 {
-	if (!pin_no || pin_no>32)
+	if (!pin_no)
 	     return 0;
-	else return 1+((pin_no-1)>>3);
+	else return (0xf0 & pin_no) >> 4;
 }
 
 inline uint8_t digitalPinToBitMask(const uint8_t pin_no)
 {
-	if (!pin_no || pin_no>32)
+	if (!pin_no)
 	     return 0;
-	else return 1<< ((pin_no-1)%8);
+	else return 1<< (0x0f & pin_no);
 }
 
 #define portOutputRegister(port_no) ( (volatile uint8_t *)( pgm_read_word( port_to_output_PGM + (port_no))) )

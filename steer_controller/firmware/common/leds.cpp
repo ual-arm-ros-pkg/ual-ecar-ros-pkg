@@ -27,7 +27,8 @@ void flash_led(int ntimes, int nms)
 {
 	for (int i=0;i<ntimes;i++)
 	{
+		if (i>0) delay_ms(nms);
 		LED_ON();  delay_ms(nms);
-		LED_OFF(); delay_ms(nms);
+		LED_OFF();
 	}
 }
