@@ -32,10 +32,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if 0
-
 #include "steer_controller_declarations.h"
 #include "steer_controller2pc-structs.h"
+#include "common/uart.h"
+#include "common/millis_timer.h"
 
 // ADC reading subsystem:
 uint8_t        num_active_ADC_channels = 0;
@@ -59,7 +59,8 @@ void processADCs()
 	
 	for (uint8_t i=0;i<num_active_ADC_channels;i++)
 	{
-		ADC_readings[i] = analogRead(ADC_active_channels[i]);
+		#warning Implement!
+		//ADC_readings[i] = analogRead(ADC_active_channels[i]);
 	}
 
 	// send answer back:
@@ -72,6 +73,3 @@ void processADCs()
 
 	UART::Write((uint8_t*)&tx,sizeof(tx));
 }
-
-#endif
-

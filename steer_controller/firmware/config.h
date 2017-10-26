@@ -13,10 +13,12 @@
 #define F_CPU 20000000UL
 
 // Where LEDs are connected (They are supposed to be VCC-tied)
-#define LED_PORT    PORTD  // LED1 = PD5
-#define LED_DDR     DDRD
-#define LED_PIN_IDX 5
+#define LED_PIN_NO 30   // LED1 = PD5 = pin number 
 
 #define sbi(port,bit)  (port |=  ( 1 << bit ))
 #define cbi(port,bit)  (port &= ~( 1 << bit ))
+
+// Fixed pins configuration for this hardware:
+const int PIN_DAC_MAX5500_CS  = 9;
+const int PIN_LED             = 13;
 

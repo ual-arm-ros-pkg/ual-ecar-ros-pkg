@@ -32,12 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if 0
-//#include <Wire.h>
-//#include <SPI.h>
-
+#include "common/gpio.h"
 #include "mod_dac_max5500.h"
-
 #include "config.h" // Fixed pins configuration for this hardware
 
 /* SPI frames for the MAX5500 chip
@@ -57,9 +53,12 @@ Commands C1.C0:
 
 void mod_dac_max5500_init()
 {
+#warning Update!
+#if 0
 	// start the SPI library:
 	SPI.begin();
-	gpio_pin_write(PIN_DAC_MAX5500_CS, HIGH);  // /CS=1
+#endif
+	gpio_pin_write(PIN_DAC_MAX5500_CS, true);  // /CS=1
 	gpio_pin_mode(PIN_DAC_MAX5500_CS, OUTPUT);
 	// Set all chip outputs to 0V
 	mod_dac_max5500_send_spi_word(0x8000);
@@ -67,21 +66,24 @@ void mod_dac_max5500_init()
 
 void mod_dac_max5500_send_spi_word(uint16_t tx_word)
 {
+#warning Update!
+#if 0
 	// Send HiByte:
 	SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
 
 	// nCS -> 0
-	gpio_pin_write(PIN_DAC_MAX5500_CS, LOW);
-	delayMicroseconds(1); // Min. 40ns: nCS->0 to SCK
+	gpio_pin_write(PIN_DAC_MAX5500_CS, false);
+	delay_us(1); // Min. 40ns: nCS->0 to SCK
 
 	SPI.transfer16 (tx_word);
 
-	delayMicroseconds(1);
+	delay_us(1);
 
 	// nCS -> 1
-	gpio_pin_write(PIN_DAC_MAX5500_CS, HIGH);
+	gpio_pin_write(PIN_DAC_MAX5500_CS, true);
 
 	SPI.endTransaction();
+#endif
 }
 
 void mod_dac_max5500_update_single_DAC(uint8_t dac_idx, uint16_t dac_value)
@@ -94,5 +96,3 @@ void mod_dac_max5500_update_single_DAC(uint8_t dac_idx, uint16_t dac_value)
 
 	mod_dac_max5500_send_spi_word(tx_word);
 }
-
-#endif

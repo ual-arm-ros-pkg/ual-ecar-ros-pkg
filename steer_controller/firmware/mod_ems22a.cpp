@@ -5,11 +5,13 @@
  *  Author: Francisco José Mañas
  */ 
 
-#if 0
-
 #include "steer_controller_declarations.h"
 #include "steer_controller2pc-structs.h"
-#include "Encoder_EMS22A.h"
+#include "mod_ems22a.h"
+#include "common/delays.h"
+#include "common/gpio.h"
+#include "common/millis_timer.h"
+#include "common/uart.h"
 
 /* Absolute encoder EMS22A reading waveforms (from its datasheet) */
 //    ____                                                                  ____
@@ -32,10 +34,10 @@
 // S5	: Decrease in magnitude.
 // P1	: Even parity for detecting bits 1-15 transmission error.
 
-/*  Lectura de Encoder Absoluto EMS22A  */
-int ENCODER_ABS_CS  = A1;
-int ENCODER_ABS_CLK = A3;
-int ENCODER_ABS_DO  = A2;
+#warning Change to other default pin numbers!
+int ENCODER_ABS_CS  = 9;
+int ENCODER_ABS_CLK = 10;
+int ENCODER_ABS_DO  = 11;
 unsigned long  EMS22A_last_millis        = 0;
 uint16_t       EMS22A_sampling_period_ms = 200;
 bool           EMS22A_active             = false;
@@ -53,8 +55,8 @@ bool init_EMS22A(int8_t init_ENCODER_ABS_CS, int8_t init_ENCODER_ABS_CLK, int8_t
 	gpio_pin_mode(ENCODER_ABS_CLK, OUTPUT);
 	gpio_pin_mode(ENCODER_ABS_DO, INPUT);
 
-	gpio_pin_write(ENCODER_ABS_CLK, HIGH);
-	gpio_pin_write(ENCODER_ABS_CS, HIGH);
+	gpio_pin_write(ENCODER_ABS_CLK, true);
+	gpio_pin_write(ENCODER_ABS_CS, true);
 	
 	return true; // all ok
 }
@@ -65,22 +67,22 @@ uint16_t read_EMS22A()
 	gpio_pin_mode(ENCODER_ABS_CLK, OUTPUT);
 	gpio_pin_mode(ENCODER_ABS_DO, INPUT);
 
-	gpio_pin_write(ENCODER_ABS_CS, LOW);
-	delayMicroseconds(2);
+	gpio_pin_write(ENCODER_ABS_CS, false);
+	delay_us(2);
 
 	uint16_t pos = 0;
 	for (int i=0; i<16; i++) {
-		 gpio_pin_write(ENCODER_ABS_CLK, LOW);  delayMicroseconds(1);
-		 gpio_pin_write(ENCODER_ABS_CLK, HIGH); delayMicroseconds(1);
-		 
-		 pos = pos << 1; // shift 1 bit left
-		 if (gpio_pin_read(ENCODER_ABS_DO) == HIGH )
-		 {
-			 pos |= 0x01;
-		 }
-	 }
+		gpio_pin_write(ENCODER_ABS_CLK, false);  delay_us(1);
+		gpio_pin_write(ENCODER_ABS_CLK, true); delay_us(1);
 
-	gpio_pin_write(ENCODER_ABS_CS, HIGH);
+		pos = pos << 1; // shift 1 bit left
+		if (gpio_pin_read(ENCODER_ABS_DO) == true )
+		{
+			pos |= 0x01;
+		}
+	}
+
+	gpio_pin_write(ENCODER_ABS_CS, true);
 	return pos;
 }
 
@@ -113,8 +115,4 @@ void processEMS22A()
 	tx.calc_and_update_checksum();
 
 	UART::Write((uint8_t*)&tx,sizeof(tx));
-
 }
-
-#endif
-  

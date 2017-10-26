@@ -32,13 +32,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if 0
-
 #include "steer_controller2pc-structs.h"
 #include "config.h"
-
-#include <Wire.h>
-//#include <SPI.h>
+#include "common/gpio.h"
+#include "common/millis_timer.h"
+#include "common/uart.h"
+#include <avr/interrupt.h>
 
 unsigned long  PC_last_millis = 0;
 uint16_t       PC_sampling_period_ms = 500;
@@ -90,15 +89,13 @@ static void onEncoder_Raising_A()
 		ENC_STATUS[index].COUNTER++;
 	}
 
-#if 0
-	if (ENC_STATUS[index].encZ_valid) 
+	if (ENC_STATUS[index].encZ_valid)
 	{
 		const bool Z = (*portInputRegister(ENC_STATUS[index].encZ_port) & ENC_STATUS[index].encZ_bit);
 		if (Z) {
 			ENC_STATUS[index].COUNTER=0;
 		}
 	}
-#endif
 }
 
 // List of function pointers, required by Arduino attachInterrupt() and also 
@@ -148,7 +145,8 @@ void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 				ENC_STATUS[i].encZ_bit = ENC_STATUS[i].encZ_port = 0;
 			}
 			
-			attachInterrupt(digitalPinToInterrupt(cmd.encA_pin[i]), my_encoder_ISRs[i], RISING );
+			#warning interrupts!
+			//attachInterrupt(digitalPinToInterrupt(cmd.encA_pin[i]), my_encoder_ISRs[i], RISING );
 		}
 	}
 }
@@ -172,12 +170,12 @@ void processEncoders()
 	TFrame_ENCODERS_readings tx;
 
 	// Atomic read: used to avoid race condition while reading if an interrupt modified the mid-read data.
-	noInterrupts();
+	cli();
 	for (uint8_t i=0;i<TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS;i++)
 	{
 		tx.payload.encoders[i] = ENC_STATUS[i].COUNTER;
 	}
-	interrupts();
+	sei();
 
 	// send answer back:
 	tx.payload.timestamp_ms = millis();
@@ -186,5 +184,3 @@ void processEncoders()
 
 	UART::Write((uint8_t*)&tx,sizeof(tx));
 }
-
-#endif

@@ -80,8 +80,6 @@ void Configure(uint32_t USART_BAUDRATE, char sel_parity, bool rxen,bool txen,boo
 	UCSR0C = b;
 	
 	// Baud rate:
-	//UBRR0H = (baud_div >> 8) & 0x0F;	
-	//UBRR0L = baud_div & 0xFF;	
 	UBRR0 = baud_div;
 }
 

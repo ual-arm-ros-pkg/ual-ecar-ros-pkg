@@ -19,9 +19,11 @@ int main(void)
 	// ================== Setup hardware ==================
 	UART::Configure(115200);
 	millis_init();
-	
+
 	// Enable interrupts:
 	sei();
+
+	flash_led(3,2);
 
 	// ============== Infinite loop ====================
 	while(1)

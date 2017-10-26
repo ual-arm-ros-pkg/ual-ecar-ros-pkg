@@ -7,21 +7,21 @@
 
 #include "../config.h"
 #include "leds.h"
+#include "gpio.h"
 #include "delays.h"
 #include <avr/io.h>
 
 void LED_ON()
 {
-	sbi(LED_DDR,LED_PIN_IDX);
-	cbi(LED_PORT,LED_PIN_IDX);
+	gpio_pin_mode(LED_PIN_NO, OUTPUT);
+	gpio_pin_write(LED_PIN_NO, false);
 }
 
 void LED_OFF()
 {
-	sbi(LED_DDR,LED_PIN_IDX);
-	sbi(LED_PORT,LED_PIN_IDX);
+	gpio_pin_mode(LED_PIN_NO, OUTPUT);
+	gpio_pin_write(LED_PIN_NO, true);
 }
-
 
 void flash_led(int ntimes, int nms)
 {
