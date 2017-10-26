@@ -36,7 +36,7 @@ inline uint8_t digitalPinToPort(const uint8_t pin_no)
 {
 	if (!pin_no || pin_no>32)
 	     return 0;
-	else return (pin_no-1)>>3;
+	else return 1+((pin_no-1)>>3);
 }
 
 inline uint8_t digitalPinToBitMask(const uint8_t pin_no)
