@@ -19,7 +19,7 @@ Universidad de Almeria
 int main(void)
 {
 	// ================== Setup hardware ==================
-	UART::Configure(115200);
+	UART::Configure(500000);
 	millis_init();
 
 	// Enable interrupts:
@@ -30,6 +30,7 @@ int main(void)
 	// ============== Infinite loop ====================
 	while(1)
 	{
+#if 0
 		processIncommingPkts();
 		processADCs();
 		processEncoders();
@@ -37,6 +38,7 @@ int main(void)
 
 		// Handle possible timeouts of previous commands:
 		process_timeouts();
+#endif
 
 		delay_ms(1000);
 		char str[100];
