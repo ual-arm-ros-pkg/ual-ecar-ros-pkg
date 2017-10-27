@@ -12,7 +12,7 @@
 
 volatile uint32_t timer_ms=0;
 
-// Handle the Timer 2 events:
+// Handle the Timer 1 events:
 ISR(TIMER1_COMPA_vect)
 {
 	++timer_ms;

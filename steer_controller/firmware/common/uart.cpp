@@ -18,6 +18,25 @@ Universidad de Almeria
 
 #warning Use interrupts
 
+#include <avr/interrupt.h>
+
+#define UART_RX_BUFFER_BITS 5 // 2^5 = 64 bytes
+#define UART_RX_BUFFER_LEN  (1<<UART_RX_BUFFER_BITS)
+#define UART_RX_BUFFER_MASK ((1<<UART_RX_BUFFER_BITS)-1)
+
+uint8_t uart_rx_buffer[UART_RX_BUFFER_LEN];
+uint8_t uart_rx_buffer_write_index = 0;
+uint8_t uart_rx_buffer_read_index = 0;
+
+// Handle the UART RX events:
+ISR(USART0_RX_vect)
+{
+	const uint8_t rx_b = UDR0;
+	uart_rx_buffer[uart_rx_buffer_write_index++] = rx_b;
+	// Circular buffer index:
+	uart_rx_buffer_write_index = uart_rx_buffer_write_index & UART_RX_BUFFER_MASK;
+}
+
 namespace UART
 {
 	
@@ -68,7 +87,7 @@ void Configure(uint32_t USART_BAUDRATE, char sel_parity, bool rxen,bool txen,boo
 	UCSR0A = (1<<U2X0); // U2X: Prescaler=8
 	
 	// B
-	uint8_t b = 0x00;	// Dont enable received data interrupt
+	uint8_t b = 1 << RXCIE0;	// enable received data interrupt
 	if (rxen) b|=1 << RXEN0;
 	if (txen) b|=1 << TXEN0;
 	UCSR0B = b; 

@@ -15,6 +15,7 @@ Universidad de Almeria
 /** Access to UART0 */
 namespace UART
 {
+
 	inline bool ReadByte( uint8_t &data )
 	{
 		if ( UCSR0A & (1<<RXC0) )
