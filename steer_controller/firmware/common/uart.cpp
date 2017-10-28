@@ -14,71 +14,33 @@ Universidad de Almeria
 #include <string.h>  // strlen()
 
 #include "uart.h"
+#include "circular_buffer.h"
 #include "../config.h"
-
-#warning Use interrupts
 
 #include <avr/interrupt.h>
 
-#define UART_RX_BUFFER_BITS 5 // 2^5 = 64 bytes
-#define UART_RX_BUFFER_LEN  (1<<UART_RX_BUFFER_BITS)
-#define UART_RX_BUFFER_MASK ((1<<UART_RX_BUFFER_BITS)-1)
+#define UART_RX_BUFFER_BITS 6 // 2^6 = 64 bytes
 
-uint8_t uart_rx_buffer[UART_RX_BUFFER_LEN];
-uint8_t uart_rx_buffer_write_index = 0;
-uint8_t uart_rx_buffer_read_index = 0;
+circular_buffer<UART_RX_BUFFER_BITS>  uart_rx_buffer;
 
 // Handle the UART RX events:
 ISR(USART0_RX_vect)
 {
 	const uint8_t rx_b = UDR0;
-	uart_rx_buffer[uart_rx_buffer_write_index++] = rx_b;
-	// Circular buffer index:
-	uart_rx_buffer_write_index = uart_rx_buffer_write_index & UART_RX_BUFFER_MASK;
+	uart_rx_buffer.push(rx_b);
 }
 
-namespace UART
+/** Pops a byte from the RX queue. Returns false if no data was available. */
+bool UART::ReadByte( uint8_t &data )
 {
-	
-unsigned char ReadByte_blocking()
-{
-	unsigned char status, res;
-	/* Wait for data to be received */
-	while ( !(UCSR0A & (1<<RXC0)) )
-		;
-	/* Get status and 9th bit, then data */
-	/* from buffer */
-	status = UCSR0A;
-	res = UDR0;
-	/* If error, return -1 */
-	if ( status & ((1<<FE0)|(1<<DOR0)|(1<<UPE0)) )
-		return -1;
-
-	return res;	
+	return uart_rx_buffer.pop(data);
 }
-
-/** Blocks until one line of text is received (ended in '\r' or '\n'). Line length is returned. */
-uint8_t ReadLine_blocking(char*buf, unsigned char bufSize)
-{
-	uint8_t len = 0;
-	while (len<bufSize)
-	{
-		unsigned char b = ReadByte_blocking();
-		if (b=='\n' || b=='\r')
-			break;
-		buf[len++]=(char)b;		
-	}
-	buf[len]='\0';
-	return len;		
-}
-
-
 
 /*-----------------------------------------------------------------
 void CUART::Configure( bool RXEN, bool TXEN, char parity, bool stop_2bits, uint16_t baud_divisor )
 	Configure the UART. sel_parity = 0:N,2:even,3:odd
   -----------------------------------------------------------------*/
-void Configure(uint32_t USART_BAUDRATE, char sel_parity, bool rxen,bool txen,bool twostopbits)
+void UART::Configure(uint32_t USART_BAUDRATE, char sel_parity, bool rxen,bool txen,bool twostopbits)
 {
 	// Define baud rate
 	const uint16_t baud_div = (((F_CPU / (USART_BAUDRATE * 8UL))) - 1);
@@ -102,23 +64,21 @@ void Configure(uint32_t USART_BAUDRATE, char sel_parity, bool rxen,bool txen,boo
 	UBRR0 = baud_div;
 }
 
-
-
 /*-----------------------------------------------------------------
 void 	UART::ResetReceiver()
 	Empty received queue
   -----------------------------------------------------------------*/
-void 	ResetReceiver()
-{ 
-	register unsigned char b = UDR0;
+void UART::ResetReceiver()
+{
+	unsigned char b = UDR0;
+	uart_rx_buffer.clear();
 }
-
 
 /*-----------------------------------------------------------------
 void CUART::WriteByte( unsigned char data)
 	Write a byte to UART. 
   -----------------------------------------------------------------*/
-void WriteByte( register unsigned char data)
+void UART::WriteByte( register unsigned char data)
 {
 	while ( 0 == (UCSR0A & (1 << UDRE0)) ) {};	// wait until free
 	UDR0 = data;
@@ -127,19 +87,20 @@ void WriteByte( register unsigned char data)
 /*-----------------------------------------------------------------
 	Write an array of bytes:
   -----------------------------------------------------------------*/
-void Write( const uint8_t *data, uint16_t nBytes)
+void UART::Write( const uint8_t *data, uint16_t nBytes)
 {
 	for (uint16_t i = 0;i<nBytes;i++)
 		WriteByte( data[i] );
 }
 
-void WriteString( const char *str)
+void UART::WriteString( const char *str)
 {
 	Write((unsigned char*)str, strlen(str));
 }
 
-
-
-};
+uint8_t UART::AvailableForRead()
+{
+	return uart_rx_buffer.size();
+}
 
 

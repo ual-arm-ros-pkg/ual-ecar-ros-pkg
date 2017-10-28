@@ -42,7 +42,7 @@ int main(void)
 
 		delay_ms(1000);
 		char str[100];
-		sprintf(str,"Hello world! tim=%lu\n", millis() );
+		sprintf(str,"Hello world! tim=%lu for_read=%u\n", millis(), UART::AvailableForRead() );
 		UART::WriteString(str);
 	}
 }
