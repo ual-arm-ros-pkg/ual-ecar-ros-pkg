@@ -54,5 +54,5 @@ void send_simple_opcode_frame(const uint8_t op);
 extern uint8_t        num_active_ADC_channels;
 #define MAX_ADC_CHANNELS  8
 extern uint8_t        ADC_active_channels[MAX_ADC_CHANNELS];
-extern uint16_t       ADC_sampling_period_ms;
+extern uint16_t       ADC_sampling_period_ms_tenths;
 

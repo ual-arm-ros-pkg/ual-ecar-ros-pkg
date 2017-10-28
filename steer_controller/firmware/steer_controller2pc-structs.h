@@ -201,14 +201,14 @@ struct TFrameCMD_GPIO_read : public TBaseFrame<TFrameCMD_GPIO_read_payload_t>
 
 struct TFrameCMD_ADC_start_payload_t
 {
-	/** Fill all the pins ("Arduino-based numbering") that want to get read with an ADC. Default values = -1, means ignore that channel.
+	/** Fill all the pins (0xAB: A=port no., B=pin no.) that want to get read with an ADC. Default values = -1, means ignore that channel.
 	  */
 	int8_t   active_channels[8];
-	uint16_t measure_period_ms; //!< Default = 200
+	uint16_t measure_period_ms_tenths; //!<  in tenths of milliseconds Default = 2000
 	uint8_t  use_internal_refvolt; //!< 0 or 1. Default=0
 
 	TFrameCMD_ADC_start_payload_t() :
-		measure_period_ms(200),
+		measure_period_ms_tenths(2000),
 		use_internal_refvolt(0)
 	{
 		for (int i=0;i<8;i++) {
@@ -257,7 +257,7 @@ struct TFrameCMD_SET_PWM : public TBaseFrame<TFrameCMD_SET_PWM_payload_t>
 
 struct TFrame_ADC_readings_payload_t
 {
-	uint32_t timestamp_ms;
+	uint32_t timestamp_ms_tenths; //!< timestamp, in tenths of milliseconds
 	uint16_t adc_data[8];
 };
 struct TFrame_ADC_readings : public TBaseFrame<TFrame_ADC_readings_payload_t>
@@ -277,10 +277,10 @@ struct TFrameCMD_ENCODERS_start_payload_t
 	  * Leave to "0" if don't need Z channels or one of the A/B encoder channels.
 	  */
 	int8_t encA_pin[NUM_ENCODERS], encB_pin[NUM_ENCODERS], encZ_pin[NUM_ENCODERS];
-	uint16_t sampling_period_ms;
+	uint16_t sampling_period_ms_tenths;
 
 	TFrameCMD_ENCODERS_start_payload_t() :
-		sampling_period_ms(250)
+		sampling_period_ms_tenths(2500)
 	{
 		for (uint8_t i=0;i<NUM_ENCODERS;i++) {
 			encA_pin[i]=encB_pin[i]=encZ_pin[i]=0;
@@ -309,9 +309,9 @@ struct TFrameCMD_ENCODERS_stop : public TBaseFrame<TFrameCMD_ENCODERS_stop_paylo
 
 struct TFrame_ENCODERS_readings_payload_t
 {
-	uint32_t timestamp_ms;
+	uint32_t timestamp_ms_tenths;
 	int32_t  encoders[2];
-	uint32_t period_ms;
+	uint32_t period_ms_tenths;
 };
 struct TFrame_ENCODERS_readings : public TBaseFrame<TFrame_ENCODERS_readings_payload_t>
 {
@@ -323,7 +323,7 @@ struct TFrame_ENCODERS_readings : public TBaseFrame<TFrame_ENCODERS_readings_pay
 
 struct TFrame_ENCODER_ABS_reading_payload_t
 {
-	uint32_t timestamp_ms;
+	uint32_t timestamp_ms_tenths;
 	uint16_t enc_pos; //!< Absolute value read from the encoder (10 bits resolution)
 	uint8_t  enc_status; //!< See EMS22A datasheet for the bit map
 };
@@ -338,10 +338,10 @@ struct TFrame_ENCODER_ABS_reading : public TBaseFrame<TFrame_ENCODER_ABS_reading
 struct TFrameCMD_EMS22A_start_payload_t
 {
 	int8_t ENCODER_ABS_CS, ENCODER_ABS_CLK, ENCODER_ABS_DO;
-	uint16_t sampling_period_ms;
+	uint16_t sampling_period_ms_tenths;
 
 	TFrameCMD_EMS22A_start_payload_t() :
-		sampling_period_ms(50)
+		sampling_period_ms_tenths(500)
 	{
 		ENCODER_ABS_CS=ENCODER_ABS_CLK=ENCODER_ABS_DO=0;
 	}

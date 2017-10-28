@@ -24,3 +24,4 @@ steer_controller/firmware/Debug/Makefile
 steer_controller/firmware/Debug/Makefile
 *.lss
 *.srec
+*.srec

@@ -61,11 +61,7 @@ void processIncommingPkts()
 		// store:
 		rx_buf[rx_buf_len++] = b;
 
-		//char buf[10];
-		//sprintf(buf,"rx: 0x%02X\n",b);
-		//Serial.print(buf);
-
-		if (rx_buf_len==5+rx_buf[2])
+		if (rx_buf_len>2 && rx_buf_len==5+rx_buf[2])
 		{
 			// Check if we have a full frame:
 			if (rx_buf[rx_buf_len-1]!=FRAME_END_FLAG) {

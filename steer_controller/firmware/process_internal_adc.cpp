@@ -36,39 +36,39 @@
 #include "steer_controller2pc-structs.h"
 #include "common/uart.h"
 #include "common/millis_timer.h"
+#include "common/adc_internal.h"
 
 // ADC reading subsystem:
 uint8_t        num_active_ADC_channels = 0;
 uint8_t        ADC_active_channels[MAX_ADC_CHANNELS] = {0,0,0,0,0,0,0,0};
 unsigned long  ADC_last_millis = 0;
-uint16_t       ADC_sampling_period_ms = 200;
+uint16_t       ADC_sampling_period_ms_tenths = 2000;
 
+// 160us per channel
 void processADCs()
 {
 	if (!num_active_ADC_channels)
 		return;
 
-	const unsigned long tnow = millis();
+	const uint32_t tnow = millis();
 
-	if (tnow-ADC_last_millis < ADC_sampling_period_ms)
+	if (tnow-ADC_last_millis < ADC_sampling_period_ms_tenths)
 		return;
 
 	ADC_last_millis = tnow;
 
-	uint16_t ADC_readings[MAX_ADC_CHANNELS] =  {0,0,0,0,0,0,0,0};
+	TFrame_ADC_readings tx;
+	for (int i=0;i<MAX_ADC_CHANNELS;i++) {
+		tx.payload.adc_data[i] = 0;
+	}
 	
 	for (uint8_t i=0;i<num_active_ADC_channels;i++)
 	{
-		#warning Implement!
-		//ADC_readings[i] = analogRead(ADC_active_channels[i]);
+		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]);
 	}
 
 	// send answer back:
-	TFrame_ADC_readings tx;
-	tx.payload.timestamp_ms = millis();
-	for (int i=0;i<8;i++) {
-		tx.payload.adc_data[i] = ADC_readings[i];
-	}
+	tx.payload.timestamp_ms_tenths = millis();
 	tx.calc_and_update_checksum();
 
 	UART::Write((uint8_t*)&tx,sizeof(tx));

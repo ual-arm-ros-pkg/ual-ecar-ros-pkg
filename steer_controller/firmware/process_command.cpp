@@ -85,7 +85,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 	{
 	case OP_NOP:
 	{
-		if (datalen!=sizeof(TFrameCMD_NOP_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		if (datalen!=0) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
 		// No-operation: just a fake command to check if comms are alive
 		return send_simple_opcode_frame(RESP_NOP);
@@ -144,7 +144,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		const uint8_t val = gpio_pin_read(pin_no);
 
 		// send answer back:
-		const uint8_t rx[] = { FRAME_START_FLAG, RESP_GET_GPIO, 0x01, pin_no, val, 0x00 +pin_no+ val/*checksum*/, FRAME_END_FLAG };
+		const uint8_t rx[] = { FRAME_START_FLAG, RESP_GET_GPIO, 0x01, pin_no, val, uint8_t(0x00 +pin_no+ val)/*checksum*/, FRAME_END_FLAG };
 		UART::Write(rx,sizeof(rx));
 	}
 	break;
@@ -165,7 +165,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 				num_active_ADC_channels++;
 			}
 		}
-		ADC_sampling_period_ms = adc_req.measure_period_ms;
+		ADC_sampling_period_ms_tenths = adc_req.measure_period_ms_tenths;
 		
 		// Enable ADC with internal/default reference:
 		adc_init(adc_req.use_internal_refvolt);
@@ -246,7 +246,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		memcpy(&EMS22A_req,data, sizeof(EMS22A_req));
 		if (init_EMS22A(
 			EMS22A_req.ENCODER_ABS_CS,EMS22A_req.ENCODER_ABS_CLK, 
-			EMS22A_req.ENCODER_ABS_DO, EMS22A_req.sampling_period_ms
+			EMS22A_req.ENCODER_ABS_DO, EMS22A_req.sampling_period_ms_tenths
 			))
 		{
 
@@ -282,7 +282,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 void process_timeouts()
 {
 	TimeoutData &pt = PendingTimeouts; // shortcut
-	const unsigned long tnow = millis();
+	const uint32_t tnow = millis();
 
 	if (pt.DAC_any)
 	{

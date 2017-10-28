@@ -13,8 +13,6 @@ Universidad de Almeria
 #include "steer_controller_declarations.h"
 
 #include <avr/interrupt.h> // sei()
-#include <stdio.h>
-
 
 int main(void)
 {
@@ -26,23 +24,18 @@ int main(void)
 	sei();
 
 	flash_led(3,100);
-
+	
 	// ============== Infinite loop ====================
 	while(1)
 	{
-#if 0
 		processIncommingPkts();
 		processADCs();
 		processEncoders();
 		processEMS22A();
 
+		//processSteerControl();
+
 		// Handle possible timeouts of previous commands:
 		process_timeouts();
-#endif
-
-		delay_ms(1000);
-		char str[100];
-		sprintf(str,"Hello world! tim=%lu for_read=%u\n", millis(), UART::AvailableForRead() );
-		UART::WriteString(str);
 	}
 }

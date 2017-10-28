@@ -40,7 +40,7 @@
 #include <avr/interrupt.h>
 
 unsigned long  PC_last_millis = 0;
-uint16_t       PC_sampling_period_ms = 500;
+uint16_t       PC_sampling_period_ms_tenths = 5000;
 bool           ENCODERS_active       = false;
 
 struct EncoderStatus
@@ -111,7 +111,7 @@ func_ptr my_encoder_ISRs[TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS] =
 
 void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 {
-	PC_sampling_period_ms = cmd.sampling_period_ms;
+	PC_sampling_period_ms_tenths = cmd.sampling_period_ms_tenths;
 
 	// For each software-based encoder:
 	for (uint8_t i=0;i<TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS;i++)
@@ -161,8 +161,8 @@ void processEncoders()
 	gpio_pin_write(PIN_ENCODER_DEBUG_LED,ENC_STATUS[0].led);
 #endif
 
-	const unsigned long tnow = millis();
-	if (tnow-PC_last_millis < PC_sampling_period_ms)
+	const uint32_t tnow = millis();
+	if (tnow-PC_last_millis < PC_sampling_period_ms_tenths)
 	return;
 
 	PC_last_millis = tnow;
@@ -178,8 +178,8 @@ void processEncoders()
 	sei();
 
 	// send answer back:
-	tx.payload.timestamp_ms = millis();
-	tx.payload.period_ms = PC_sampling_period_ms;
+	tx.payload.timestamp_ms_tenths = millis();
+	tx.payload.period_ms_tenths = PC_sampling_period_ms_tenths;
 	tx.calc_and_update_checksum();
 
 	UART::Write((uint8_t*)&tx,sizeof(tx));

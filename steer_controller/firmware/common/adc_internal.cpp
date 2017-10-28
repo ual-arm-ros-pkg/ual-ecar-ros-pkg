@@ -10,14 +10,20 @@
 
 void adc_init(bool use_internal_vref)
 {
-#warning handle use_internal_vref!
+	if (use_internal_vref)
+	{
+		//Volt. ref= internal 2.56V
+		ADMUX |= (1<<REFS0);
+		ADMUX |= ~(1<<REFS1);
+	}
+	else
+	{
+		//Avcc(+5v) as voltage reference
+		ADMUX |= (1<<REFS0);
+		ADMUX &= ~(1<<REFS1);
+	}
 	
-	//Avcc(+5v) as voltage reference
-	//TODO: Volt. ref= internal 2.56V
-	ADMUX |= (1<<REFS0);
-	ADMUX &= ~(1<<REFS1);
-	
-	//Prescaler at 128 -> 16Mhz/128 = 125Khz ADC clock
+	//Prescaler at 128 -> 20Mhz/128 = 156.25Khz ADC clock
 	ADCSRA |= ((1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0));
 
 	// Power up
