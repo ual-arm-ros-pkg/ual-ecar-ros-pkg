@@ -21,9 +21,10 @@ ISR(TIMER1_COMPA_vect)
 /** Returns the elapsed tenths of milliseconds since boot */
 uint32_t millis()
 {
+	uint8_t oldSREG = SREG;
 	cli();
 	const uint32_t ret = timer_ms;
-	sei();
+	SREG = oldSREG;
 	return ret;
 }
 

@@ -170,12 +170,13 @@ void processEncoders()
 	TFrame_ENCODERS_readings tx;
 
 	// Atomic read: used to avoid race condition while reading if an interrupt modified the mid-read data.
+	uint8_t oldSREG = SREG;
 	cli();
 	for (uint8_t i=0;i<TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS;i++)
 	{
 		tx.payload.encoders[i] = ENC_STATUS[i].COUNTER;
 	}
-	sei();
+	SREG=oldSREG;
 
 	// send answer back:
 	tx.payload.timestamp_ms_tenths = millis();
