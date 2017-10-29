@@ -37,7 +37,7 @@
 #include "common/gpio.h"
 #include "common/millis_timer.h"
 #include "common/uart.h"
-#include <avr/interrupt.h>
+#include <avr/interrupt.h>  // cli()/sei()
 
 unsigned long  PC_last_millis = 0;
 uint16_t       PC_sampling_period_ms_tenths = 5000;

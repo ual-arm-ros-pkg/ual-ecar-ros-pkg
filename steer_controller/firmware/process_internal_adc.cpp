@@ -44,7 +44,6 @@ uint8_t        ADC_active_channels[MAX_ADC_CHANNELS] = {0,0,0,0,0,0,0,0};
 unsigned long  ADC_last_millis = 0;
 uint16_t       ADC_sampling_period_ms_tenths = 2000;
 
-// 160us per channel
 void processADCs()
 {
 	if (!num_active_ADC_channels)

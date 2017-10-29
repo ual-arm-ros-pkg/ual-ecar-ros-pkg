@@ -34,10 +34,9 @@
 // S5	: Decrease in magnitude.
 // P1	: Even parity for detecting bits 1-15 transmission error.
 
-#warning Change to other default pin numbers!
-int ENCODER_ABS_CS  = 9;
-int ENCODER_ABS_CLK = 10;
-int ENCODER_ABS_DO  = 11;
+int ENCODER_ABS_CS  = 0x10;
+int ENCODER_ABS_CLK = 0x11;
+int ENCODER_ABS_DO  = 0x12;
 unsigned long  EMS22A_last_millis        = 0;
 uint16_t       EMS22A_sampling_period_ms_tenths = 2000;
 bool           EMS22A_active             = false;

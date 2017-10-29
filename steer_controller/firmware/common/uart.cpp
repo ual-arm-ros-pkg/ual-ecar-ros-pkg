@@ -70,7 +70,6 @@ void 	UART::ResetReceiver()
   -----------------------------------------------------------------*/
 void UART::ResetReceiver()
 {
-	unsigned char b = UDR0;
 	uart_rx_buffer.clear();
 }
 

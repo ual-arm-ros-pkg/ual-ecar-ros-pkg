@@ -8,6 +8,7 @@
 #include "gpio.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdlib.h>
 
 // Mapping between pin numbers and actual AVR registers:
 // For: 
@@ -92,4 +93,60 @@ bool gpio_pin_read(const uint8_t pin_no)
 	return (*ptr_in & mask)!=0;
 }
 
+
+// Handle external interrupts:
+typedef void (*user_ext_int_func)(void);
+user_ext_int_func user_external_interrupts[3] = {
+	NULL,  // PC0
+	NULL,  // PC1
+	NULL   // PC2
+};
+
+ISR(INT0_vect)
+{
+	if (user_external_interrupts[0])
+		(*user_external_interrupts[0])();
+}
+ISR(INT1_vect)
+{
+	if (user_external_interrupts[1])
+		(*user_external_interrupts[1])();
+}
+ISR(INT2_vect)
+{
+	if (user_external_interrupts[2])
+		(*user_external_interrupts[2])();
+}
+
+bool gpio_attach_interrupt(const uint8_t pin_no, void (*func_ptr)(void), interrupt_event_type_t  int_event)
+{
+	// only PCINT[0-2] are available on "atmega{16,32,64,128}4":
+	// INT0=PD2 => 0x42
+	// INT1=PD3 => 0x43
+	// INT2=PB2 => 0x22
+	uint8_t int_no;
+	switch (pin_no)
+	{
+		case 0x42: int_no = 0; break;
+		case 0x43: int_no = 1; break;
+		case 0x22: int_no = 2; break;
+		default:
+			return false; // invalid pin
+	};
+
+	// 1) disable ints while changing ISCnX bits, as recommended by datasheet:
+	EIMSK &= ~(1<<int_no);
+	
+	// change user function pointers:
+	user_external_interrupts[int_no] = func_ptr;
+
+	// 2) change ISCnX bits: (see section 13.2 of datasheet)
+	EICRA &= ~(0x03 << (2*int_no));
+	EICRA |= (int_event & 0x03) << (2*int_no);
+	
+	// 3) enable ints:
+	EIMSK |= (1<<int_no);
+
+	return true;
+}
 
