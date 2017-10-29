@@ -33,6 +33,8 @@
  */
 
 #include "common/gpio.h"
+#include "common/spi.h"
+#include "common/delays.h"
 #include "mod_dac_max5500.h"
 #include "config.h" // Fixed pins configuration for this hardware
 
@@ -53,11 +55,10 @@ Commands C1.C0:
 
 void mod_dac_max5500_init()
 {
-#warning Update!
-#if 0
 	// start the SPI library:
-	SPI.begin();
-#endif
+	spi_begin();
+	spi_settings(8000000, SPI_MSB_FIRST, SPI_MODE0);
+	
 	gpio_pin_write(PIN_DAC_MAX5500_CS, true);  // /CS=1
 	gpio_pin_mode(PIN_DAC_MAX5500_CS, OUTPUT);
 	// Set all chip outputs to 0V
@@ -66,24 +67,21 @@ void mod_dac_max5500_init()
 
 void mod_dac_max5500_send_spi_word(uint16_t tx_word)
 {
-#warning Update!
-#if 0
 	// Send HiByte:
-	SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
+	spi_begin_transaction();
 
 	// nCS -> 0
 	gpio_pin_write(PIN_DAC_MAX5500_CS, false);
 	delay_us(1); // Min. 40ns: nCS->0 to SCK
 
-	SPI.transfer16 (tx_word);
+	spi_transfer16(tx_word);
 
 	delay_us(1);
 
 	// nCS -> 1
 	gpio_pin_write(PIN_DAC_MAX5500_CS, true);
 
-	SPI.endTransaction();
-#endif
+	spi_end_transaction();
 }
 
 void mod_dac_max5500_update_single_DAC(uint8_t dac_idx, uint16_t dac_value)

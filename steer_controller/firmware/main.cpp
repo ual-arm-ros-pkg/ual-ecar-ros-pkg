@@ -14,7 +14,6 @@ Universidad de Almeria
 
 #include <avr/interrupt.h> // sei()
 
-
 int main(void)
 {
 	// ================== Setup hardware ==================

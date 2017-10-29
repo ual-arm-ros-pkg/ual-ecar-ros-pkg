@@ -42,6 +42,7 @@ C_SRCS +=  \
 ../common/gpio.cpp \
 ../common/leds.cpp \
 ../common/millis_timer.cpp \
+../common/spi.cpp \
 ../common/uart.cpp \
 ../main.cpp \
 ../mod_dac_max5500.cpp \
@@ -63,6 +64,7 @@ common/adc_internal.o \
 common/gpio.o \
 common/leds.o \
 common/millis_timer.o \
+common/spi.o \
 common/uart.o \
 main.o \
 mod_dac_max5500.o \
@@ -77,6 +79,7 @@ common/adc_internal.o \
 common/gpio.o \
 common/leds.o \
 common/millis_timer.o \
+common/spi.o \
 common/uart.o \
 main.o \
 mod_dac_max5500.o \
@@ -91,6 +94,7 @@ common/adc_internal.d \
 common/gpio.d \
 common/leds.d \
 common/millis_timer.d \
+common/spi.d \
 common/uart.d \
 main.d \
 mod_dac_max5500.d \
@@ -105,6 +109,7 @@ common/adc_internal.d \
 common/gpio.d \
 common/leds.d \
 common/millis_timer.d \
+common/spi.d \
 common/uart.d \
 main.d \
 mod_dac_max5500.d \
@@ -128,6 +133,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

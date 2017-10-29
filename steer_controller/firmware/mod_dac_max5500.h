@@ -38,6 +38,6 @@
 
 #include <stdint.h>  // uint8_t, etc.
 
-void mod_dac_max5500_init();
+void mod_dac_max5500_init();     //!< time: 40 us
 void mod_dac_max5500_send_spi_word(uint16_t tx_word);
-void mod_dac_max5500_update_single_DAC(uint8_t dac_idx, uint16_t dac_value);
+void mod_dac_max5500_update_single_DAC(uint8_t dac_idx, uint16_t dac_value); //!< time: 11.15 us
