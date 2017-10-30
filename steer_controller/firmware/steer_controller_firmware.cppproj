@@ -229,6 +229,12 @@
     <Compile Include="common\millis_timer.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="common\pwm.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="common\pwm.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="common\spi.cpp">
       <SubType>compile</SubType>
     </Compile>

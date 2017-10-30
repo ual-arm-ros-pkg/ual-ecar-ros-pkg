@@ -37,7 +37,7 @@ enum interrupt_event_type_t
 	INTERRUPT_ON_LOW_LEVEL    = 0,
 	INTERRUPT_ON_ANY_EDGE     = 1,
 	INTERRUPT_ON_FALLING_EDGE = 2,
-	INTERRUPT_ON_RAISING_EDGE = 3
+	INTERRUPT_ON_RISING_EDGE = 3
 };
 
 /** See gpio_pin_mode() for pin number convention.

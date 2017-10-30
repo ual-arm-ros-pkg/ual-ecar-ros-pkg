@@ -39,7 +39,7 @@
 #include "common/uart.h"
 #include <avr/interrupt.h>  // cli()/sei()
 
-unsigned long  PC_last_millis = 0;
+uint32_t  PC_last_millis = 0;
 uint16_t       PC_sampling_period_ms_tenths = 5000;
 bool           ENCODERS_active       = false;
 
@@ -144,9 +144,8 @@ void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 				ENC_STATUS[i].encZ_valid = false;
 				ENC_STATUS[i].encZ_bit = ENC_STATUS[i].encZ_port = 0;
 			}
-			
-			#warning interrupts!
-			//attachInterrupt(digitalPinToInterrupt(cmd.encA_pin[i]), my_encoder_ISRs[i], RISING );
+
+			gpio_attach_interrupt(cmd.encA_pin[i],my_encoder_ISRs[i], INTERRUPT_ON_RISING_EDGE);
 		}
 	}
 }

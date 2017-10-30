@@ -10,6 +10,8 @@ common\leds.cpp
 
 common\millis_timer.cpp
 
+common\pwm.cpp
+
 common\spi.cpp
 
 common\uart.cpp

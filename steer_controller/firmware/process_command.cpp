@@ -40,6 +40,7 @@
 #include "common/delays.h"
 #include "common/gpio.h"
 #include "common/adc_internal.h"
+#include "common/pwm.h"
 #include "steer_controller_declarations.h"
 
 
@@ -51,13 +52,13 @@
 
 struct TimeoutData
 {
-	unsigned long TIMEOUT_TICKS;   //!< Number of millis() ticks to timeout an output signal. Default=1000 ms
+	uint32_t TIMEOUT_TICKS;   //!< Number of millis() ticks to timeout an output signal. Default=1000 ms
 	
 	bool PWM_any;
-	unsigned long PWM_last_changed[16];  //!< Last timestamp (millis()) for each PWM channel
+	uint32_t PWM_last_changed[2];  //!< Last timestamp (millis()) for each PWM channel
 
 	bool DAC_any;
-	unsigned long DAC_last_changed[4];  //!< Last timestamp (millis()) for each DAC channel
+	uint32_t DAC_last_changed[4];  //!< Last timestamp (millis()) for each DAC channel
 
 	TimeoutData() :
 		TIMEOUT_TICKS(1000),
@@ -194,9 +195,13 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		memcpy(&pwm_req,data, sizeof(pwm_req));
 
 		gpio_pin_mode(pwm_req.pin_index, OUTPUT);
-		
-		#warning define API for PWM
-		//analogWrite(pwm_req.pin_index, pwm_req.analog_value);
+
+		static bool pwm_initialized = false;
+		if (!pwm_initialized)
+		{
+			pwm_init(PWM_TIMER0, PWM_PRESCALER_1 );
+		}
+		pwm_set_duty_cycle(PWM_TIMER0,pwm_pin_t(pwm_req.pin_index),pwm_req.analog_value);
 
 		if (pwm_req.flag_enable_timeout)
 		{
@@ -315,9 +320,7 @@ void process_timeouts()
 				{
 					// Watchdog timer event!
 					pt.PWM_last_changed[i]=0; // reset this one
-					
-					#warning define API for PWM
-					//analogWrite(i, 0);
+					pwm_set_duty_cycle(PWM_TIMER0,pwm_pin_t(i),0x00);
 				}
 			}
 		}

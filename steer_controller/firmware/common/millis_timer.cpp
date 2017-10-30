@@ -33,11 +33,11 @@ uint32_t millis()
 void millis_init()
 {
 	timer_ms=0;
-	// Timer2: 8bits,
+	// Timer1: 16bits,
 	const unsigned int prescaler = 8;
 	// 1 overflow with compare = (1+n): prescaler* (1+n) / FREQ_CPU = period
 
-	// 1ms period compare value:
+	// 0.1ms period compare value:
 	OCR1A = ((F_CPU/10000)/prescaler)-1;
 
 	// Mode 2: WGM12=1 (clear on compare)
