@@ -98,7 +98,7 @@ enum opcode_t {
 	RESP_ENCODER_READINGS = 0x93,
 	RESP_EMS22A_READINGS  = 0x94,
 	RESP_SET_PWM          = OP_SET_PWM + RESP_OFFSET,
-
+	RESP_CPU_USAGE_STATS  = 0xA0,
 
 	// error codes:
 	RESP_CHECKSUM_ERROR    = 0xfa,
@@ -331,6 +331,27 @@ struct TFrame_ENCODER_ABS_reading : public TBaseFrame<TFrame_ENCODER_ABS_reading
 {
 	// Defaults:
 	TFrame_ENCODER_ABS_reading() : TBaseFrame(RESP_EMS22A_READINGS)
+	{
+	}
+};
+
+struct TFrame_CPU_USAGE_STATS_payload_t
+{
+	uint32_t timestamp_ms_tenths;
+	/** min/max/average execution time of the uC main loop (in tenths of milliseconds) */
+	uint32_t loop_min_time, loop_max_time, loop_average_time;
+	uint16_t loop_iterations;
+	void clear()
+	{
+		loop_min_time = 0xffffffff;
+		loop_max_time = loop_average_time = 0;
+		loop_iterations = 0;
+	}
+};
+struct TFrame_CPU_USAGE_STATS : public TBaseFrame<TFrame_CPU_USAGE_STATS_payload_t>
+{
+	// Defaults:
+	TFrame_CPU_USAGE_STATS() : TBaseFrame(RESP_CPU_USAGE_STATS)
 	{
 	}
 };

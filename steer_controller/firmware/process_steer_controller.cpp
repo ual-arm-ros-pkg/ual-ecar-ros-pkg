@@ -1,4 +1,9 @@
-ï»¿/*
+/*
+ * process_steer_controller.cpp
+ *
+ * Created: 30/10/2017 22:59:28
+ *  Author: Francisco Jose Mañas Alvarez, Jose Luis Blanco Claraco
+ *
  * Software License Agreement (BSD License)
  *
  *  Copyright (c) 2016-17, Universidad de Almeria
@@ -32,31 +37,35 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+//#include "steer_controller2pc-structs.h"
+//#include "config.h"
+#include "common/millis_timer.h"
+#include "common/uart.h"
+//#include <avr/interrupt.h>  // cli()/sei()
 
-#include "steer_controller2pc-structs.h"
+uint32_t  CONTROL_last_millis = 0;
+uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
+bool      STEERCONTROL_active = false;// true: controller; false: open loop
 
-#include <stdint.h>  // uint8_t, etc.
+void enableSteerController(bool enabled)
+{
+	STEERCONTROL_active = enabled;
+	
+	#warning Set PWM & DAC values to safe values in any case.
 
-// Function prototypes:
-void reset_rx_buf();
-void processIncommingPkts();
-void processADCs();          // 160us per ADC channel
-void processEncoders();
-void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd);
-void processEMS22A();        // 193us (Real: 300-400 us)
-void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*data);
-void process_timeouts();
-void flash_led(int ntimes, int nms);
-void send_simple_opcode_frame(const uint8_t op);
+}
 
-void processSteerController();
-void enableSteerController(bool enabled);
+void processSteerController()
+{
+	if (!STEERCONTROL_active)
+		return;
+
+	const uint32_t tnow = millis();
+	if (tnow-CONTROL_last_millis < CONTROL_sampling_period_ms_tenths)
+	return;
+	CONTROL_last_millis = tnow;
 
 
-// Global vars:
-extern uint8_t        num_active_ADC_channels;
-#define MAX_ADC_CHANNELS  8
-extern uint8_t        ADC_active_channels[MAX_ADC_CHANNELS];
-extern uint16_t       ADC_sampling_period_ms_tenths;
+
+}
 

@@ -28,5 +28,7 @@ mod_ems22a.cpp
 
 process_encoder.cpp
 
+process_steer_controller.cpp
+
 serial.cpp
 
