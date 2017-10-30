@@ -73,8 +73,8 @@ void pwm_init(pwm_timer_t timer_id, pwm_timer_prescaler_t pwm_prescaler)
 			// See datasheet page 103
 			// Mode(WGM2:0)=1: phase correct PWM. TOP=0xff
 			TCCR0A = 
-				_BV(COM0A1) | _BV(COM0A0) |
-				_BV(COM0B1) | _BV(COM0B0) |
+				_BV(COM0A1) |
+				_BV(COM0B1) |
 				_BV(WGM00);
 			TCCR0B = (pwm_prescaler & 0x03) << CS00;
 		}
@@ -87,8 +87,8 @@ void pwm_init(pwm_timer_t timer_id, pwm_timer_prescaler_t pwm_prescaler)
 			// See datasheet page 103
 			// Mode(WGM2:0)=1: phase correct PWM. TOP=0xff
 			TCCR2A =
-			_BV(COM2A1) | _BV(COM2A0) |
-			_BV(COM2B1) | _BV(COM2B0) |
+			_BV(COM2A1) |
+			_BV(COM2B1) |
 			_BV(WGM20);
 			TCCR2B = (pwm_prescaler & 0x03) << CS20;
 		}

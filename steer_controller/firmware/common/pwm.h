@@ -32,7 +32,8 @@ enum pwm_pin_t
 	PWM_PIN_OCnB
 };
 
-/** Allows changing the period of the PWM signal. */
+/** Allows changing the period of the PWM signal. 
+  *  freq_PWM = F_CPU / (prescaler*510)  */
 void pwm_init(pwm_timer_t timer_id, pwm_timer_prescaler_t pwm_prescaler);
 
 /** Sets the PWM cycle. First, call pwm_init(). 
