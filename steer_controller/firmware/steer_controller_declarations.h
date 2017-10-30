@@ -43,7 +43,7 @@ void reset_rx_buf();
 void processIncommingPkts();
 void processADCs();          // 160us per ADC channel
 void processEncoders();
-void processEMS22A();        // 193us
+void processEMS22A();        // 193us (Real: 300-400 us)
 void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*data);
 void process_timeouts();
 void flash_led(int ntimes, int nms);

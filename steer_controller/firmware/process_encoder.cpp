@@ -60,6 +60,8 @@ struct EncoderStatus
 
 EncoderStatus ENC_STATUS[TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS];
 
+// Minimum pulse width: ~3 us (ISR takes 2.8us @ 20MHz)
+
 // Forward:
 //        ------      ------
 // A:     |    |      |    |
@@ -80,9 +82,8 @@ static void onEncoder_Raising_A()
 	if (ENC_STATUS[index].encB_valid)
 	{
 		const bool B = (*portInputRegister(ENC_STATUS[index].encB_port) & ENC_STATUS[index].encB_bit);
-		if (B)
-		ENC_STATUS[index].COUNTER--;
-		else ENC_STATUS[index].COUNTER++;	
+		if (B) ENC_STATUS[index].COUNTER--;
+		else ENC_STATUS[index].COUNTER++;
 	}
 	else 
 	{
@@ -123,8 +124,11 @@ void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 		// Is it enabled by the user?
 		if (cmd.encA_pin[i]>0) 
 		{
+			gpio_pin_mode(cmd.encA_pin[i], INPUT_PULLUP);
 			if (cmd.encB_pin[i]>0)
 			{
+				gpio_pin_mode(cmd.encB_pin[i], INPUT_PULLUP);
+
 				// Cache these calls to avoid repeating them in readDigital() inside the interrupt vector ;-)
 				ENC_STATUS[i].encB_bit = digitalPinToBitMask( cmd.encB_pin[i] );
 				ENC_STATUS[i].encB_port = digitalPinToPort(cmd.encB_pin[i]);

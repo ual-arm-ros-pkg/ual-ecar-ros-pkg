@@ -67,7 +67,7 @@
     </AsfFrameworkConfig>
     <avrtoolserialnumber>J41800025971</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x1E940A</avrdeviceexpectedsignature>
-    <avrtoolinterfaceclock>200000</avrtoolinterfaceclock>
+    <avrtoolinterfaceclock>6052966</avrtoolinterfaceclock>
     <com_atmel_avrdbg_tool_simulator>
       <ToolOptions>
         <InterfaceProperties>
@@ -83,7 +83,7 @@
     <com_atmel_avrdbg_tool_atmelice>
       <ToolOptions>
         <InterfaceProperties>
-          <JtagDbgClock>200000</JtagDbgClock>
+          <JtagDbgClock>6052966</JtagDbgClock>
         </InterfaceProperties>
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
