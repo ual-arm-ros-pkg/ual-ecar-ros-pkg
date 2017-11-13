@@ -117,7 +117,7 @@ bool CSteerControllerLowLevel::iterate()
 	std_msgs::Bool msg_b;
 
 	//Calibracion encoder Absoluto
-	if(pos_ant == 0 && m_Encoder_Absoluto < 280)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
+	if(pos_ant == 0 && m_Encoder_Absoluto < 250)					/*Comprobacion por si el encoder se encuentra en una posicion superior a 1024*/
 		paso = true;
 
 	if(m_Encoder_Absoluto - pos_ant < - 500 || paso == true)		/*Comprobacion por si el encoder se inicia en una posicion superior a 1024 o*/
@@ -131,21 +131,20 @@ bool CSteerControllerLowLevel::iterate()
 		encoder_value = m_Encoder_Absoluto - 303;
 
 	pos_ant = m_Encoder_Absoluto;
-	// 150.6995 se corresponde a la correlación entre un paso del encoder absoluto y el encoder incremental
-	// 1824.9 se corresponde con (ppv * reductor * nºvueltas)/ang_max
-	m_Encoder_Abs[0] = - (encoder_value - 512) * 150.6995 / 1824.9;// 303 = Offset // 512 = Centro
+
+	m_Encoder_Abs[0] = - (encoder_value - 512);// 303 = Offset // 512 = Centro
 	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
 
 	//Calibracion inicial de la posicion del encoder relativo. Produce errores
-/*	if (red)
+	if (red)
 	{
 		ang_inicial = m_Encoder_Abs[0];
 		aux = m_enc_inc;
 		red = false;
 	}
-	m_Encoder[0] = m_enc_inc - aux + ang_inicial; */
-	m_Encoder[0] = m_enc_inc;
-	// ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder: %f ", m_Encoder[0]);
+	m_Encoder[0] = m_enc_inc - aux + ang_inicial;
+	//m_Encoder[0] = m_enc_inc;
+	ROS_INFO_COND_NAMED( m_Encoder[0] !=  m_Encoder[1], " test only " , "Encoder: %f ", m_Encoder[0]);
 
 	// Proteccion que avisa de la discrepancia de datos entre encoders y recalibra el incremental
 /*	if (std::abs(m_Encoder[0]-m_Encoder_Abs[0])>5)
@@ -332,7 +331,7 @@ void CSteerControllerLowLevel::GPIO7Callback(const std_msgs::Bool::ConstPtr& msg
 
 void CSteerControllerLowLevel::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
 {
-	m_enc_inc = (msg->encoder_values[0]) / 1824.9; //( ppv * reductor * n vueltas ) / ang_max 
+	m_enc_inc = (msg->encoder_values[0])*337 / (500*100);
 	//	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
 }
 
