@@ -262,6 +262,7 @@ bool CSteerControllerLowLevel::iterate()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
+	/*	Control en lazo abierto	 */
 		voltaje_pedal = 1.0 + std::abs(Eje_y) * 4.76;
 
 		if (voltaje_pedal < 1)
@@ -272,13 +273,15 @@ bool CSteerControllerLowLevel::iterate()
 		m_pub_voltage_pedal.publish(msg_f);
 
 		ROS_INFO("Pedal: %.02f volts", voltaje_pedal);
+
 		// Bool
-		
+
+		ROS_INFO_COND_NAMED(GPIO7 !=  b1, " test only " , "Rev Relay = %s", b1 ? "true":"false");
+
 		b1 = GPIO7;
 		msg_b.data = GPIO7;
 		m_pub_rev_relay.publish(msg_b);
 
-		ROS_INFO("Rev Relay = %s", b1 ? "true":"false");
 
 	/* Actualizacion de valores*/
 	m_R_steer[1] = m_R_steer[0];
