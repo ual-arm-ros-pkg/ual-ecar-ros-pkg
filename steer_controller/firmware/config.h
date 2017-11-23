@@ -19,6 +19,7 @@
 #define cbi(port,bit)  (port &= ~( 1 << bit ))
 
 // Fixed pins configuration for this hardware:
-const int PIN_DAC_MAX5500_CS  = 9;
+const int PIN_DAC_MAX5500_CS  = 0x12;
 const int PIN_LED             = 13;
+
 

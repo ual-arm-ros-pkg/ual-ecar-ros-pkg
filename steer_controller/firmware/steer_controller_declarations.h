@@ -42,6 +42,8 @@
 void reset_rx_buf();
 void processIncommingPkts();
 void processADCs();          // 160us per ADC channel
+void adc_process_start_cmd(const TFrameCMD_ADC_start_payload_t &adc_req);
+void adc_process_stop_cmd();
 void processEncoders();
 void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd);
 void processEMS22A();        // 193us (Real: 300-400 us)
@@ -52,11 +54,12 @@ void send_simple_opcode_frame(const uint8_t op);
 
 void processSteerController();
 void enableSteerController(bool enabled);
-
+void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p);
+void setSteerControllerSetpoint_Steer(int16_t pos, float dtime);
+void setSteerControllerSetpoint_VehVel(float vel_mps);
+void initSensorsForController();
 
 // Global vars:
-extern uint8_t        num_active_ADC_channels;
-#define MAX_ADC_CHANNELS  8
-extern uint8_t        ADC_active_channels[MAX_ADC_CHANNELS];
-extern uint16_t       ADC_sampling_period_ms_tenths;
+extern bool STEERCONTROL_active;
 
+extern TFrame_ENCODERS_readings_payload_t enc_last_reading;

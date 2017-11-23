@@ -40,9 +40,35 @@
 
 // ADC reading subsystem:
 uint8_t        num_active_ADC_channels = 0;
+#define MAX_ADC_CHANNELS 8
 uint8_t        ADC_active_channels[MAX_ADC_CHANNELS] = {0,0,0,0,0,0,0,0};
 uint32_t  ADC_last_millis = 0;
 uint16_t       ADC_sampling_period_ms_tenths = 2000;
+
+void adc_process_start_cmd(const TFrameCMD_ADC_start_payload_t &adc_req)
+{
+	// Setup vars for ADC task:
+	num_active_ADC_channels = 0;
+	for (int i=0;i<MAX_ADC_CHANNELS;i++) {
+		ADC_active_channels[i] = 0;
+		if (adc_req.active_channels[i]>=0) {
+			ADC_active_channels[i] = adc_req.active_channels[i];
+			num_active_ADC_channels++;
+		}
+	}
+	ADC_sampling_period_ms_tenths = adc_req.measure_period_ms_tenths;
+	
+	// Enable ADC with internal/default reference:
+	if (num_active_ADC_channels)
+		adc_init(adc_req.use_internal_refvolt);
+}
+
+void adc_process_stop_cmd()
+{
+	num_active_ADC_channels = 0;
+}
+
+
 
 void processADCs()
 {
@@ -66,6 +92,7 @@ void processADCs()
 		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]);
 	}
 
+	#warning "TODO: Decimate UART! & save last value"
 	// send answer back:
 	tx.payload.timestamp_ms_tenths = millis();
 	tx.calc_and_update_checksum();

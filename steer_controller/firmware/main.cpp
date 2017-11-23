@@ -29,6 +29,7 @@ int main(void)
 
 	// Make sure all outputs are in a safe state:
 	enableSteerController(false);
+	initSensorsForController();
 
 	TFrame_CPU_USAGE_STATS  cpu_busy_stats;
 	cpu_busy_stats.payload.clear();

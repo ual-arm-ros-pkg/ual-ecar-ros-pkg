@@ -38,6 +38,8 @@
 #include "mod_dac_max5500.h"
 #include "config.h" // Fixed pins configuration for this hardware
 
+#warning "Update PIN_DAC_MAX5500_CS!!"
+
 /* SPI frames for the MAX5500 chip
            16 bits
      MSB --- LSB (MSB first)

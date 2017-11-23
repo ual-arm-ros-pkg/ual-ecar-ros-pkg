@@ -60,6 +60,8 @@ struct EncoderStatus
 
 EncoderStatus ENC_STATUS[TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS];
 
+TFrame_ENCODERS_readings_payload_t enc_last_reading;
+
 // Minimum pulse width: ~3 us (ISR takes 2.8us @ 20MHz)
 
 // Forward:
@@ -159,11 +161,6 @@ void processEncoders()
 	if (!ENCODERS_active)
 		return;
 
-#ifdef USE_ENCODER_DEBUG_LED
-	gpio_pin_mode(PIN_ENCODER_DEBUG_LED, OUTPUT);
-	gpio_pin_write(PIN_ENCODER_DEBUG_LED,ENC_STATUS[0].led);
-#endif
-
 	const uint32_t tnow = millis();
 	if (tnow-PC_last_millis < PC_sampling_period_ms_tenths)
 	return;
@@ -184,7 +181,15 @@ void processEncoders()
 	// send answer back:
 	tx.payload.timestamp_ms_tenths = millis();
 	tx.payload.period_ms_tenths = PC_sampling_period_ms_tenths;
-	tx.calc_and_update_checksum();
 
-	UART::Write((uint8_t*)&tx,sizeof(tx));
+	// Decimate the number of msgs sent to the PC:
+	static uint8_t decim = 0;
+	if (++decim>10)
+	{
+		decim=0;
+		tx.calc_and_update_checksum();
+		UART::Write((uint8_t*)&tx,sizeof(tx));
+	}
+
+	enc_last_reading = tx.payload;
 }

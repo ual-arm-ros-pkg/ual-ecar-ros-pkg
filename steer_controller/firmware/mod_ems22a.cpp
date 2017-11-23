@@ -106,6 +106,8 @@ void processEMS22A()
 	const uint16_t enc_pos = dat >> 6;
 	const uint8_t  enc_status = dat & 0x3f;
 	
+	#warning "TODO: Decimate UART! & save last value"
+
 	TFrame_ENCODER_ABS_reading tx;
 	// send answer back:
 	tx.payload.timestamp_ms_tenths = tnow;

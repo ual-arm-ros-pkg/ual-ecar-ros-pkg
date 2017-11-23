@@ -157,20 +157,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		TFrameCMD_ADC_start_payload_t adc_req;
 		memcpy(&adc_req,data, sizeof(adc_req));
 
-		// Setup vars for ADC task:
-		num_active_ADC_channels = 0;
-		for (int i=0;i<8;i++) {
-			ADC_active_channels[i] = 0;
-			if (adc_req.active_channels[i]>=0) {
-				ADC_active_channels[i] = adc_req.active_channels[i];
-				num_active_ADC_channels++;
-			}
-		}
-		ADC_sampling_period_ms_tenths = adc_req.measure_period_ms_tenths;
-		
-		// Enable ADC with internal/default reference:
-		adc_init(adc_req.use_internal_refvolt);
-
+		adc_process_start_cmd(adc_req);
 		// send answer back:
 		send_simple_opcode_frame(RESP_START_CONT_ADC);
 	}
@@ -180,7 +167,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 	{
 		if (datalen!=sizeof(TFrameCMD_ADC_stop_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
-		num_active_ADC_channels = 0;
+		adc_process_stop_cmd();
 
 		// send answer back:
 		send_simple_opcode_frame(RESP_STOP_CONT_ADC);
@@ -272,6 +259,25 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		EMS22A_active = false;
 		// send answer back:
 		send_simple_opcode_frame(RESP_STOP_EMS22A);
+	}
+	break;
+
+	case OP_CONTROL_MODE:
+	{
+		if (datalen!=sizeof(TFrameCMD_EMS22A_start_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+
+		TFrameCMD_CONTROL_MODE_payload_t control_req;
+		memcpy(&control_req,data, sizeof(control_req));
+		STEERCONTROL_active = control_req.enable;		
+	}
+	break;
+	case OP_CONTROL_STEERING_SET_PARAMS:
+	{
+		if (datalen!=sizeof(TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+
+		TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t p;
+		memcpy(&p,data, sizeof(p));
+		setSteer_SteeringParams(p);
 	}
 	break;
 
