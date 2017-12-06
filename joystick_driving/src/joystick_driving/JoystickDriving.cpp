@@ -27,7 +27,7 @@ bool JoystickDriving::initialize()
 	m_pub_rev_relay     = m_nh.advertise<std_msgs::Bool>("arduino_daq_GPIO_output7", 10);
 	m_pub_eje_x			= m_nh.advertise<std_msgs::Float64>("joystick_eje_x", 10);
 	m_pub_eje_y			= m_nh.advertise<std_msgs::Float64>("joystick_eje_y", 10);
-	m_pub_contr_status	= m_nh.advertise<std_msgs::Bool>("steer_controller_status", 10);
+	m_pub_contr_status	= m_nh.advertise<std_msgs::Bool>("vehicle_manual_mode", 10);
 
 	{
 		std_msgs::Bool b;
@@ -82,7 +82,7 @@ bool JoystickDriving::iterate()
 			eje_x = eje_x + aux_s[0];
 			aux_s[0] = eje_x;
 		}
-		else 
+		else
 			aux_s[0] = eje_x + aux_s[0];
 
 		msg_f.data = aux_s[0];
@@ -105,12 +105,12 @@ bool JoystickDriving::iterate()
 			eje_y = eje_y + aux_r[0];
 			aux_r[0] = eje_y;
 		}
-		else 
+		else
 			aux_r[0] = eje_y + aux_r[0];
 
 		std_msgs::Float64 msg_f;
 		msg_f.data = aux_r[0];
-		
+
 		m_pub_eje_y.publish(msg_f);
 	}
 	// Rev button:

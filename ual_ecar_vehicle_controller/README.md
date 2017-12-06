@@ -1,13 +1,13 @@
-steer_controller
+ual_ecar_vehicle_controller
 ==================
 
-This package contains a ROS node for UAL eCAR's steer driver ("caja azul").
+This package contains a ROS node for UAL eCAR's steer driver.
 
 Examples of use & demos:
   * Launch:
 ```
        roscore     # In one terminal
-       rosrun steer_controller steer_controller_node _CURRENT_LIMIT_THRESHOLD_VOLT:=1.5 _CURRENT_LIMIT_TIME:=0.75   # In another terminal
+       rosrun ual_ecar_vehicle_controller ual_ecar_vehicle_controller_node _CURRENT_LIMIT_THRESHOLD_VOLT:=1.5 _CURRENT_LIMIT_TIME:=0.75   # In another terminal
 ```
 
   * Getting the controller / encoder status / motor current:
