@@ -39,18 +39,26 @@
 
 #include "steer_controller_declarations.h"
 #include "mod_ems22a.h"
+#include "mod_dac_max5500.h"
 #include "common/millis_timer.h"
 #include "common/uart.h"
 #include "common/pwm.h"
+#include "common/gpio.h"
 
 // ============== HARDWARE CONFIGURATION =====================
 const uint16_t SAMPLING_PERIOD_MSth = 10 /*ms*/ *10 /*th*/;
-const int8_t ENCODER_ABS_CS         = 0x11;  // **** CHANGE**
-const int8_t ENCODER_ABS_CLK        = 0x12;
-const int8_t ENCODER_ABS_DO         = 0x13;
+const int8_t ENCODER_ABS_CS         = 0x20;
+const int8_t ENCODER_ABS_CLK        = 0x21;
+const int8_t ENCODER_ABS_DO         = 0x22;
 const int8_t ENCODER_DIFF_A         = 0x42; // PD2
 const int8_t ENCODER_DIFF_B         = 0x43; // PD3
 const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
+const int8_t PWM_DIR                = 0x47; // CW/CCW
+const int8_t RELAY_FRWD_REV         = 0x11;
+#define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
+#define PWM_OUT_PIN                 PWM_PIN_OCnB
+const int8_t PWM_PIN_NO             = 0x46;
+const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
 // ===========================================================
 
 uint32_t  CONTROL_last_millis = 0;
@@ -64,6 +72,9 @@ float Q_STEER_EXT[3] = { 1.8903f, - 1.8240f, .0f };
   * -512:max right, +511: max left
   */
 int16_t  SETPOINT_STEER_POS = 0;
+
+/** Time of when the setpoint was last changed (1/10 of ms) */
+uint32_t SETPOINT_STEER_TIMESTAMP = 0;
 
 /** Desired steering duration (in seconds)
   */
@@ -96,10 +107,25 @@ void initSensorsForController()
 		init_EMS22A(ENCODER_ABS_CS,ENCODER_ABS_CLK,ENCODER_ABS_DO,SAMPLING_PERIOD_MSth);
 		EMS22A_active = true;
 	}
+	
+	// Init DAC:
+	mod_dac_max5500_init();
 
-	// gpio_pin_mode(XXXX_PINNO, OUTPUT);   //******** FIXME!
-	pwm_init(PWM_TIMER0, PWM_PRESCALER_1 );
-	pwm_set_duty_cycle(PWM_TIMER0,PWM_PIN_OCnA,0x00);
+	// PWM:
+	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
+	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );
+	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,0x00);
+	// PWM dir:	
+	gpio_pin_mode(PWM_DIR, OUTPUT);
+	gpio_pin_write(PWM_DIR, false);
+
+	// Relay:
+	gpio_pin_mode(RELAY_FRWD_REV, OUTPUT);
+	gpio_pin_write(RELAY_FRWD_REV, false);
+	
+	// DAC:
+	PIN_DAC_MAX5500_CS = DAC_OUT_PIN_NO;
+	
 }
 
 // TODO: "a" constant that converts from diff encoder tick count to abs enc tick count
@@ -125,8 +151,7 @@ void setSteerControllerSetpoint_Steer(int16_t pos, float dtime)
 {
 	SETPOINT_STEER_POS=pos;
 	SETPOINT_STEER_TIME=dtime;
-
-#warning TODO: Save set time as a reference value, etc.
+	SETPOINT_STEER_TIMESTAMP = millis();
 }
 void setSteerControllerSetpoint_VehVel(float vel_mps)
 {
@@ -146,6 +171,9 @@ void processSteerController()
 
 	// ========= Control algorithm for: (i) steering, (ii) vehicle main motor =====
 
+	// (i) CONTROL FOR STEERING WHEEL
+	// -------------------------------------------------------------
+
 	// last differential encoder:
 	int32_t enc_diff = enc_last_reading.encoders[0];
 
@@ -153,13 +181,27 @@ void processSteerController()
 
 
 	uint8_t u_steer  = 0x00; // [0,255]
+	bool u_steer_dir = false;
 
 	// Output GPIO cw/ccw rotation direction:
 	//gpio_pin_write();
 
 	// Output PWM:
-	pwm_set_duty_cycle(PWM_TIMER0,PWM_PIN_OCnA,u_steer);
+	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
+	// PWM dir:
+	gpio_pin_write(PWM_DIR, u_steer_dir);
 
+	// (ii) CONTROL FOR MAIN VEHICLE MOTOR
+	// -------------------------------------------------------------
+
+		
+	uint16_t veh_speed_dac = 0; // TODO
+
+	// Output value:
+	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
 	
+	// Output direction:
+	gpio_pin_write(RELAY_FRWD_REV,false);
+
 }
 

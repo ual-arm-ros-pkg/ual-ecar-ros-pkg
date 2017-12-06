@@ -93,6 +93,10 @@ void pwm_init(pwm_timer_t timer_id, pwm_timer_prescaler_t pwm_prescaler)
 			TCCR2B = (pwm_prescaler & 0x03) << CS20;
 		}
 		break;
+		
+	default:
+		// Do nothing for other timers
+		break;
 	};
 }
 
@@ -114,6 +118,9 @@ void pwm_set_duty_cycle(pwm_timer_t timer_id,pwm_pin_t pin_id, uint8_t value)
 			case PWM_PIN_OCnA: OCR2A=value; break;
 			case PWM_PIN_OCnB: OCR2B=value; break;
 		};
+		break;
+		default:
+		// Do nothing for other timers
 		break;
 	};
 
