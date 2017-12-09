@@ -161,6 +161,7 @@ void setSteerControllerSetpoint_VehVel(float vel_mps)
 
 void processSteerController()
 {
+	#warning OPEN_LOOP!
 	if (!STEERCONTROL_active)
 		return;
 
