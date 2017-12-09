@@ -178,13 +178,108 @@ void processSteerController()
 	int32_t enc_diff = enc_last_reading.encoders[0];
 
 	// Magic here!
+	/** %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+	/*	Encoder reading and Smith predictor implementation*/
+	rpm = (m_Encoder[0] - m_Encoder[1]) / T;
+	m_ys[0] = m_ys[1] * 0.1709 - 0.973 * m_us[1+3];
+
+	// Manual mode
+	if (Manual_Control)
+	{
+		/* PWM */
+		m_us[0] = round(Eje_x * 254);
+		/*	Protection to detect the limit of mechanism */
+		if (std::abs(m_Encoder[0]) >= max_p)
+			lim = 1;
+		if (std::abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
+			lim = 0;
+		if (lim == 1)
+		{
+			if(m_Encoder[0] > 0 && m_us[0] > 0)
+				m_us[0] = 0;
+			if(m_Encoder[0] < 0 && m_us[0] < 0)
+				m_us[0] = 0;
+		}
+	}
+	// Automatic mode
+	else
+	{
+	/*	+-------------------+
+		|	STEER-BY-WIRE	|
+		+-------------------+ */
+	/*	Position reference reading */
+		m_R_steer[0]	= (double)(Eje_x * 50);
+	/*	Slope reference limit to overcurrent protection*/
+		double pendiente = (m_R_steer[0] - m_R_steer[1]) / T;
+		if (pendiente >= sat_ref)
+			m_R_steer[0] = (m_R_steer[1] + sat_ref);
+	/*	.............................*/
+		m_R_steer[0] = - m_R_steer[0];
+	/*	Position error. Extern loop*/
+		m_ep[0] = m_R_steer[0] - m_Encoder[0];
+	/*	Position controller */
+		m_up[0] = m_up[1] + 11.142 * m_ep[0] - 19.9691 * m_ep[1] +8.8889 * m_ep[2];
+	/*	Speed error. Intern loop*/
+		m_es[0] = m_up[0] - m_ys[0] - (rpm - m_ys[3]);
+	/*	Speed controller */
+		m_us[0] = round(m_us[1] - 0.4542 * m_es[0] + 0.0281 * m_es[1]);
+	/*	Variable to Anti-windup technique*/
+		int m_v= m_us[0]; 
+	/*	Protection to detect the limit of mechanism */
+		if (std::abs(m_Encoder[0]) >= max_p)
+		lim = 1;
+		if (std::abs(m_Encoder[0]) <= (max_p - 5) && lim == 1)
+		lim = 0;
+		if (lim ==1)
+		{
+			if(m_Encoder[0] > 0 && m_us[0] > 0)
+				m_us[0] = 0;
+			if(m_Encoder[0] < 0 && m_us[0] < 0)
+				m_us[0] = 0;
+		}
+	/*	Saturation */
+		if (m_us[0] > 254)
+			m_us[0] = 254;
+		if (m_us[0] < -254)
+			m_us[0] = -254;
+	/*	Anti-windup technique*/
+		if(m_us[0] - m_v != 0)
+			m_antiwindup[0] = (m_us[0] - m_v) / sqrt(0.0283);
+		else
+			m_antiwindup[0] = 0;
+
+		m_u[0] = round(0.5 * (2 * m_u[0] + 0.05 * (m_antiwindup[0] + m_antiwindup[1])));
+	}
+
+	/* Values actualization*/
+	m_R_steer[1] = m_R_steer[0];
+	m_u[1] = m_u[0];
+	m_antiwindup[1] = m_antiwindup[0];
+	for (int i=2;i>=1;i--)
+	{
+		m_yp[i] = m_yp[i-1];
+		m_ep[i] = m_ep[i-1];
+	}
+	for (int i=5;i>=1;i--)
+		m_up[i] = m_up[i-1];
+
+	m_es[1] = m_es[0];
+	m_Encoder[1] = m_Encoder[0];
+	for (int i=3;i>=1;i--)
+		m_ys[i] = m_ys[i-1];
+
+	for (int i=4;i>=1;i--)
+		m_us[i] = m_us[i-1];
 
 
-	uint8_t u_steer  = 0x00; // [0,255]
+	/*	Direction*/
 	bool u_steer_dir = false;
+	if (m_us[0] < 0)
+	u_steer_dir = false;
+	else
+	u_steer_dir = true;
 
-	// Output GPIO cw/ccw rotation direction:
-	//gpio_pin_write();
+	uint8_t u_steer = abs(m_us[0]);
 
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
@@ -193,15 +288,20 @@ void processSteerController()
 
 	// (ii) CONTROL FOR MAIN VEHICLE MOTOR
 	// -------------------------------------------------------------
+	/*	+-----------------------+
+		|	THROTTLE-BY-WIRE	|
+		+-----------------------+
+	*/
+		uint16_t veh_speed_dac = 1.0 + std::abs(Eje_y) * 4.76;
+		// Output direction:
+		if (Eje_y<0)
+			gpio_pin_write(RELAY_FRWD_REV,true);
+		else
+			gpio_pin_write(RELAY_FRWD_REV,false);
 
-		
-	uint16_t veh_speed_dac = 0; // TODO
+		// Output value:
+		mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
 
-	// Output value:
-	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
-	
-	// Output direction:
-	gpio_pin_write(RELAY_FRWD_REV,false);
 
 }
 
