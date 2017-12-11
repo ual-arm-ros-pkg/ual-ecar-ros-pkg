@@ -4,7 +4,7 @@
 ROS packages and config files for University of Almeria autonomous electric car (UAL eCar). Documentation for electrical connections, etc. are kept in a [separate repo](https://github.com/ual-arm/ual-ecar-docs).
 
 See docs for each individual node:
-  * [steer_controller](https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg/tree/master/steer_controller): ROS node for UAL eCAR's steer driver ("caja azul").
+  * [ual_ecar_vehicle_controller](https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg/tree/master/steer_controller): ROS node for UAL eCAR's steer driver ("caja azul").
   * [joystick_driving](https://github.com/ual-arm-ros-pkg/ual-ecar-ros-pkg/tree/master/joystick_driving): Manual joystick-based driving node.
 
 
@@ -29,7 +29,7 @@ sudo apt-get install -y ros-${ROS_DISTRO}-hardware-interface \
 * Install [arduino_daq](https://github.com/ual-arm-ros-pkg/arduino-daq-ros-pkg).
 * Install Ackermann messages:
 ```
-sudo apt-get install ros-kinetic-ackermann-msgs 
+sudo apt-get install ros-kinetic-ackermann-msgs
 ```
 
 * Build:

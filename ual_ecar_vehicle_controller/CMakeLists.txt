@@ -1,20 +1,18 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(steer_controller)
+cmake_minimum_required(VERSION 3.1)
+set (CMAKE_CXX_STANDARD 14)
+project(ual_ecar_vehicle_controller)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
 	message_generation
-  roscpp
-  std_msgs
-  arduino_daq
+	roscpp
+	std_msgs
 )
 
-# System dependencies are found with CMake's conventions
-find_package(MRPT REQUIRED hwdrivers)
-
-add_definitions(-std=c++11)
+# TODO: recheck 2.0 and find comms instead
+find_package(MRPT 1.5 REQUIRED hwdrivers)
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -44,7 +42,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS message_runtime roscpp std_msgs 
+  CATKIN_DEPENDS message_runtime roscpp std_msgs
 #  DEPENDS system_lib
 )
 
@@ -57,6 +55,7 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/  # for steer_controller2pc-structs
   ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 
@@ -75,7 +74,6 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 target_link_libraries(${PROJECT_NAME}
    ${catkin_LIBRARIES}
-   ${MRPT_LIBS}
    )
 
 # Declare a C++ executable
@@ -89,7 +87,7 @@ add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED
 target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
    ${PROJECT_NAME}
-   ${MRPT_LIBS}
+   ${MRPT_LIBRARIES}
 )
 
 #############
