@@ -47,9 +47,9 @@
 
 // ============== HARDWARE CONFIGURATION =====================
 const uint16_t SAMPLING_PERIOD_MSth = 10 /*ms*/ *10 /*th*/;
-const int8_t ENCODER_ABS_CS         = 0x20;
-const int8_t ENCODER_ABS_CLK        = 0x21;
-const int8_t ENCODER_ABS_DO         = 0x22;
+const int8_t ENCODER_ABS_CS         = 0x20; //PB0
+const int8_t ENCODER_ABS_CLK        = 0x21; //PB1
+const int8_t ENCODER_ABS_DO         = 0x22; //PB2
 const int8_t ENCODER_DIFF_A         = 0x42; // PD2
 const int8_t ENCODER_DIFF_B         = 0x43; // PD3
 const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
