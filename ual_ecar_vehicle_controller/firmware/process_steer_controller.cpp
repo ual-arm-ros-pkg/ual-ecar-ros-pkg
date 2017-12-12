@@ -66,7 +66,7 @@ uint32_t  CONTROL_last_millis = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;// true: controller; false: open loop
 
-float Q_STEER_INT[3] = { -2.85f, -0.1765f, .0f };
+float Q_STEER_INT[3] = { - 0.4542f, 0.0281f, .0f };
 float Q_STEER_EXT[3] = { 1.8903f, - 1.8240f, .0f };
 
 /** Desired setpoint for steering angle. 
@@ -217,7 +217,7 @@ void processSteerController()
 	/*	Speed error. Intern loop*/
 		Error_speed[0] = Ref_speed[0] - Ys[0] - (rpm - Ys[3]);
 	/*	Speed controller */
-		U_control[0] = round(U_control[1] - 0.4542 * Error_speed[0] + 0.0281 * Error_speed[1]);
+		U_control[0] = round(U_control[1] + Q_STEER_INT[1] * Error_speed[0] + Q_STEER_INT[2] * Error_speed[1] + Q_STEER_INT[3] * Error_speed[3]);
 	/*	Variable to Anti-windup technique*/
 		int m_v= U_control[0]; 
 	/*	Protection to detect the limit of mechanism */
