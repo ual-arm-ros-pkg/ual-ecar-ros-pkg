@@ -236,22 +236,22 @@ void processSteerController()
 			U_control[0] = -254;
 	/*	Anti-windup technique*/
 		if(U_control[0] - m_v != 0)
-			m_antiwindup[0] = (U_control[0] - m_v) / sqrt(0.0283);
+			Antiwindup[0] = (U_control[0] - m_v) / sqrt(0.0283);
 		else
-			m_antiwindup[0] = 0;
+			Antiwindup[0] = 0;
 
-		U_control[0] = round(0.5 * (2 * U_control[0] + 0.05 * (m_antiwindup[0] + m_antiwindup[1])));
+		U_control[0] = round(0.5 * (2 * U_control[0] + 0.05 * (Antiwindup[0] + Antiwindup[1])));
 	}
 
 	/* Values actualization*/
 	Ref_pos[1] = Ref_pos[0];
-	m_antiwindup[1] = m_antiwindup[0];
+	Antiwindup[1] = Antiwindup[0];
 	for (int i=2;i>=1;i--)
 	{
 		Error_pos[i] = Error_pos[i-1];
 	}
 	for (int i=5;i>=1;i--)
-		m_up[i] = m_up[i-1];
+		Ref_speed[i] = Ref_speed[i-1];
 
 	Error_speed[1] = Error_speed[0];
 	Encoder_dir[1] = Encoder_dir[0];
