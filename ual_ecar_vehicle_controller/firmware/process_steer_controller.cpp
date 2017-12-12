@@ -66,8 +66,9 @@ uint32_t  CONTROL_last_millis = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;// true: controller; false: open loop
 
-float Q_STEER_INT[3] = { - 0.4542f, 0.0281f, .0f };
-float Q_STEER_EXT[3] = { 11.142f, - 19.9691f, 8.8889f };
+float Q_STEER_INT[3]	= { - 0.4542f, 0.0281f, .0f };
+float Q_STEER_EXT[3]	= { 11.142f, - 19.9691f, 8.8889f };
+float P_SMITH_SPEED[5]	= {0.8291,0,1,-0.1709,0}; /*{b0,b1,a0,a1,a2}*/
 
 /** Desired setpoint for steering angle. 
   * -512:max right, +511: max left
@@ -116,7 +117,7 @@ void initSensorsForController()
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
 	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,0x00);
-	// PWM dir:	
+	// PWM direction:	
 	gpio_pin_mode(PWM_DIR, OUTPUT);
 	gpio_pin_write(PWM_DIR, false);
 
@@ -129,7 +130,7 @@ void initSensorsForController()
 	
 }
 
-// TODO: "a" constant that converts from diff encoder tick count to abs enc tick count
+// TODO: "a" constant that converts from diff encoder tick count to abs enc tick count :: 337/(500*100);
 
 void enableSteerController(bool enabled)
 {
@@ -175,7 +176,7 @@ void processSteerController()
 	/*	Encoder reading and Smith Predictor implementation*/
 	#warning Encoder reading!
 	rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
-	Ys[0] = Ys[1] * 0.1709 - 0.973 * U_control[1+3];
+	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_control[1+3] + P_SMITH_SPEED[1] * U_control[2+3])/P_SMITH_SPEED[2];
 
 	// Manual mode
 	if (STEERCONTROL_active)
@@ -203,6 +204,7 @@ void processSteerController()
 		|	STEER-BY-WIRE	|
 		+-------------------+ */
 	/*	Position reference reading */
+		#warning Axis reading
 		Ref_pos[0]	= (double)(Eje_x * 50);
 	/*	Slope reference limit to over current protection*/
 		double pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
@@ -213,11 +215,11 @@ void processSteerController()
 	/*	Position error. Extern loop*/
 		Error_pos[0] = Ref_pos[0] - Encoder_dir[0];
 	/*	Position controller */
-		Ref_speed[0] = Ref_speed[1] + Q_STEER_EXT[1] * Error_pos[0] + Q_STEER_EXT[2] * Error_pos[1] + Q_STEER_EXT[3] * Error_pos[2];
+		Ref_speed[0] = Ref_speed[1] + Q_STEER_EXT[0] * Error_pos[0] + Q_STEER_EXT[1] * Error_pos[1] + Q_STEER_EXT[2] * Error_pos[2];
 	/*	Speed error. Intern loop*/
 		Error_speed[0] = Ref_speed[0] - Ys[0] - (rpm - Ys[3]);
 	/*	Speed controller */
-		U_control[0] = round(U_control[1] + Q_STEER_INT[1] * Error_speed[0] + Q_STEER_INT[2] * Error_speed[1] + Q_STEER_INT[3] * Error_speed[3]);
+		U_control[0] = round(U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[3]);
 	/*	Variable to Anti-windup technique*/
 		int m_v= U_control[0]; 
 	/*	Protection to detect the limit of mechanism */
@@ -261,7 +263,7 @@ void processSteerController()
 	for (int i=3;i>=1;i--)
 		Ys[i] = Ys[i-1];
 
-	for (int i=4;i>=1;i--)
+	for (int i=5;i>=1;i--)
 		U_control[i] = U_control[i-1];
 
 
@@ -285,6 +287,7 @@ void processSteerController()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
+		#warning Axis reading
 		uint16_t veh_speed_dac = 1.0 + abs(Eje_y) * 4.76;
 		// Output direction:
 		if (Eje_y<0)
