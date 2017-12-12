@@ -394,7 +394,7 @@ struct TFrameCMD_CONTROL_MODE : public TBaseFrame<TFrameCMD_CONTROL_MODE_payload
 
 struct TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t
 {
-	float Q_STEER_INT[3] = {0,0,0}, Q_STEER_EXT[3]={0,0,0};
+	float Q_STEER_INT[3] = {0,0,0}, Q_STEER_EXT[3]={0,0,0}, P_SMITH_SPEED[5] = {0,0,0,0,0};
 };
 struct TFrameCMD_CONTROL_STEERING_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t>
 {
