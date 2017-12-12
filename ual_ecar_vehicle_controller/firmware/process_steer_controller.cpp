@@ -44,6 +44,7 @@
 #include "common/uart.h"
 #include "common/pwm.h"
 #include "common/gpio.h"
+#include "math.h"
 
 // ============== HARDWARE CONFIGURATION =====================
 const uint16_t SAMPLING_PERIOD_MSth = 10 /*ms*/ *10 /*th*/;
@@ -172,6 +173,7 @@ void processSteerController()
 	// last differential encoder:
 	int32_t enc_diff = enc_last_reading.encoders[0];
 	/*	Encoder reading and Smith Predictor implementation*/
+	#warning Encoder reading!
 	rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
 	Ys[0] = Ys[1] * 0.1709 - 0.973 * U_control[1+3];
 
@@ -179,11 +181,12 @@ void processSteerController()
 	if (STEERCONTROL_active)
 	{
 		/* PWM */
+		#warning Axis reading
 		U_control[0] = round(Eje_x * 254);
 		/*	Protection to detect the limit of mechanism */
-		if (std::abs(Encoder_dir[0]) >= max_p)
+		if (abs(Encoder_dir[0]) >= max_p)
 			lim = true;
-		if (std::abs(Encoder_dir[0]) <= (max_p - 10) && lim)
+		if (abs(Encoder_dir[0]) <= (max_p - 10) && lim)
 			lim = false;
 		if (lim)
 		{
@@ -218,9 +221,9 @@ void processSteerController()
 	/*	Variable to Anti-windup technique*/
 		int m_v= U_control[0]; 
 	/*	Protection to detect the limit of mechanism */
-		if (std::abs(Encoder_dir[0]) >= max_p)
+		if (abs(Encoder_dir[0]) >= max_p)
 		lim = 1;
-		if (std::abs(Encoder_dir[0]) <= (max_p - 5) && lim == 1)
+		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim == 1)
 		lim = 0;
 		if (lim ==1)
 		{
@@ -269,11 +272,11 @@ void processSteerController()
 	else
 		u_steer_dir = true;
 
-	uint8_t u_steer = abs(m_u[0]);
+	uint8_t u_steer = abs(U_control[0]);
 
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
-	// PWM dir:
+	// PWM direction:
 	gpio_pin_write(PWM_DIR, u_steer_dir);
 
 	// (ii) CONTROL FOR MAIN VEHICLE MOTOR
@@ -282,7 +285,7 @@ void processSteerController()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
-		uint16_t veh_speed_dac = 1.0 + std::abs(Eje_y) * 4.76;
+		uint16_t veh_speed_dac = 1.0 + abs(Eje_y) * 4.76;
 		// Output direction:
 		if (Eje_y<0)
 			gpio_pin_write(RELAY_FRWD_REV,true);

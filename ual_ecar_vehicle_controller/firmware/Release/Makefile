@@ -51,6 +51,7 @@ C_SRCS +=  \
 ../process_command.cpp \
 ../mod_ems22a.cpp \
 ../process_encoder.cpp \
+../process_steer_controller.cpp \
 ../serial.cpp
 
 
@@ -74,6 +75,7 @@ process_internal_adc.o \
 process_command.o \
 mod_ems22a.o \
 process_encoder.o \
+process_steer_controller.o \
 serial.o
 
 OBJS_AS_ARGS +=  \
@@ -90,6 +92,7 @@ process_internal_adc.o \
 process_command.o \
 mod_ems22a.o \
 process_encoder.o \
+process_steer_controller.o \
 serial.o
 
 C_DEPS +=  \
@@ -106,6 +109,7 @@ process_internal_adc.d \
 process_command.d \
 mod_ems22a.d \
 process_encoder.d \
+process_steer_controller.d \
 serial.d
 
 C_DEPS_AS_ARGS +=  \
@@ -122,6 +126,7 @@ process_internal_adc.d \
 process_command.d \
 mod_ems22a.d \
 process_encoder.d \
+process_steer_controller.d \
 serial.d
 
 OUTPUT_FILE_PATH +=steer_controller_firmware.elf
@@ -138,6 +143,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 
