@@ -67,7 +67,7 @@ uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;// true: controller; false: open loop
 
 float Q_STEER_INT[3] = { - 0.4542f, 0.0281f, .0f };
-float Q_STEER_EXT[3] = { 1.8903f, - 1.8240f, .0f };
+float Q_STEER_EXT[3] = { 11.142f, - 19.9691f, 8.8889f };
 
 /** Desired setpoint for steering angle. 
   * -512:max right, +511: max left
@@ -213,7 +213,7 @@ void processSteerController()
 	/*	Position error. Extern loop*/
 		Error_pos[0] = Ref_pos[0] - Encoder_dir[0];
 	/*	Position controller */
-		Ref_speed[0] = Ref_speed[1] + 11.142 * Error_pos[0] - 19.9691 * Error_pos[1] +8.8889 * Error_pos[2];
+		Ref_speed[0] = Ref_speed[1] + Q_STEER_EXT[1] * Error_pos[0] + Q_STEER_EXT[2] * Error_pos[1] + Q_STEER_EXT[3] * Error_pos[2];
 	/*	Speed error. Intern loop*/
 		Error_speed[0] = Ref_speed[0] - Ys[0] - (rpm - Ys[3]);
 	/*	Speed controller */

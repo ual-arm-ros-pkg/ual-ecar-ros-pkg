@@ -73,10 +73,12 @@ double	U_control[5]	=	{0,0,0,0,0};// Control signal
 double	Ref_pos[2]		=	{0,0};		// Position reference
 double	Ref_speed[2]	=	{0,0};		// Speed reference
 double	Error_pos[3]	=	{0,0,0};	// Position error
-double	Error_speed[2]	=	{0,0};		// Speed error
+double	Error_speed[3]	=	{0,0,0};	// Speed error
 double	Antiwindup[2]	=	{0,0};		// 
 		
 // Auxiliary vars:
 bool	lim				=	false;
 float	max_p			=	500;
 double	sat_ref			=	200;
+
+// - 0.4542 + 0.0281
