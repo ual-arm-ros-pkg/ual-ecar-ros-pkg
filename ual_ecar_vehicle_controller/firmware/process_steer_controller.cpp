@@ -98,6 +98,10 @@ uint32_t SETPOINT_STEER_TIMESTAMP = 0;
   */
 float   SETPOINT_STEER_TIME = 1.0f;
 
+/** Desired setpoint for vehicle speed.
+  * :min_speed , :max_speed
+  */
+
 
 /** Start reading all required sensors at the desired rate */
 void initSensorsForController()
@@ -152,7 +156,7 @@ void enableSteerController(bool enabled)
 {
 	STEERCONTROL_active = enabled;
 	
-	#warning Set PWM & DAC values to safe values in any case.
+	// setJoystickValue =>	#warning Set PWM & DAC values to safe values in any case.
 }
 
 void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p)
@@ -189,15 +193,18 @@ void processSteerController()
 	const uint32_t tnow = millis();
 	if (tnow-CONTROL_last_millis < CONTROL_sampling_period_ms_tenths)
 	CONTROL_last_millis = tnow;
-
+	// ========= Encoders calibration algorithm ===================================
+	// Incremental encoder reading
+	int32_t enc_diff = enc_last_reading.encoders[0];
+	// Absolute encoder reading
+	#warning Absolue Encoder here!
+	// Calibration
+	Encoder_dir[0] = enc_diff * 0.0067; /* *0.0067 = *337 / (500 * 100); */
 	// ========= Control algorithm for: (i) steering, (ii) vehicle main motor =====
 
 	// (i) CONTROL FOR STEERING WHEEL
 	// -------------------------------------------------------------
-	// last differential encoder:
-	int32_t enc_diff = enc_last_reading.encoders[0];
 	/*	Encoder reading and Smith Predictor implementation*/
-	#warning Encoder reading!
 	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
 	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_control[1+3] + P_SMITH_SPEED[1] * U_control[2+3])/P_SMITH_SPEED[2];
 
@@ -205,7 +212,6 @@ void processSteerController()
 	if (STEERCONTROL_active)
 	{
 		/* PWM */
-		#warning Axis reading
 		U_control[0] = round(Axis[0] * 254);
 		/*	Protection to detect the limit of mechanism */
 		if (abs(Encoder_dir[0]) >= max_p)
@@ -227,7 +233,6 @@ void processSteerController()
 		|	STEER-BY-WIRE	|
 		+-------------------+ */
 	/*	Position reference reading */
-		#warning Axis reading
 		Ref_pos[0]	= (double)(Axis[0] * 50);
 	/*	Slope reference limit to over current protection*/
 		double pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
@@ -242,7 +247,7 @@ void processSteerController()
 	/*	Speed error. Intern loop*/
 		Error_speed[0] = Ref_speed[0] - Ys[0] - (rpm - Ys[3]);
 	/*	Speed controller */
-		U_control[0] = round(U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[3]);
+		U_control[0] = round(U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2]);
 	/*	Variable to Anti-windup technique*/
 		int m_v= U_control[0]; 
 	/*	Protection to detect the limit of mechanism */
