@@ -61,6 +61,21 @@ const int8_t RELAY_FRWD_REV         = 0x11;
 const int8_t PWM_PIN_NO             = 0x46;
 const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
 // ===========================================================
+// Control vars:
+double	Ys[4]			=	{0,0,0,0};		// Smith predictor output
+float	T				=	0.05;			// Sample time
+double	Encoder_dir[2]	=	{0,0};			// Direction value
+double	U_control[6]	=	{0,0,0,0,0,0};	// Control signal
+double	Ref_pos[2]		=	{0,0};			// Position reference
+double	Ref_speed[2]	=	{0,0};			// Speed reference
+double	Error_pos[3]	=	{0,0,0};		// Position error
+double	Error_speed[3]	=	{0,0,0};		// Speed error
+double	Antiwindup[2]	=	{0,0};			//
+
+// Auxiliary vars:
+bool	lim				=	false;
+float	max_p			=	500;
+double	sat_ref			=	200;
 
 uint32_t  CONTROL_last_millis = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
@@ -147,7 +162,9 @@ void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload
 		Q_STEER_INT[i] = p.Q_STEER_INT[i];
 		Q_STEER_EXT[i] = p.Q_STEER_EXT[i];
 	}
-	// Anything else??
+	for (int i=0;i<2;i++)
+		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
+
 }
 
 void setSteerControllerSetpoint_Steer(int16_t pos, float dtime)
