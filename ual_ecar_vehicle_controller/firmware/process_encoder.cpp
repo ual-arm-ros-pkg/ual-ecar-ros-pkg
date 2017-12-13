@@ -39,9 +39,9 @@
 #include "common/uart.h"
 #include <avr/interrupt.h>  // cli()/sei()
 
-uint32_t  PC_last_millis = 0;
-uint16_t       PC_sampling_period_ms_tenths = 5000;
-bool           ENCODERS_active       = false;
+uint32_t	PC_last_millis = 0;
+uint16_t	PC_sampling_period_ms_tenths = 5000;
+bool		ENCODERS_active       = false;
 
 struct EncoderStatus
 {

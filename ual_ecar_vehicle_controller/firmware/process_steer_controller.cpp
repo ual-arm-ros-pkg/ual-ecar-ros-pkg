@@ -69,6 +69,7 @@ bool      STEERCONTROL_active = false;// true: controller; false: open loop
 float Q_STEER_INT[3]	= { - 0.4542f, 0.0281f, .0f };
 float Q_STEER_EXT[3]	= { 11.142f, - 19.9691f, 8.8889f };
 float P_SMITH_SPEED[5]	= {0.8291,0,1,-0.1709,0}; /*{b0,b1,a0,a1,a2}*/
+uint16_t Axis[2]		= {0,0}; /* {Eje_x, Eje_y}*/
 
 /** Desired setpoint for steering angle. 
   * -512:max right, +511: max left
@@ -175,7 +176,7 @@ void processSteerController()
 	int32_t enc_diff = enc_last_reading.encoders[0];
 	/*	Encoder reading and Smith Predictor implementation*/
 	#warning Encoder reading!
-	rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
+	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
 	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_control[1+3] + P_SMITH_SPEED[1] * U_control[2+3])/P_SMITH_SPEED[2];
 
 	// Manual mode
@@ -183,7 +184,7 @@ void processSteerController()
 	{
 		/* PWM */
 		#warning Axis reading
-		U_control[0] = round(Eje_x * 254);
+		U_control[0] = round(Axis[0] * 254);
 		/*	Protection to detect the limit of mechanism */
 		if (abs(Encoder_dir[0]) >= max_p)
 			lim = true;
@@ -205,7 +206,7 @@ void processSteerController()
 		+-------------------+ */
 	/*	Position reference reading */
 		#warning Axis reading
-		Ref_pos[0]	= (double)(Eje_x * 50);
+		Ref_pos[0]	= (double)(Axis[0] * 50);
 	/*	Slope reference limit to over current protection*/
 		double pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
 		if (pendiente >= sat_ref)
@@ -287,10 +288,9 @@ void processSteerController()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
-		#warning Axis reading
-		uint16_t veh_speed_dac = 1.0 + abs(Eje_y) * 4.76;
+		uint16_t veh_speed_dac = 1.0 + abs(Axis[1]) * 4.76;
 		// Output direction:
-		if (Eje_y<0)
+		if (Axis[1]<0)
 			gpio_pin_write(RELAY_FRWD_REV,true);
 		else
 			gpio_pin_write(RELAY_FRWD_REV,false);

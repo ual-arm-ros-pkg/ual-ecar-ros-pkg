@@ -66,7 +66,6 @@ extern TFrame_ENCODERS_readings_payload_t enc_last_reading;
 
 // Control vars:
 double	Ys[4]			=	{0,0,0,0};		// Smith predictor output
-float	rpm				=	0;				//
 float	T				=	0.05;			// Sample time
 double	Encoder_dir[2]	=	{0,0};			// Direction value
 double	U_control[6]	=	{0,0,0,0,0,0};	// Control signal 

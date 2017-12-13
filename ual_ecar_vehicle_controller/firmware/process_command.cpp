@@ -280,7 +280,11 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setSteer_SteeringParams(p);
 	}
 	break;
-
+	case OP_JOYSTICK_VALUE:
+	{
+	
+	}
+	break;
 	default:
 	{
 		// Error:

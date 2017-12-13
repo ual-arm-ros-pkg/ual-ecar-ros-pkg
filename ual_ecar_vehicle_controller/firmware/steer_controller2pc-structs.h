@@ -70,6 +70,7 @@ enum opcode_t {
 	OP_CONTROL_MODE    = 0x50,
 	OP_CONTROL_STEERING_SET_PARAMS = 0x51,
 	OP_CONTROL_STEERING_SETPOINT  = 0x52,
+	OP_JOYSTICK_VALUE  = 0x53,
 
 	// -----------------------------
 	// Responses uC -> PC
@@ -400,6 +401,18 @@ struct TFrameCMD_CONTROL_STEERING_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTR
 {
 	// Defaults:
 	TFrameCMD_CONTROL_STEERING_SET_PARAMS() : TBaseFrame(OP_CONTROL_STEERING_SET_PARAMS)
+	{
+	}
+};
+
+struct TFrameCMD_JOYSTICK_VALUE_payload_t 
+{
+	uint16_t Axis[2] = {0,0};
+};
+struct TFrameCMD_JOYSTICK_VALUE : public TBaseFrame<TFrameCMD_JOYSTICK_VALUE_payload_t>  
+{
+	//Defaults:
+	TFrameCMD_JOYSTICK_VALUE() : TBaseFrame(OP_JOYSTICK_VALUE)
 	{
 	}
 };
