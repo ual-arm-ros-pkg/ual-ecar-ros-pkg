@@ -166,6 +166,11 @@ void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload
 		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
 
 }
+void setJoystickValue(const TFrameCMD_JOYSTICK_VALUE_payload_t &j)
+{
+	for (int i=0;i<2;i++)
+		Axis[i]=j.Axis[i];
+}
 
 void setSteerControllerSetpoint_Steer(int16_t pos, float dtime)
 {

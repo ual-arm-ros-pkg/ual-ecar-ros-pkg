@@ -282,7 +282,10 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 	break;
 	case OP_JOYSTICK_VALUE:
 	{
-	
+		if (datalen!=sizeof(TFrameCMD_JOYSTICK_VALUE_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		TFrameCMD_JOYSTICK_VALUE_payload_t j;
+		memcpy(&j,data, sizeof(j));
+		setJoystickValue(j);
 	}
 	break;
 	default:
