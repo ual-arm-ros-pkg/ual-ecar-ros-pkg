@@ -40,6 +40,7 @@ int ENCODER_ABS_DO  = 0x12;
 uint32_t  EMS22A_last_millis        = 0;
 uint16_t       EMS22A_sampling_period_ms_tenths = 2000;
 bool           EMS22A_active             = false;
+TFrame_ENCODER_ABS_reading_payload_t enc_abs_last_reading;
 
 bool init_EMS22A(int8_t init_ENCODER_ABS_CS, int8_t init_ENCODER_ABS_CLK, int8_t init_ENCODER_ABS_DO, uint16_t init_sampling_period_ms_tenths)
 {
@@ -105,15 +106,19 @@ void processEMS22A()
 	// Extract the position part and the status part
 	const uint16_t enc_pos = dat >> 6;
 	const uint8_t  enc_status = dat & 0x3f;
-	
-	#warning "TODO: Decimate UART! & save last value"
-
 	TFrame_ENCODER_ABS_reading tx;
-	// send answer back:
-	tx.payload.timestamp_ms_tenths = tnow;
-	tx.payload.enc_pos = enc_pos;
-	tx.payload.enc_status = enc_status;
-	tx.calc_and_update_checksum();
+	// Decimate the number of msgs sent to the PC:
+	static uint8_t decim0 = 0;
+	if (++decim0>10)
+	{
+		decim0=0;
+		
+		tx.payload.timestamp_ms_tenths = tnow;
+		tx.payload.enc_pos = enc_pos;
+		tx.payload.enc_status = enc_status;
+		tx.calc_and_update_checksum();
 
-	UART::Write((uint8_t*)&tx,sizeof(tx));
+		UART::Write((uint8_t*)&tx,sizeof(tx));
+	}
+	enc_abs_last_reading = tx.payload;
 }

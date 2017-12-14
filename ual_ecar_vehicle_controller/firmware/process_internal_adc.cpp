@@ -44,6 +44,7 @@ uint8_t        num_active_ADC_channels = 0;
 uint8_t        ADC_active_channels[MAX_ADC_CHANNELS] = {0,0,0,0,0,0,0,0};
 uint32_t  ADC_last_millis = 0;
 uint16_t       ADC_sampling_period_ms_tenths = 2000;
+TFrame_ADC_readings_payload_t ADC_last_reading;
 
 void adc_process_start_cmd(const TFrameCMD_ADC_start_payload_t &adc_req)
 {
@@ -91,11 +92,16 @@ void processADCs()
 	{
 		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]);
 	}
+	// Decimate the number of msgs sent to the PC:
+	static uint8_t decim1 = 0;
+	if (++decim1>10)
+	{
+		decim1=0;
+		
+		tx.payload.timestamp_ms_tenths = millis();
+		tx.calc_and_update_checksum();
 
-	#warning "TODO: Decimate UART! & save last value"
-	// send answer back:
-	tx.payload.timestamp_ms_tenths = millis();
-	tx.calc_and_update_checksum();
-
-	UART::Write((uint8_t*)&tx,sizeof(tx));
+		UART::Write((uint8_t*)&tx,sizeof(tx));
+	}
+	ADC_last_reading = tx.payload;
 }
