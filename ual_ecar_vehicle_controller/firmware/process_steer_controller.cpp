@@ -86,7 +86,7 @@ bool      STEERCONTROL_active = false;// true: controller; false: open loop
 float Q_STEER_INT[3]	= { - 0.4542f, 0.0281f, .0f };
 float Q_STEER_EXT[3]	= { 11.142f, - 19.9691f, 8.8889f };
 float P_SMITH_SPEED[5]	= {0.8291,0,1,-0.1709,0}; /*{b0,b1,a0,a1,a2}*/
-uint16_t Axis[2]		= {0,0}; /* {Eje_x, Eje_y}*/
+int16_t Axis[2]		= {0,0}; /* {Eje_x:steer [-255,+255], Eje_y}*/
 
 /** Desired setpoint for steering angle. 
   * -512:max right, +511: max left
@@ -95,10 +95,6 @@ int16_t  SETPOINT_STEER_POS = 0;
 
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
-
-/** Desired steering duration (in seconds)
-  */
-float   SETPOINT_STEER_TIME = 1.0f;
 
 /** Desired setpoint for vehicle speed.
   * :min_speed , :max_speed
@@ -178,10 +174,9 @@ void setJoystickValue(const TFrameCMD_JOYSTICK_VALUE_payload_t &j)
 		Axis[i]=j.Axis[i];
 }
 
-void setSteerControllerSetpoint_Steer(int16_t pos, float dtime)
+void setSteerControllerSetpoint_Steer(int16_t pos)
 {
 	SETPOINT_STEER_POS=pos;
-	SETPOINT_STEER_TIME=dtime;
 	SETPOINT_STEER_TIMESTAMP = millis();
 }
 void setSteerControllerSetpoint_VehVel(float vel_mps)
@@ -216,7 +211,7 @@ void processSteerController()
 	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_control[1+3] + P_SMITH_SPEED[1] * U_control[2+3])/P_SMITH_SPEED[2];
 
 	// Manual mode
-	if (STEERCONTROL_active)
+	if (!STEERCONTROL_active)
 	{
 		/* PWM */
 		U_control[0] = round(Axis[0] * 254);
@@ -310,6 +305,8 @@ void processSteerController()
 		u_steer_dir = true;
 
 	uint8_t u_steer = abs(U_control[0]);
+
+	#warning Check max current and stop?
 
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);

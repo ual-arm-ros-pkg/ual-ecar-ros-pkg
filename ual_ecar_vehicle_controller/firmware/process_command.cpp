@@ -264,7 +264,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 
 	case OP_CONTROL_MODE:
 	{
-		if (datalen!=sizeof(TFrameCMD_EMS22A_start_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		if (datalen!=sizeof(TFrameCMD_CONTROL_MODE_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
 		TFrameCMD_CONTROL_MODE_payload_t control_req;
 		memcpy(&control_req,data, sizeof(control_req));
@@ -321,6 +321,7 @@ void process_timeouts()
 		}
 	}
 	
+	#warning Pensar si llevar esto al if(bucle abierto) del controlador
 	if (pt.PWM_any)
 	{
 		pt.PWM_any=false; // if no timeout is set, don't waste time in the next time we are called.

@@ -423,10 +423,6 @@ struct TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t
 	  * -512:max right, +511: max left
 	  */
 	int16_t  SETPOINT_STEER_POS { 0 };
-
-	/** Desired steering duration (in seconds)
-	  */
-	float   SETPOINT_STEER_TIME {1.0f};
 };
 struct TFrameCMD_CONTROL_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t>
 {
