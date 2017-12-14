@@ -197,8 +197,9 @@ void processSteerController()
 	// Incremental encoder reading
 	int32_t enc_diff = enc_last_reading.encoders[0];
 	// Absolute encoder reading
-	#warning Absolue Encoder here!
+	int16_t enc_abs = enc_abs_last_reading.enc_pos;
 	// Calibration
+	#warning "Calculate initial position"
 	Encoder_dir[0] = enc_diff * 0.0067; /* *0.0067 = *337 / (500 * 100); */
 	// ========= Control algorithm for: (i) steering, (ii) vehicle main motor =====
 

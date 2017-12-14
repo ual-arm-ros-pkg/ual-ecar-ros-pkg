@@ -64,3 +64,4 @@ void initSensorsForController();
 extern bool STEERCONTROL_active;
 
 extern TFrame_ENCODERS_readings_payload_t enc_last_reading;
+extern TFrame_ENCODER_ABS_reading_payload_t enc_abs_last_reading;
