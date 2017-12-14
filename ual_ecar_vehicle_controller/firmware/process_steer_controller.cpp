@@ -76,6 +76,8 @@ double	Antiwindup[2]	=	{0,0};			//
 bool	lim				=	false;
 float	max_p			=	500;
 double	sat_ref			=	200;
+double	enc_init		=	0;
+static uint8_t adjust	=	0;
 
 uint32_t  CONTROL_last_millis = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
@@ -197,10 +199,14 @@ void processSteerController()
 	// Incremental encoder reading
 	int32_t enc_diff = enc_last_reading.encoders[0];
 	// Absolute encoder reading
-	int16_t enc_abs = enc_abs_last_reading.enc_pos;
+	// int16_t enc_abs = enc_abs_last_reading.enc_pos;
 	// Calibration
-	#warning "Calculate initial position"
-	Encoder_dir[0] = enc_diff * 0.0067; /* *0.0067 = *337 / (500 * 100); */
+	if (++adjust>200)
+	{
+		adjust = 0;
+		enc_init = enc_abs_last_reading.enc_pos - enc_last_reading.encoders[0] * 0.0067;
+	}
+	Encoder_dir[0] = enc_init + enc_diff * 0.0067; /* *0.0067 = *337 / (500 * 100); */
 	// ========= Control algorithm for: (i) steering, (ii) vehicle main motor =====
 
 	// (i) CONTROL FOR STEERING WHEEL
