@@ -55,7 +55,6 @@ void send_simple_opcode_frame(const uint8_t op);
 void processSteerController();
 void enableSteerController(bool enabled);
 void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p);
-void setJoystickValue(const TFrameCMD_JOYSTICK_VALUE_payload_t &j);
 void setSteerControllerSetpoint_Steer(int16_t pos);
 void setSteerControllerSetpoint_VehVel(float vel_mps);
 void initSensorsForController();

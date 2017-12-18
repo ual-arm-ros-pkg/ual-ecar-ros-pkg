@@ -139,7 +139,7 @@ void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 			else 				
 				ENC_STATUS[i].encB_valid = false;
 
-			if (cmd.encZ_pin>0)
+			if (cmd.encZ_pin[i]>0)
 			{
 				ENC_STATUS[i].encZ_bit = digitalPinToBitMask(cmd.encZ_pin[i]);
 				ENC_STATUS[i].encZ_port = digitalPinToPort(cmd.encZ_pin[i]);

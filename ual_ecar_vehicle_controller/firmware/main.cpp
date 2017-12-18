@@ -25,11 +25,15 @@ int main(void)
 	// Enable interrupts:
 	sei();
 
-	flash_led(3,100);
+//	flash_led(3,100);
 
 	// Make sure all outputs are in a safe state:
 	enableSteerController(false);
 	initSensorsForController();
+	
+	#warning QUITAR! PRUEBA!
+	enableSteerController(true);
+	setSteerControllerSetpoint_Steer(100);
 
 	TFrame_CPU_USAGE_STATS  cpu_busy_stats;
 	cpu_busy_stats.payload.clear();

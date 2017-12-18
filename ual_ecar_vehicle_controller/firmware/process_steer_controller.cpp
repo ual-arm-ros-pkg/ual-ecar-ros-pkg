@@ -62,21 +62,21 @@ const int8_t PWM_PIN_NO             = 0x46;
 const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
 // ===========================================================
 // Control vars:
-double	Ys[4]			=	{0,0,0,0};		// Smith predictor output
-float	T				=	0.05;			// Sample time
-double	Encoder_dir[2]	=	{0,0};			// Direction value
-double	U_control[6]	=	{0,0,0,0,0,0};	// Control signal
-double	Ref_pos[2]		=	{0,0};			// Position reference
-double	Ref_speed[2]	=	{0,0};			// Speed reference
-double	Error_pos[3]	=	{0,0,0};		// Position error
-double	Error_speed[3]	=	{0,0,0};		// Speed error
-double	Antiwindup[2]	=	{0,0};			//
+float	Ys[4]			=	{0,0,0,0};		// Smith predictor output
+float	T				=	0.05f;			// Sample time
+float	Encoder_dir[2]	=	{0,0};			// Direction value
+float	U_control[6]	=	{0,0,0,0,0,0};	// Control signal
+float	Ref_pos[2]		=	{0,0};			// Position reference
+float	Ref_speed[2]	=	{0,0};			// Speed reference
+float	Error_pos[3]	=	{0,0,0};		// Position error
+float	Error_speed[3]	=	{0,0,0};		// Speed error
+float	Antiwindup[2]	=	{0,0};			//
 
 // Auxiliary vars:
 bool	lim				=	false;
 float	max_p			=	500;
-double	sat_ref			=	200;
-double	enc_init		=	0;
+float	sat_ref			=	200;
+float	enc_init		=	0;
 static uint8_t adjust	=	0;
 
 uint32_t  CONTROL_last_millis = 0;
@@ -168,11 +168,6 @@ void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload
 		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
 
 }
-void setJoystickValue(const TFrameCMD_JOYSTICK_VALUE_payload_t &j)
-{
-	for (int i=0;i<2;i++)
-		Axis[i]=j.Axis[i];
-}
 
 void setSteerControllerSetpoint_Steer(int16_t pos)
 {
@@ -189,6 +184,8 @@ void processSteerController()
 {
 	const uint32_t tnow = millis();
 	if (tnow-CONTROL_last_millis < CONTROL_sampling_period_ms_tenths)
+		return;
+		
 	CONTROL_last_millis = tnow;
 	// ========= Encoders calibration algorithm ===================================
 	// Incremental encoder reading
@@ -213,20 +210,10 @@ void processSteerController()
 	// Manual mode
 	if (!STEERCONTROL_active)
 	{
-		/* PWM */
-		U_control[0] = round(Axis[0] * 254);
 		/*	Protection to detect the limit of mechanism */
-		if (abs(Encoder_dir[0]) >= max_p)
-			lim = true;
-		if (abs(Encoder_dir[0]) <= (max_p - 10) && lim)
-			lim = false;
-		if (lim)
-		{
-			if(Encoder_dir[0] > 0 && U_control[0] > 0)
-				U_control[0] = 0;
-			if(Encoder_dir[0] < 0 && U_control[0] < 0)
-				U_control[0] = 0;
-		}
+		#warning Hacer la proteccion en ROS
+		#warning OJO. Hace falta que el pwm se lea aqui para que funcione el predictor de smith
+		#warning NO CARGAR EN EL COCHE
 	}
 	// Automatic mode
 	else
@@ -235,9 +222,9 @@ void processSteerController()
 		|	STEER-BY-WIRE	|
 		+-------------------+ */
 	/*	Position reference reading */
-		Ref_pos[0]	= (double)(Axis[0] * 50);
+		Ref_pos[0]	= SETPOINT_STEER_POS;
 	/*	Slope reference limit to over current protection*/
-		double pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
+		float pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
 		if (pendiente >= sat_ref)
 			Ref_pos[0] = (Ref_pos[1] + sat_ref);
 	/*	.............................*/
@@ -251,13 +238,14 @@ void processSteerController()
 	/*	Speed controller */
 		U_control[0] = round(U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2]);
 	/*	Variable to Anti-windup technique*/
-		int m_v= U_control[0]; 
+		int m_v= U_control[0];
+		#warning Esta proteccion tiene sentido en control automatico??
 	/*	Protection to detect the limit of mechanism */
 		if (abs(Encoder_dir[0]) >= max_p)
-		lim = 1;
-		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim == 1)
-		lim = 0;
-		if (lim ==1)
+			lim = true;
+		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim)
+			lim = false;
+		if (lim)
 		{
 			if(Encoder_dir[0] > 0 && U_control[0] > 0)
 				U_control[0] = 0;

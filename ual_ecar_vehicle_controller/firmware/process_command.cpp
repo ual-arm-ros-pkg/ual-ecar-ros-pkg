@@ -198,7 +198,6 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 				PendingTimeouts.PWM_last_changed[pwm_req.pin_index] = millis();
 			}
 		}
-
 		// send answer back:
 		send_simple_opcode_frame(RESP_SET_PWM);
 	}
@@ -280,14 +279,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setSteer_SteeringParams(p);
 	}
 	break;
-	case OP_JOYSTICK_VALUE:
-	{
-		if (datalen!=sizeof(TFrameCMD_JOYSTICK_VALUE_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
-		TFrameCMD_JOYSTICK_VALUE_payload_t j;
-		memcpy(&j,data, sizeof(j));
-		setJoystickValue(j);
-	}
-	break;
+
 	default:
 	{
 		// Error:
@@ -321,7 +313,6 @@ void process_timeouts()
 		}
 	}
 	
-	#warning Pensar si llevar esto al if(bucle abierto) del controlador
 	if (pt.PWM_any)
 	{
 		pt.PWM_any=false; // if no timeout is set, don't waste time in the next time we are called.
