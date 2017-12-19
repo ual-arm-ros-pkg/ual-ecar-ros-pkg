@@ -25,3 +25,6 @@ ual_ecar_vehicle_controller/firmware/Debug/Makefile
 *.lss
 *.srec
 *.srec
+*.mk
+ual_ecar_vehicle_controller/firmware/Debug/Makefile
+ual_ecar_vehicle_controller/firmware/Release/Makefile

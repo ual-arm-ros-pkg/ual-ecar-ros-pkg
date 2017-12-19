@@ -6,10 +6,10 @@ Jose Luis Blanco Claraco (C) 2017
 Universidad de Almeria
 ****************************************************************************************/
 
-#include "common/uart.h"
-#include "common/leds.h"
-#include "common/delays.h"
-#include "common/millis_timer.h"
+#include "libclaraquino/uart.h"
+#include "libclaraquino/leds.h"
+#include "libclaraquino/delays.h"
+#include "libclaraquino/millis_timer.h"
 #include "steer_controller_declarations.h"
 
 #include <avr/interrupt.h> // sei()

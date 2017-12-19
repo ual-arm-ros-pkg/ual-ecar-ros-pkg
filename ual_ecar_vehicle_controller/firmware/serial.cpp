@@ -34,7 +34,7 @@
 
 #include "steer_controller2pc-structs.h"
 #include "steer_controller_declarations.h"
-#include "common/uart.h"
+#include "libclaraquino/uart.h"
 
 // Frame format: see README.md
 uint8_t rx_buf_len = 0;

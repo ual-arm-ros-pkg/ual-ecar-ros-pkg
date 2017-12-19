@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Software License Agreement (BSD License)
  *
  *  Copyright (c) 2016-17, Universidad de Almeria
@@ -32,76 +32,51 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "steer_controller_declarations.h"
 #include "steer_controller2pc-structs.h"
-#include "libclaraquino/uart.h"
-#include "libclaraquino/millis_timer.h"
-#include "libclaraquino/adc_internal.h"
+#include <libclaraquino/mod_ems22a.h>
+#include <libclaraquino/uart.h>
+#include <libclaraquino/millis_timer.h>
 
-// ADC reading subsystem:
-uint8_t        num_active_ADC_channels = 0;
-#define MAX_ADC_CHANNELS 8
-uint8_t        ADC_active_channels[MAX_ADC_CHANNELS] = {0,0,0,0,0,0,0,0};
-uint32_t  ADC_last_millis = 0;
-uint16_t       ADC_sampling_period_ms_tenths = 2000;
-TFrame_ADC_readings_payload_t ADC_last_reading;
+uint32_t  EMS22A_last_millis        = 0;
+extern uint16_t  EMS22A_sampling_period_ms_tenths;  // libclaraquino
+bool      EMS22A_active             = false;
+TFrame_ENCODER_ABS_reading_payload_t enc_abs_last_reading;
 
-void adc_process_start_cmd(const TFrameCMD_ADC_start_payload_t &adc_req)
+
+void processEMS22A()
 {
-	// Setup vars for ADC task:
-	num_active_ADC_channels = 0;
-	for (int i=0;i<MAX_ADC_CHANNELS;i++) {
-		ADC_active_channels[i] = 0;
-		if (adc_req.active_channels[i]>=0) {
-			ADC_active_channels[i] = adc_req.active_channels[i];
-			num_active_ADC_channels++;
-		}
-	}
-	ADC_sampling_period_ms_tenths = adc_req.measure_period_ms_tenths;
-	
-	// Enable ADC with internal/default reference:
-	if (num_active_ADC_channels)
-		adc_init(adc_req.use_internal_refvolt);
-}
-
-void adc_process_stop_cmd()
-{
-	num_active_ADC_channels = 0;
-}
-
-
-
-void processADCs()
-{
-	if (!num_active_ADC_channels)
-		return;
-
-	const uint32_t tnow = millis();
-
-	if (tnow-ADC_last_millis < ADC_sampling_period_ms_tenths)
-		return;
-
-	ADC_last_millis = tnow;
-
-	TFrame_ADC_readings tx;
-	for (int i=0;i<MAX_ADC_CHANNELS;i++) {
-		tx.payload.adc_data[i] = 0;
-	}
-	
-	for (uint8_t i=0;i<num_active_ADC_channels;i++)
+	if (!EMS22A_active)
 	{
-		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]);
+		return;
 	}
+	
+	const uint32_t tnow = millis(); /* the current time ("now") */
+
+	if (tnow-EMS22A_last_millis < EMS22A_sampling_period_ms_tenths)
+	{
+		return;
+	}
+	EMS22A_last_millis = tnow;
+
+	const uint16_t dat = read_EMS22A();
+	
+	// Extract the position part and the status part
+	const uint16_t enc_pos = dat >> 6;
+	const uint8_t  enc_status = dat & 0x3f;
+	TFrame_ENCODER_ABS_reading tx;
 	// Decimate the number of msgs sent to the PC:
-	static uint8_t decim1 = 0;
-	if (++decim1>10)
+	static uint8_t decim0 = 0;
+	if (++decim0>10)
 	{
-		decim1=0;
+		decim0=0;
 		
-		tx.payload.timestamp_ms_tenths = millis();
+		tx.payload.timestamp_ms_tenths = tnow;
+		tx.payload.enc_pos = enc_pos;
+		tx.payload.enc_status = enc_status;
 		tx.calc_and_update_checksum();
 
 		UART::Write((uint8_t*)&tx,sizeof(tx));
 	}
-	ADC_last_reading = tx.payload;
+	enc_abs_last_reading = tx.payload;
 }
+

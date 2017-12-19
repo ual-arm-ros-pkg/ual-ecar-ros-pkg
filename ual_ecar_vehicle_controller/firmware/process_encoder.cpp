@@ -33,10 +33,10 @@
  */
 
 #include "steer_controller2pc-structs.h"
-#include "config.h"
-#include "common/gpio.h"
-#include "common/millis_timer.h"
-#include "common/uart.h"
+#include "libclaraquino/claraquino_config.h"
+#include "libclaraquino/gpio.h"
+#include "libclaraquino/millis_timer.h"
+#include "libclaraquino/uart.h"
 #include <avr/interrupt.h>  // cli()/sei()
 
 uint32_t	PC_last_millis = 0;

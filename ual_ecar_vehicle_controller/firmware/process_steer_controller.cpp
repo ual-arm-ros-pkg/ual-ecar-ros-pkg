@@ -38,12 +38,12 @@
  */
 
 #include "steer_controller_declarations.h"
-#include "mod_ems22a.h"
-#include "mod_dac_max5500.h"
-#include "common/millis_timer.h"
-#include "common/uart.h"
-#include "common/pwm.h"
-#include "common/gpio.h"
+#include "libclaraquino/mod_ems22a.h"
+#include "libclaraquino/mod_dac_max5500.h"
+#include "libclaraquino/millis_timer.h"
+#include "libclaraquino/uart.h"
+#include "libclaraquino/pwm.h"
+#include "libclaraquino/gpio.h"
 #include "math.h"
 
 // ============== HARDWARE CONFIGURATION =====================

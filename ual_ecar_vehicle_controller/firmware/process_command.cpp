@@ -34,21 +34,21 @@
 
 #include <string.h> // memset()
 
-#include "common/leds.h"
-#include "common/uart.h"
-#include "common/millis_timer.h"
-#include "common/delays.h"
-#include "common/gpio.h"
-#include "common/adc_internal.h"
-#include "common/pwm.h"
+#include "libclaraquino/leds.h"
+#include "libclaraquino/uart.h"
+#include "libclaraquino/millis_timer.h"
+#include "libclaraquino/delays.h"
+#include "libclaraquino/gpio.h"
+#include "libclaraquino/adc_internal.h"
+#include "libclaraquino/pwm.h"
 #include "steer_controller_declarations.h"
 
 
-#include "mod_dac_max5500.h"
-#include "mod_ems22a.h"
+#include "libclaraquino/mod_dac_max5500.h"
+#include "libclaraquino/mod_ems22a.h"
 
 // Fixed pins configuration for this hardware:
-#include "config.h"
+#include "libclaraquino/claraquino_config.h"
 
 struct TimeoutData
 {
