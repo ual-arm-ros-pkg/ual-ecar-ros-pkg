@@ -63,7 +63,7 @@ const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
 // ===========================================================
 // Control vars:
 float	Ys[4]			=	{0,0,0,0};		// Smith predictor output
-float	T				=	0.05f;			// Sample time
+float	T				=	0.01f;			// Sample time
 float	Encoder_dir[2]	=	{0,0};			// Direction value
 float	U_control[6]	=	{0,0,0,0,0,0};	// Control signal
 float	Ref_pos[2]		=	{0,0};			// Position reference
@@ -75,7 +75,7 @@ float	Antiwindup[2]	=	{0,0};			//
 // Auxiliary vars:
 bool	lim				=	false;
 float	max_p			=	500;
-float	sat_ref			=	200;
+float	sat_ref			=	100;
 float	enc_init		=	.0f;
 static	uint8_t adjust	=	0;
 float	pedal			=	.0f; /* [0,1] */
@@ -85,9 +85,9 @@ uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;// true: controller; false: open loop
 bool	  THROTTLECONTROL_active = false; //true: controller; false: open loop
 
-float Q_STEER_INT[3]	= { - 0.4542f, 0.0281f, .0f };
-float Q_STEER_EXT[3]	= { 11.142f, - 19.9691f, 8.8889f };
-float P_SMITH_SPEED[5]	= {0.8291f,.0f,1,-0.1709f,.0f}; /*{b0,b1,a0,a1,a2}*/
+float Q_STEER_INT[3]	= { - 0.2838f, 0.1986f, .0f };
+float Q_STEER_EXT[3]	= { 46.6728f, - -91.1049f, 44.4444f };
+float P_SMITH_SPEED[5]	= {0.2977f,.0f,1,-0.7023f,.0f}; /*{b0,b1,a0,a1,a2}*/
 
 /** Desired setpoint for steering angle. 
   * -512:max right, +511: max left
@@ -268,7 +268,7 @@ void processSteerController()
 		float pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
 		if (pendiente >= sat_ref)
 			Ref_pos[0] = (Ref_pos[1] + sat_ref);
-	/*	.............................*/
+	/*	Correction of the wheels' direction */
 		Ref_pos[0] = - Ref_pos[0];
 	/*	Position error. Extern loop*/
 		Error_pos[0] = Ref_pos[0] - Encoder_dir[0];
