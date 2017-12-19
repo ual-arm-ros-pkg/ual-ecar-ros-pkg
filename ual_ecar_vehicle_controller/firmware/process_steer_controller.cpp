@@ -211,9 +211,18 @@ void processSteerController()
 	if (!STEERCONTROL_active)
 	{
 		/*	Protection to detect the limit of mechanism */
-		#warning Hacer la proteccion en ROS
+		if (abs(Encoder_dir[0]) >= max_p)
+			lim = true;
+		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim)
+			lim = false;
+		if (lim)
+		{
+			if(Encoder_dir[0] > 0 && U_control[0] > 0)
+				U_control[0] = 0;
+			if(Encoder_dir[0] < 0 && U_control[0] < 0)
+				U_control[0] = 0;
+		}
 		#warning OJO. Hace falta que el pwm se lea aqui para que funcione el predictor de smith
-		#warning NO CARGAR EN EL COCHE
 	}
 	// Automatic mode
 	else
@@ -239,19 +248,6 @@ void processSteerController()
 		U_control[0] = round(U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2]);
 	/*	Variable to Anti-windup technique*/
 		int m_v= U_control[0];
-		#warning Esta proteccion tiene sentido en control automatico??
-	/*	Protection to detect the limit of mechanism */
-		if (abs(Encoder_dir[0]) >= max_p)
-			lim = true;
-		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim)
-			lim = false;
-		if (lim)
-		{
-			if(Encoder_dir[0] > 0 && U_control[0] > 0)
-				U_control[0] = 0;
-			if(Encoder_dir[0] < 0 && U_control[0] < 0)
-				U_control[0] = 0;
-		}
 	/*	Saturation */
 		if (U_control[0] > 254)
 			U_control[0] = 254;
@@ -273,9 +269,7 @@ void processSteerController()
 	{
 		Error_pos[i] = Error_pos[i-1];
 	}
-	for (int i=5;i>=1;i--)
-		Ref_speed[i] = Ref_speed[i-1];
-
+	Ref_speed[1] = Ref_speed[0];
 	Error_speed[1] = Error_speed[0];
 	Encoder_dir[1] = Encoder_dir[0];
 	for (int i=3;i>=1;i--)
