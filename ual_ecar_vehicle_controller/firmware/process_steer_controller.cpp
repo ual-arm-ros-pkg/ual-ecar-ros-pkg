@@ -108,6 +108,7 @@ float SETPOINT_OPENLOOP_THROTTLE = .0f;
   * 0:min speed, 12.5 m/s: max forward
   */
 float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
+
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
 uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;

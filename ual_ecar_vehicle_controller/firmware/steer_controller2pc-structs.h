@@ -453,6 +453,22 @@ struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLO
 	}
 };
 
+struct TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t
+{
+	/** Desired setpoint for throttle in Open Loop. 
+	  * 0:min speed, 12.5 m/s: max forward
+	  */
+	float  SETPOINT_CONTROL_THROTTLE_SPEED { .0f };
+};
+struct TFrameCMD_CONTROL_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_CONTROL_THROTTLE_SETPOINT() : TBaseFrame(OP_CONTROL_THROTTLE_SETPOINT)
+	{
+	}
+};
+
+
 
 #if !defined(__AVR_MEGA__)
 #	pragma pack(pop)

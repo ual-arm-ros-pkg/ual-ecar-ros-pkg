@@ -280,7 +280,12 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setSteer_SteeringParams(p);
 	}
 	break;
-
+/*
+	OP_CONTROL_STEERING_SETPOINT
+	OP_OPENLOOP_STEERING_SETPOINT
+	OP_OPENLOOP_THROTTLE_SETPOINT
+	OP_CONTROL_THROTTLE_SETPOINT
+*/
 	default:
 	{
 		// Error:
