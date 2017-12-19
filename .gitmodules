@@ -1,3 +1,3 @@
-[submodule "ual_ecar_vehicle_controller\\firmware\\claraquino"]
-	path = ual_ecar_vehicle_controller\\firmware\\claraquino
+[submodule "ual_ecar_vehicle_controller/firmware/claraquino"]
+	path = ual_ecar_vehicle_controller/firmware/claraquino
 	url = https://github.com/jlblancoc/claraquino.git
