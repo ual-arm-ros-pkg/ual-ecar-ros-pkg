@@ -93,8 +93,14 @@ int16_t Axis[2]		= {0,0}; /* {Eje_x:steer [-255,+255], Eje_y}*/
   */
 int16_t  SETPOINT_STEER_POS = 0;
 
+/** Desired setpoint for steering angle in Open Loop. 
+  * -254:max right, +254: max left
+  */
+uint16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
+
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
+uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
 
 /** Desired setpoint for vehicle speed.
   * :min_speed , :max_speed
@@ -168,7 +174,11 @@ void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload
 		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
 
 }
-
+void setSteerOpenLoopSetpoint_Steer(int16_t speed)
+{
+	SETPOINT_OPENLOOP_STEER_SPEED = speed;
+	SETPOINT_OPENLOOP_STEER_TIMESTAMP = millis();
+}
 void setSteerControllerSetpoint_Steer(int16_t pos)
 {
 	SETPOINT_STEER_POS=pos;
@@ -210,6 +220,7 @@ void processSteerController()
 	// Manual mode
 	if (!STEERCONTROL_active)
 	{
+		U_control[0] = SETPOINT_OPENLOOP_STEER_SPEED;
 		/*	Protection to detect the limit of mechanism */
 		if (abs(Encoder_dir[0]) >= max_p)
 			lim = true;
@@ -222,7 +233,6 @@ void processSteerController()
 			if(Encoder_dir[0] < 0 && U_control[0] < 0)
 				U_control[0] = 0;
 		}
-		#warning OJO. Hace falta que el pwm se lea aqui para que funcione el predictor de smith
 	}
 	// Automatic mode
 	else

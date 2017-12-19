@@ -56,6 +56,7 @@ void processSteerController();
 void enableSteerController(bool enabled);
 void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p);
 void setSteerControllerSetpoint_Steer(int16_t pos);
+void setSteerOpenLoopSetpoint_Steer(int16_t speed);
 void setSteerControllerSetpoint_VehVel(float vel_mps);
 void initSensorsForController();
 
