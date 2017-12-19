@@ -229,26 +229,6 @@ struct TFrameCMD_ADC_stop : public TBaseFrame<TFrameCMD_ADC_stop_payload_t>
 	}
 };
 
-// struct TFrameCMD_SET_PWM_payload_t
-// {
-// 	uint8_t  pin_index;
-// 	uint8_t  analog_value; //!< 0-255 maps to 0% to 100% duty cycle
-// 	uint8_t  flag_enable_timeout : 1;   // bitfield: 1 bit flag
-// 	TFrameCMD_SET_PWM_payload_t() :
-// 		pin_index(0),
-// 		analog_value(0),
-// 		flag_enable_timeout(0)
-// 	{
-// 	}
-// };
-// struct TFrameCMD_SET_PWM : public TBaseFrame<TFrameCMD_SET_PWM_payload_t>
-// {
-// 	// Defaults:
-// 	TFrameCMD_SET_PWM() : TBaseFrame(OP_SET_PWM)
-// 	{
-// 	}
-// };
-
 struct TFrame_ADC_readings_payload_t
 {
 	uint32_t timestamp_ms_tenths; //!< timestamp, in tenths of milliseconds

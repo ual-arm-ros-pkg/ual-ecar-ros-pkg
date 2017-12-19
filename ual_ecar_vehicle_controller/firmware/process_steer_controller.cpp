@@ -81,7 +81,8 @@ static	uint8_t adjust	=	0;
 float	pedal			=	.0f; /* [0,1] */
 const float ANTIWINDUP_CTE = sqrt(0.0283);
 
-uint32_t  CONTROL_last_millis = 0;
+uint32_t  CONTROL_last_millis_STEER = 0;
+uint32_t  CONTROL_last_millis_THROTTLE = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;// true: controller; false: open loop
 bool	  THROTTLECONTROL_active = false; //true: controller; false: open loop
@@ -240,10 +241,10 @@ void setSteerControllerSetpoint_VehVel(float vel_mps)
 void processSteerController()
 {
 	const uint32_t tnow = millis();
-	if (tnow-CONTROL_last_millis < CONTROL_sampling_period_ms_tenths)
+	if (tnow-CONTROL_last_millis_STEER < CONTROL_sampling_period_ms_tenths)
 		return;
 		
-	CONTROL_last_millis = tnow;
+	CONTROL_last_millis_STEER = tnow;
 	// ========= Encoders calibration algorithm ===================================
 	// Incremental encoder reading
 	int32_t enc_diff = enc_last_reading.encoders[0];
@@ -337,7 +338,6 @@ void processSteerController()
 	do_shift(Encoder_dir);
 	do_shift(Ys);
 	do_shift(U_control);
-	
 
 	/*	Direction*/
 	bool u_steer_dir = false;
@@ -355,7 +355,16 @@ void processSteerController()
 	// PWM direction:
 	gpio_pin_write(PWM_DIR, u_steer_dir);
 
-	// (ii) CONTROL FOR MAIN VEHICLE MOTOR
+}
+void processThrottleController()
+{
+	const uint32_t tnow = millis();
+	if (tnow-CONTROL_last_millis_THROTTLE < CONTROL_sampling_period_ms_tenths)
+		return;
+
+	CONTROL_last_millis_THROTTLE = tnow;
+
+		// (ii) CONTROL FOR MAIN VEHICLE MOTOR
 	// -------------------------------------------------------------
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
@@ -377,6 +386,6 @@ void processSteerController()
 	// Output value:
 	uint16_t veh_speed_dac = 1.0 + abs(pedal) * 4; /* 1.0 : Offset */
 	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
-	
+
 }
 

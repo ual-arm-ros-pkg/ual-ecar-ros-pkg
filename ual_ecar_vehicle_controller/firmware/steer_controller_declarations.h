@@ -53,6 +53,7 @@ void flash_led(int ntimes, int nms);
 void send_simple_opcode_frame(const uint8_t op);
 
 void processSteerController();
+void processThrottleController();
 void enableSteerController(bool enabled);
 void enableThrottleController(bool enabled);
 void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &steer_controller_params);
