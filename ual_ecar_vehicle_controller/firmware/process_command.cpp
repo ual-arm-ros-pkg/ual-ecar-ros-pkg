@@ -174,35 +174,6 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 	}
 	break;
 
-// 	case OP_SET_PWM:
-// 	{
-// 		if (datalen!=sizeof(TFrameCMD_SET_PWM_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
-// 
-// 		TFrameCMD_SET_PWM_payload_t pwm_req;
-// 		memcpy(&pwm_req,data, sizeof(pwm_req));
-// 
-// 		gpio_pin_mode(pwm_req.pin_index, OUTPUT);
-// 
-// 		static bool pwm_initialized = false;
-// 		if (!pwm_initialized)
-// 		{
-// 			pwm_init(PWM_TIMER0, PWM_PRESCALER_1 );
-// 		}
-// 		pwm_set_duty_cycle(PWM_TIMER0,pwm_pin_t(pwm_req.pin_index),pwm_req.analog_value);
-// 
-// 		if (pwm_req.flag_enable_timeout)
-// 		{
-// 			if (pwm_req.pin_index<sizeof(PendingTimeouts.PWM_last_changed)/sizeof(PendingTimeouts.PWM_last_changed[0])) 
-// 			{
-// 				PendingTimeouts.PWM_any=true;
-// 				PendingTimeouts.PWM_last_changed[pwm_req.pin_index] = millis();
-// 			}
-// 		}
-// 		// send answer back:
-// 		send_simple_opcode_frame(RESP_SET_PWM);
-// 	}
-// 	break;
-
 	case OP_START_ENCODERS:
 	{
 		if (datalen!=sizeof(TFrameCMD_ENCODERS_start_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
@@ -280,12 +251,40 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setSteer_SteeringParams(p);
 	}
 	break;
-/*
-	OP_CONTROL_STEERING_SETPOINT
-	OP_OPENLOOP_STEERING_SETPOINT
-	OP_OPENLOOP_THROTTLE_SETPOINT
-	OP_CONTROL_THROTTLE_SETPOINT
-*/
+	
+	case OP_CONTROL_STEERING_SETPOINT:
+	{
+		if (datalen!=sizeof(TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+		TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t control_steer_setpoint;
+		
+	}
+	break;
+	
+	case OP_OPENLOOP_STEERING_SETPOINT:
+	{
+		if (datalen!=sizeof(TFrameCMD_OPENLOOP_STEERING_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+		TFrameCMD_OPENLOOP_STEERING_SETPOINT_payload_t ol_steer_setpoint;
+	}
+	break;
+	
+	case OP_OPENLOOP_THROTTLE_SETPOINT:
+	{
+		if (datalen!=sizeof(TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+		TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t ol_throttle_setpoint;
+	}
+	break;
+	
+	case OP_CONTROL_THROTTLE_SETPOINT:
+	{
+		if (datalen!=sizeof(TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+		TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t k;
+	}
+	break;
+
 	default:
 	{
 		// Error:

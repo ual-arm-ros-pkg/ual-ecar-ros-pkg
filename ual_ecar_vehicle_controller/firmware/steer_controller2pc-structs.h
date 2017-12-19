@@ -441,7 +441,7 @@ struct TFrameCMD_OPENLOOP_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_OPENLO
 struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t
 {
 /** Desired setpoint for throttle in Open Loop. 
-  * [-5.7,-1]V:max reverse, [+1,+5.7]V: max forward
+  * [-1,0]:max reverse, [0,1]: max forward
   */
 	float  SETPOINT_OPENLOOP_THROTTLE { .0f };
 };

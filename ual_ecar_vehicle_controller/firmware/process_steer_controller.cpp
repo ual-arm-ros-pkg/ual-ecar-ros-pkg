@@ -75,10 +75,11 @@ float	Antiwindup[2]	=	{0,0};			//
 // Auxiliary vars:
 bool	lim				=	false;
 float	max_p			=	500;
-float	sat_ref			=	100;
+const float	sat_ref			=	100;
 float	enc_init		=	.0f;
 static	uint8_t adjust	=	0;
 float	pedal			=	.0f; /* [0,1] */
+const float ANTIWINDUP_CTE = sqrt(0.0283);
 
 uint32_t  CONTROL_last_millis = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
@@ -100,7 +101,7 @@ int16_t  SETPOINT_STEER_POS = 0;
 uint16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
 
 /** Desired setpoint for throttle in Open Loop. 
-  * [-5.7,-1]V:max reverse, [+1,+5.7]V: max forward
+  * [-1,0]V:max reverse, [0,+1]V: max forward
   */
 float SETPOINT_OPENLOOP_THROTTLE = .0f;
 
@@ -115,9 +116,12 @@ uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
 uint32_t SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
 uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
 
-/** Desired setpoint for vehicle speed.
-  * :min_speed , :max_speed
-  */
+template <typename T, size_t N>
+void do_shift(T (&v)[N])
+{
+	for (int i=N-1;i>=1;i--)
+		v[i] = v[i-1];
+}
 
 
 /** Start reading all required sensors at the desired rate */
@@ -212,7 +216,7 @@ void setSteerControllerSetpoint_VehVel(float vel_mps)
 	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
 }
 
-
+// Stopwatch: 0.35 ms
 void processSteerController()
 {
 	const uint32_t tnow = millis();
@@ -278,39 +282,40 @@ void processSteerController()
 	/*	Speed error. Intern loop*/
 		Error_speed[0] = Ref_speed[0] - Ys[0] - (rpm - Ys[3]);
 	/*	Speed controller */
-		U_control[0] = round(U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2]);
+		U_control[0] = U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2];
 	/*	Variable to Anti-windup technique*/
-		int m_v= U_control[0];
+		int m_v= round(U_control[0]);
 	/*	Saturation */
+		bool has_sat = false;
 		if (U_control[0] > 254)
+		{
 			U_control[0] = 254;
+			has_sat = true;
+		}
 		if (U_control[0] < -254)
+		{
 			U_control[0] = -254;
+			has_sat = true;
+		}
 	/*	Anti-windup technique*/
-		if(U_control[0] - m_v != 0)
-			Antiwindup[0] = (U_control[0] - m_v) / sqrt(0.0283);
+		if(has_sat)
+			Antiwindup[0] = (U_control[0] - m_v) / ANTIWINDUP_CTE;
 		else
 			Antiwindup[0] = 0;
 
-		U_control[0] = round(0.5 * (2 * U_control[0] + 0.05 * (Antiwindup[0] + Antiwindup[1])));
-	}
+		U_control[0] = round(0.5 * (2 * U_control[0] + T * (Antiwindup[0] + Antiwindup[1])));
+	} // end automatic control
 
 	/* Values actualization*/
-	Ref_pos[1] = Ref_pos[0];
-	Antiwindup[1] = Antiwindup[0];
-	for (int i=2;i>=1;i--)
-	{
-		Error_pos[i] = Error_pos[i-1];
-	}
-	Ref_speed[1] = Ref_speed[0];
-	Error_speed[1] = Error_speed[0];
-	Encoder_dir[1] = Encoder_dir[0];
-	for (int i=3;i>=1;i--)
-		Ys[i] = Ys[i-1];
-
-	for (int i=5;i>=1;i--)
-		U_control[i] = U_control[i-1];
-
+	do_shift(Ref_pos);
+	do_shift(Antiwindup);
+	do_shift(Error_pos);
+	do_shift(Ref_speed);
+	do_shift(Error_speed);
+	do_shift(Encoder_dir);
+	do_shift(Ys);
+	do_shift(U_control);
+	
 
 	/*	Direction*/
 	bool u_steer_dir = false;
@@ -341,16 +346,15 @@ void processSteerController()
 		// Throttle-by-wire controller here!!
 		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
 	}
-		// Output direction:
-		if (pedal<0)
-			gpio_pin_write(RELAY_FRWD_REV,true);
-		else
-			gpio_pin_write(RELAY_FRWD_REV,false);
+	// Output direction:
+	if (pedal<0)
+		gpio_pin_write(RELAY_FRWD_REV,true);
+	else
+		gpio_pin_write(RELAY_FRWD_REV,false);
 
-		// Output value:
-		uint16_t veh_speed_dac = 1.0 + pedal * 4.76; /* 1.0 : Offset */
-		mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
+	// Output value:
+	uint16_t veh_speed_dac = 1.0 + abs(pedal) * 4; /* 1.0 : Offset */
+	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
 	
-	return;
 }
 
