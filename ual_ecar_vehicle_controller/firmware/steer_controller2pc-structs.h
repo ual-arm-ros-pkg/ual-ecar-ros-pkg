@@ -61,16 +61,16 @@ enum opcode_t {
 	OP_GET_GPIO        = 0x12,
 	OP_START_CONT_ADC  = 0x20,
 	OP_STOP_CONT_ADC   = 0x21,
-	OP_SET_PWM         = 0x25,
+/*	OP_SET_PWM         = 0x25,*/
 	OP_START_ENCODERS  = 0x30,
 	OP_STOP_ENCODERS   = 0x31,
 	OP_START_EMS22A	   = 0x40, //
 	OP_STOP_EMS22A     = 0x41, //
 	// Control:
-	OP_CONTROL_MODE    = 0x50,
-	OP_CONTROL_STEERING_SET_PARAMS = 0x51,
-	OP_CONTROL_STEERING_SETPOINT  = 0x52,
-	OP_JOYSTICK_VALUE  = 0x53,
+	OP_CONTROL_MODE					= 0x50,
+	OP_CONTROL_STEERING_SET_PARAMS	= 0x51,
+	OP_CONTROL_STEERING_SETPOINT	= 0x52,
+	OP_OPEN_LOOP_STEERING_SETPOINT  = 0x53,
 
 	// -----------------------------
 	// Responses uC -> PC
@@ -90,7 +90,7 @@ enum opcode_t {
 	RESP_ADC_READINGS     = 0x92,
 	RESP_ENCODER_READINGS = 0x93,
 	RESP_EMS22A_READINGS  = 0x94,
-	RESP_SET_PWM          = OP_SET_PWM + RESP_OFFSET,
+	/*RESP_SET_PWM          = OP_SET_PWM + RESP_OFFSET,*/
 	RESP_CPU_USAGE_STATS  = 0xA0,
 
 	// error codes:
@@ -228,25 +228,25 @@ struct TFrameCMD_ADC_stop : public TBaseFrame<TFrameCMD_ADC_stop_payload_t>
 	}
 };
 
-struct TFrameCMD_SET_PWM_payload_t
-{
-	uint8_t  pin_index;
-	uint8_t  analog_value; //!< 0-255 maps to 0% to 100% duty cycle
-	uint8_t  flag_enable_timeout : 1;   // bitfield: 1 bit flag
-	TFrameCMD_SET_PWM_payload_t() :
-		pin_index(0),
-		analog_value(0),
-		flag_enable_timeout(0)
-	{
-	}
-};
-struct TFrameCMD_SET_PWM : public TBaseFrame<TFrameCMD_SET_PWM_payload_t>
-{
-	// Defaults:
-	TFrameCMD_SET_PWM() : TBaseFrame(OP_SET_PWM)
-	{
-	}
-};
+// struct TFrameCMD_SET_PWM_payload_t
+// {
+// 	uint8_t  pin_index;
+// 	uint8_t  analog_value; //!< 0-255 maps to 0% to 100% duty cycle
+// 	uint8_t  flag_enable_timeout : 1;   // bitfield: 1 bit flag
+// 	TFrameCMD_SET_PWM_payload_t() :
+// 		pin_index(0),
+// 		analog_value(0),
+// 		flag_enable_timeout(0)
+// 	{
+// 	}
+// };
+// struct TFrameCMD_SET_PWM : public TBaseFrame<TFrameCMD_SET_PWM_payload_t>
+// {
+// 	// Defaults:
+// 	TFrameCMD_SET_PWM() : TBaseFrame(OP_SET_PWM)
+// 	{
+// 	}
+// };
 
 struct TFrame_ADC_readings_payload_t
 {
@@ -405,18 +405,6 @@ struct TFrameCMD_CONTROL_STEERING_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTR
 	}
 };
 
-struct TFrameCMD_JOYSTICK_VALUE_payload_t 
-{
-	uint16_t Axis[2] = {0,0};
-};
-struct TFrameCMD_JOYSTICK_VALUE : public TBaseFrame<TFrameCMD_JOYSTICK_VALUE_payload_t>  
-{
-	//Defaults:
-	TFrameCMD_JOYSTICK_VALUE() : TBaseFrame(OP_JOYSTICK_VALUE)
-	{
-	}
-};
-
 struct TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t
 {
 	/** Desired setpoint for steering angle. 
@@ -428,6 +416,21 @@ struct TFrameCMD_CONTROL_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL
 {
 	// Defaults:
 	TFrameCMD_CONTROL_STEERING_SETPOINT() : TBaseFrame(OP_CONTROL_STEERING_SETPOINT)
+	{
+	}
+};
+
+struct TFrameCMD_OPEN_LOOP_STEERING_SETPOINT_payload_t
+{
+	/** Desired setpoint for steering angle in Open Loop. 
+	  * -254:max right, +254: max left
+	  */
+	int16_t  SETPOINT_OPENLOOP_STEER_SPEED { 0 };
+};
+struct TFrameCMD_OPEN_LOOP_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_OPEN_LOOP_STEERING_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_OPEN_LOOP_STEERING_SETPOINT() : TBaseFrame(OP_OPEN_LOOP_STEERING_SETPOINT)
 	{
 	}
 };
