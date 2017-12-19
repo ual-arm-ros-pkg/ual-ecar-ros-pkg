@@ -87,6 +87,7 @@ bool      STEERCONTROL_active = false;// true: controller; false: open loop
 bool	  THROTTLECONTROL_active = false; //true: controller; false: open loop
 
 float Q_STEER_INT[3]	= { - 0.2838f, 0.1986f, .0f };
+float Q_THROTTLE[3]		= {0,0,0};
 float Q_STEER_EXT[3]	= { 46.6728f, - -91.1049f, 44.4444f };
 float P_SMITH_SPEED[5]	= {0.2977f,.0f,1,-0.7023f,.0f}; /*{b0,b1,a0,a1,a2}*/
 
@@ -183,8 +184,7 @@ void enableThrottleController(bool enabled)
 	THROTTLECONTROL_active = enabled;
 }
 
-
-void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p)
+void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p)
 {
 	for (int i=0;i<3;i++)
 	{
@@ -193,8 +193,17 @@ void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload
 	}
 	for (int i=0;i<2;i++)
 		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
-
+		
+	#warning Add FeedForward & Decoupling
 }
+void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &p)
+{
+	for (int i=0;i<3;i++)
+		Q_THROTTLE[i] = p.Q_THROTTLE_CONTROLLER[i];
+		
+	#warning Add FeedForward & Decoupling
+}
+
 void setSteerOpenLoopSetpoint_Steer(int16_t speed)
 {
 	SETPOINT_OPENLOOP_STEER_SPEED = speed;

@@ -246,12 +246,22 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 	{
 		if (datalen!=sizeof(TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
-		TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t p;
-		memcpy(&p,data, sizeof(p));
-		setSteer_SteeringParams(p);
+		TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t steer_controller_params;
+		memcpy(&steer_controller_params,data, sizeof(steer_controller_params));
+		setSteer_ControllerParams(steer_controller_params);
 	}
 	break;
-	
+
+	case OP_CONTROL_THROTTLE_SET_PARAMS:
+	{
+		if (datalen!=sizeof(TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+
+		TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t throttle_controller_params;
+		memcpy(&throttle_controller_params,data, sizeof(throttle_controller_params));
+		setThrottle_ControllerParams(throttle_controller_params);
+	}
+	break;
+
 	case OP_CONTROL_STEERING_SETPOINT:
 	{
 		if (datalen!=sizeof(TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);

@@ -29,6 +29,7 @@ int main(void)
 
 	// Make sure all outputs are in a safe state:
 	enableSteerController(false);
+	enableThrottleController(false);
 	initSensorsForController();
 	
 // 	#warning QUITAR! PRUEBA!
