@@ -42,11 +42,15 @@ bool CSteerControllerLowLevel::initialize()
 	}
 
 	m_pub_controller_status = m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>("vehicle_controller_status", 10);
+	/*Pub: Encoders, Control signal, ADC*/
 
 	m_sub_contr_status	= m_nh.subscribe("vehicle_manual_mode", 10, &CSteerControllerLowLevel::statusCallback, this);
 	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &CSteerControllerLowLevel::ejexCallback, this);
 	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &CSteerControllerLowLevel::ejeyCallback, this);
-
+	/*Sub:	1. Joystick[Axis & control modes]
+			2. System_Identification[Controller & Smith predictor params, Feedforwards...]
+	*/
+	
 	return true;
 }
 
