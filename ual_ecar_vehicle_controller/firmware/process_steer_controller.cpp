@@ -76,17 +76,18 @@ float	Antiwindup[2]	=	{0,0};			//
 bool	lim				=	false;
 float	max_p			=	500;
 float	sat_ref			=	200;
-float	enc_init		=	0;
-static uint8_t adjust	=	0;
+float	enc_init		=	.0f;
+static	uint8_t adjust	=	0;
+float	pedal			=	.0f; /* [0,1] */
 
 uint32_t  CONTROL_last_millis = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;// true: controller; false: open loop
+bool	  THROTTLECONTROL_active = false; //true: controller; false: open loop
 
 float Q_STEER_INT[3]	= { - 0.4542f, 0.0281f, .0f };
 float Q_STEER_EXT[3]	= { 11.142f, - 19.9691f, 8.8889f };
-float P_SMITH_SPEED[5]	= {0.8291,0,1,-0.1709,0}; /*{b0,b1,a0,a1,a2}*/
-int16_t Axis[2]		= {0,0}; /* {Eje_x:steer [-255,+255], Eje_y}*/
+float P_SMITH_SPEED[5]	= {0.8291f,.0f,1,-0.1709f,.0f}; /*{b0,b1,a0,a1,a2}*/
 
 /** Desired setpoint for steering angle. 
   * -512:max right, +511: max left
@@ -98,9 +99,20 @@ int16_t  SETPOINT_STEER_POS = 0;
   */
 uint16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
 
+/** Desired setpoint for throttle in Open Loop. 
+  * [-5.7,-1]V:max reverse, [+1,+5.7]V: max forward
+  */
+float SETPOINT_OPENLOOP_THROTTLE = .0f;
+
+/** Desired setpoint for throttle in Open Loop. 
+  * 0:min speed, 12.5 m/s: max forward
+  */
+float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
 uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
+uint32_t SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
+uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
 
 /** Desired setpoint for vehicle speed.
   * :min_speed , :max_speed
@@ -159,9 +171,13 @@ void initSensorsForController()
 void enableSteerController(bool enabled)
 {
 	STEERCONTROL_active = enabled;
-	
-	// setJoystickValue =>	#warning Set PWM & DAC values to safe values in any case.
 }
+
+void enableThrottleController(bool enabled)
+{
+	THROTTLECONTROL_active = enabled;
+}
+
 
 void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p)
 {
@@ -184,9 +200,15 @@ void setSteerControllerSetpoint_Steer(int16_t pos)
 	SETPOINT_STEER_POS=pos;
 	SETPOINT_STEER_TIMESTAMP = millis();
 }
+void setSteerOpenLoopSetpoint_VehVel(float ol_vel_mps)
+{
+	SETPOINT_OPENLOOP_THROTTLE = ol_vel_mps;
+	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = millis();
+}
 void setSteerControllerSetpoint_VehVel(float vel_mps)
 {
-	#warning Write me!
+	SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
+	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
 }
 
 
@@ -311,16 +333,23 @@ void processSteerController()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
-		uint16_t veh_speed_dac = 1.0 + abs(Axis[1]) * 4.76;
+	if (!THROTTLECONTROL_active)
+		pedal = SETPOINT_OPENLOOP_THROTTLE;
+	else
+	{
+		// Throttle-by-wire controller here!!
+		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
+	}
 		// Output direction:
-		if (Axis[1]<0)
+		if (pedal<0)
 			gpio_pin_write(RELAY_FRWD_REV,true);
 		else
 			gpio_pin_write(RELAY_FRWD_REV,false);
 
 		// Output value:
+		uint16_t veh_speed_dac = 1.0 + pedal * 4.76; /* 1.0 : Offset */
 		mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
-
+	
 	return;
 }
 

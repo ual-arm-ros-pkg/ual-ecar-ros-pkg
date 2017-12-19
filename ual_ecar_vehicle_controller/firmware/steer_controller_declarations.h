@@ -54,14 +54,17 @@ void send_simple_opcode_frame(const uint8_t op);
 
 void processSteerController();
 void enableSteerController(bool enabled);
+void enableThrottleController(bool enabled);
 void setSteer_SteeringParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p);
 void setSteerControllerSetpoint_Steer(int16_t pos);
 void setSteerOpenLoopSetpoint_Steer(int16_t speed);
+void setSteerOpenLoopSetpoint_VehVel(float ol_vel_mps);
 void setSteerControllerSetpoint_VehVel(float vel_mps);
 void initSensorsForController();
 
 // Global vars:
 extern bool STEERCONTROL_active;
+extern bool THROTTLECONTROL_active;
 
 extern TFrame_ENCODERS_readings_payload_t enc_last_reading;
 extern TFrame_ENCODER_ABS_reading_payload_t enc_abs_last_reading;

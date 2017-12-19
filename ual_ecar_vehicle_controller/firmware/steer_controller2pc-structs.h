@@ -70,7 +70,9 @@ enum opcode_t {
 	OP_CONTROL_MODE					= 0x50,
 	OP_CONTROL_STEERING_SET_PARAMS	= 0x51,
 	OP_CONTROL_STEERING_SETPOINT	= 0x52,
-	OP_OPEN_LOOP_STEERING_SETPOINT  = 0x53,
+	OP_OPENLOOP_STEERING_SETPOINT	= 0x53,
+	OP_OPENLOOP_THROTTLE_SETPOINT	= 0x54,
+	OP_CONTROL_THROTTLE_SETPOINT	= 0x55,
 
 	// -----------------------------
 	// Responses uC -> PC
@@ -382,7 +384,8 @@ struct TFrameCMD_EMS22A_stop : public TBaseFrame<TFrameCMD_EMS22A_stop_payload_t
 
 struct TFrameCMD_CONTROL_MODE_payload_t
 {
-	bool enable; //!< false: open loop (no control algorithm)
+	bool steer_enable; //!< false: open loop (no control algorithm)
+	bool throttle_enable; //!< false: open loop (no control algorithm)
 };
 struct TFrameCMD_CONTROL_MODE : public TBaseFrame<TFrameCMD_CONTROL_MODE_payload_t>
 {
@@ -420,20 +423,36 @@ struct TFrameCMD_CONTROL_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL
 	}
 };
 
-struct TFrameCMD_OPEN_LOOP_STEERING_SETPOINT_payload_t
+struct TFrameCMD_OPENLOOP_STEERING_SETPOINT_payload_t
 {
 	/** Desired setpoint for steering angle in Open Loop. 
 	  * -254:max right, +254: max left
 	  */
 	int16_t  SETPOINT_OPENLOOP_STEER_SPEED { 0 };
 };
-struct TFrameCMD_OPEN_LOOP_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_OPEN_LOOP_STEERING_SETPOINT_payload_t>
+struct TFrameCMD_OPENLOOP_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_OPENLOOP_STEERING_SETPOINT_payload_t>
 {
 	// Defaults:
-	TFrameCMD_OPEN_LOOP_STEERING_SETPOINT() : TBaseFrame(OP_OPEN_LOOP_STEERING_SETPOINT)
+	TFrameCMD_OPENLOOP_STEERING_SETPOINT() : TBaseFrame(OP_OPENLOOP_STEERING_SETPOINT)
 	{
 	}
 };
+
+struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t
+{
+/** Desired setpoint for throttle in Open Loop. 
+  * [-5.7,-1]V:max reverse, [+1,+5.7]V: max forward
+  */
+	float  SETPOINT_OPENLOOP_THROTTLE { .0f };
+};
+struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_OPENLOOP_THROTTLE_SETPOINT() : TBaseFrame(OP_OPENLOOP_THROTTLE_SETPOINT)
+	{
+	}
+};
+
 
 #if !defined(__AVR_MEGA__)
 #	pragma pack(pop)

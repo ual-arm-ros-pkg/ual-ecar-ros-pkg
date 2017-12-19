@@ -267,7 +267,8 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 
 		TFrameCMD_CONTROL_MODE_payload_t control_req;
 		memcpy(&control_req,data, sizeof(control_req));
-		STEERCONTROL_active = control_req.enable;		
+		STEERCONTROL_active = control_req.steer_enable;
+		THROTTLECONTROL_active = control_req.throttle_enable;	
 	}
 	break;
 	case OP_CONTROL_STEERING_SET_PARAMS:
