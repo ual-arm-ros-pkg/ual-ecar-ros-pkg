@@ -202,12 +202,12 @@ bool VehicleControllerLowLevel::AttemptConnection()
 		m_serial.setConfig(m_serial_port_baudrate);
 		m_serial.setTimeouts(100,0,10,0,50);
 
-		MRPT_LOG_INFO_FMT("[CSteerControllerLowLevel::AttemptConnection] Serial port '%s' open was successful.", m_serial_port_name.c_str() );
+		MRPT_LOG_INFO_FMT("[VehicleControllerLowLevel::AttemptConnection] Serial port '%s' open was successful.", m_serial_port_name.c_str() );
 		return true;
 	}
 	catch (std::exception &e)
 	{
-		MRPT_LOG_ERROR_FMT("[CSteerControllerLowLevel::AttemptConnection] COMMS error: %s", e.what() );
+		MRPT_LOG_ERROR_FMT("[VehicleControllerLowLevel::AttemptConnection] COMMS error: %s", e.what() );
 		return false;
 	}
 }
@@ -422,13 +422,3 @@ bool VehicleControllerLowLevel::IsConnected() const
 	return m_serial.isOpen();
 }
 
-bool VehicleControllerLowLevel ::CMD_PWM(int pin_index, uint8_t pwm_value)
-{
-	TFrameCMD_SET_PWM cmd;
-	cmd.payload.pin_index = pin_index;
-	cmd.payload.analog_value = pwm_value;
-	cmd.payload.flag_enable_timeout = true;
-	cmd.calc_and_update_checksum();
-
-	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
-}

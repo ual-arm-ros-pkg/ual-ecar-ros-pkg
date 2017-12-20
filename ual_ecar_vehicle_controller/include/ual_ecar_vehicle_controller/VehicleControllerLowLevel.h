@@ -37,8 +37,11 @@ public:
 	ros::NodeHandle m_nh_params {"~"};
 
 	ros::Publisher  m_pub_controller_status;
+	/*Pub: Encoders, Control signal, ADC*/
 	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status;
-
+	/*Sub:	1. Joystick[Axis & control modes]
+			2. System_Identification[Controller & Smith predictor params, Feedforwards...]
+	*/
 	bool initialize();
 
 	/** called when work is to be done */
