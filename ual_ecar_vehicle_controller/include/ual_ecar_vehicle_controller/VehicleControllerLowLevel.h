@@ -10,7 +10,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 //#include <std_msgs/UInt8.h>
-#include <steer_controller2pc-structs.h>
+#include <vehicle_controller2pc-structs.h>
 #include <mrpt/utils/COutputLogger.h>
 
 #include <mrpt/version.h>
@@ -23,10 +23,10 @@ using mrpt::hwdrivers::CSerialPort;
 #endif
 
 
-class CSteerControllerLowLevel : public mrpt::utils::COutputLogger
+class VehicleControllerLowLevel : public mrpt::utils::COutputLogger
 {
 public:
-	CSteerControllerLowLevel() { }
+	VehicleControllerLowLevel() { }
 
 	/**
 	* NodeHandle is the main access point to communications with the ROS system.

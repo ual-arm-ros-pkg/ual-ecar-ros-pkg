@@ -4,7 +4,7 @@
    |   Copyright (C) 2014-17  University of Almeria                            |
    +---------------------------------------------------------------------------+ */
 
-#include <ual_ecar_vehicle_controller/CSteerControllerLowLevel.h>
+#include <ual_ecar_vehicle_controller/VehicleControllerLowLevel.h>
 #include <thread>
 #include <ros/console.h>
 #include <ual_ecar_vehicle_controller/SteerControllerStatus.h>
@@ -21,9 +21,9 @@
 
 bool mode_manual = false;	/*Variable para la comprobacion del modo de control*/
 
-bool CSteerControllerLowLevel::initialize()
+bool VehicleControllerLowLevel::initialize()
 {
-	ROS_INFO("CSteerControllerLowLevel::inicialize() ok.");
+	ROS_INFO("VehicleControllerLowLevel::inicialize() ok.");
 
 	m_serial_port_name = "/dev/serial/by-id/usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0";
 	m_serial_port_baudrate = 500000;
@@ -37,16 +37,16 @@ bool CSteerControllerLowLevel::initialize()
 	}
 	else
 	{
-		ROS_ERROR("Error in CSteerControllerLowLevel::AttemptConnection()!");
+		ROS_ERROR("Error in VehicleControllerLowLevel::AttemptConnection()!");
 		return false;
 	}
 
 	m_pub_controller_status = m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>("vehicle_controller_status", 10);
 	/*Pub: Encoders, Control signal, ADC*/
 
-	m_sub_contr_status	= m_nh.subscribe("vehicle_manual_mode", 10, &CSteerControllerLowLevel::statusCallback, this);
-	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &CSteerControllerLowLevel::ejexCallback, this);
-	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &CSteerControllerLowLevel::ejeyCallback, this);
+	m_sub_contr_status	= m_nh.subscribe("vehicle_manual_mode", 10, &VehicleControllerLowLevel::statusCallback, this);
+	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &VehicleControllerLowLevel::ejexCallback, this);
+	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &VehicleControllerLowLevel::ejeyCallback, this);
 	/*Sub:	1. Joystick[Axis & control modes]
 			2. System_Identification[Controller & Smith predictor params, Feedforwards...]
 	*/
@@ -54,7 +54,7 @@ bool CSteerControllerLowLevel::initialize()
 	return true;
 }
 
-void CSteerControllerLowLevel::processIncommingFrame(const std::vector<uint8_t> &rxFrame)
+void VehicleControllerLowLevel::processIncommingFrame(const std::vector<uint8_t> &rxFrame)
 {
 	//MRPT_LOG_INFO_STREAM  << "Rx frame, len=" << rxFrame.size();
 	if (rxFrame.size() >= 5)
@@ -89,7 +89,7 @@ void CSteerControllerLowLevel::processIncommingFrame(const std::vector<uint8_t> 
 }
 
 
-bool CSteerControllerLowLevel::iterate()
+bool VehicleControllerLowLevel::iterate()
 {
 	// Main module loop code.
 	const size_t MAX_FRAMES_PER_ITERATE = 20;
@@ -122,28 +122,28 @@ bool CSteerControllerLowLevel::iterate()
 	return true;
 }
 
-void CSteerControllerLowLevel::statusCallback(const std_msgs::Bool::ConstPtr& msg)
+void VehicleControllerLowLevel::statusCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	mode_manual = msg->data;
 	MRPT_TODO("Enviar al controlador!?");
 
 }
 
-void CSteerControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
+void VehicleControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	const double eje_x = msg->data;
 
 	MRPT_TODO("Enviar al controlador!?");
 }
 
-void CSteerControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
+void VehicleControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	const double eje_y = msg->data;
 	MRPT_TODO("Enviar al controlador!?");
 
 }
 
-void CSteerControllerLowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_payload_t &data)
+void VehicleControllerLowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_payload_t &data)
 {
 	MRPT_TODO("Append data to ControllerStatus");
 #if 0
@@ -158,7 +158,7 @@ void CSteerControllerLowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_pay
 #endif
 }
 
-void CSteerControllerLowLevel::daqOnNewENCCallback(const TFrame_ENCODERS_readings_payload_t &data)
+void VehicleControllerLowLevel::daqOnNewENCCallback(const TFrame_ENCODERS_readings_payload_t &data)
 {
 	MRPT_TODO("Append data to ControllerStatus");
 #if 0
@@ -177,7 +177,7 @@ void CSteerControllerLowLevel::daqOnNewENCCallback(const TFrame_ENCODERS_reading
 #endif
 }
 
-void CSteerControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_reading_payload_t &data)
+void VehicleControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_reading_payload_t &data)
 {
 	MRPT_TODO("Append data to ControllerStatus");
 #if 0
@@ -191,7 +191,7 @@ void CSteerControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_r
 #endif
 }
 
-bool CSteerControllerLowLevel::AttemptConnection()
+bool VehicleControllerLowLevel::AttemptConnection()
 {
 	if (m_serial.isOpen()) return true; // Already open.
 
@@ -214,7 +214,7 @@ bool CSteerControllerLowLevel::AttemptConnection()
 
 
 /** Sends a binary packet (returns false on COMMS error) */
-bool CSteerControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame, const size_t full_frame_len)
+bool VehicleControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame, const size_t full_frame_len)
 {
 	if (!AttemptConnection()) return false;
 
@@ -241,7 +241,7 @@ bool CSteerControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame, const
 	}
 }
 
-bool CSteerControllerLowLevel::SendFrameAndWaitAnswer(
+bool VehicleControllerLowLevel::SendFrameAndWaitAnswer(
 	const uint8_t *full_frame,
 	const size_t full_frame_len,
 	const int num_retries,
@@ -283,7 +283,7 @@ bool CSteerControllerLowLevel::SendFrameAndWaitAnswer(
 	return false; // No answer!
 }
 
-bool CSteerControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> &rxFrame)
+bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> &rxFrame)
 {
 	rxFrame.clear();
 	size_t	nFrameBytes = 0;
@@ -389,7 +389,7 @@ bool CSteerControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> &
 	return true;
 }
 
-bool CSteerControllerLowLevel::CMD_GPIO_output(int pin, bool pinState)
+bool VehicleControllerLowLevel::CMD_GPIO_output(int pin, bool pinState)
 {
     TFrameCMD_GPIO_output cmd;
     cmd.payload.pin_index = pin;
@@ -401,7 +401,7 @@ bool CSteerControllerLowLevel::CMD_GPIO_output(int pin, bool pinState)
 }
 
 //!< Sets the clutch
-bool CSteerControllerLowLevel::CMD_DAC(int dac_index,double dac_value_volts)
+bool VehicleControllerLowLevel::CMD_DAC(int dac_index,double dac_value_volts)
 {
     uint16_t dac_counts = 4096 * dac_value_volts / 5.0;
     mrpt::utils::saturate(dac_counts, uint16_t(0), uint16_t(4095));
@@ -417,12 +417,12 @@ bool CSteerControllerLowLevel::CMD_DAC(int dac_index,double dac_value_volts)
 	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t*>(&cmd),sizeof(cmd));
 }
 
-bool CSteerControllerLowLevel::IsConnected() const
+bool VehicleControllerLowLevel::IsConnected() const
 {
 	return m_serial.isOpen();
 }
 
-bool CSteerControllerLowLevel::CMD_PWM(int pin_index, uint8_t pwm_value)
+bool VehicleControllerLowLevel ::CMD_PWM(int pin_index, uint8_t pwm_value)
 {
 	TFrameCMD_SET_PWM cmd;
 	cmd.payload.pin_index = pin_index;

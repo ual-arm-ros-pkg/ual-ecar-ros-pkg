@@ -1,5 +1,5 @@
 
-#include <ual_ecar_vehicle_controller/CSteerControllerLowLevel.h>
+#include <ual_ecar_vehicle_controller/VehicleControllerLowLevel.h>
 #include <ros/console.h>
 
 
@@ -7,16 +7,16 @@ int main(int argc, char **argv)
 {
 	try
 	{
-		ros::init(argc, argv, "steer_controller");
+		ros::init(argc, argv, "vehicle_controller");
 
-		CSteerControllerLowLevel  steer_controller;
-		steer_controller.initialize();
+		VehicleControllerLowLevel  vehicle_controller;
+		vehicle_controller.initialize();
 
-		ros::Rate loop_rate(25); // Hz
+		ros::Rate loop_rate(100); // f : 100Hz => T = 10 ms
 		while (ros::ok())
 		{
 			ros::spinOnce();
-			steer_controller.iterate();
+			vehicle_controller.iterate();
 			loop_rate.sleep();
 		}
 

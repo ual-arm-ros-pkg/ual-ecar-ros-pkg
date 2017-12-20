@@ -55,7 +55,7 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/  # for steer_controller2pc-structs
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/  # for vehicle_controller2pc-structs
   ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 
@@ -129,7 +129,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_steer_controller.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_vehicle_controller.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
