@@ -32,8 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "steer_controller2pc-structs.h"
-#include "steer_controller_declarations.h"
+#include "vehicle_controller2pc-structs.h"
+#include "vehicle_controller_declarations.h"
 #include "libclaraquino/uart.h"
 
 // Frame format: see README.md

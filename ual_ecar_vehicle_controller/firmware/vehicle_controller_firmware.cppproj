@@ -13,7 +13,7 @@
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
     <AssemblyName>steer_controller_firmware</AssemblyName>
-    <Name>steer_controller_firmware</Name>
+    <Name>vehicle_controller_firmware</Name>
     <RootNamespace>steer_controller_firmware</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
@@ -233,10 +233,10 @@
     <Compile Include="serial.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="steer_controller2pc-structs.h">
+    <Compile Include="vehicle_controller2pc-structs.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="steer_controller_declarations.h">
+    <Compile Include="vehicle_controller_declarations.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

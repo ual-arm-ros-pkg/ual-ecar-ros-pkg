@@ -41,7 +41,7 @@
 #include "libclaraquino/gpio.h"
 #include "libclaraquino/adc_internal.h"
 #include "libclaraquino/pwm.h"
-#include "steer_controller_declarations.h"
+#include "vehicle_controller_declarations.h"
 
 
 #include "libclaraquino/mod_dac_max5500.h"

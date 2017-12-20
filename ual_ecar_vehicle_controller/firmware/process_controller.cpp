@@ -37,7 +37,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "steer_controller_declarations.h"
+#include "vehicle_controller_declarations.h"
 #include "libclaraquino/mod_ems22a.h"
 #include "libclaraquino/mod_dac_max5500.h"
 #include "libclaraquino/millis_timer.h"

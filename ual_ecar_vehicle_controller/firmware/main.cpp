@@ -10,7 +10,7 @@ Universidad de Almeria
 #include "libclaraquino/leds.h"
 #include "libclaraquino/delays.h"
 #include "libclaraquino/millis_timer.h"
-#include "steer_controller_declarations.h"
+#include "vehicle_controller_declarations.h"
 
 #include <avr/interrupt.h> // sei()
 

@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include "steer_controller2pc-structs.h"
+#include "vehicle_controller2pc-structs.h"
 
 #include <stdint.h>  // uint8_t, etc.
 
@@ -52,16 +52,20 @@ void process_timeouts();
 void flash_led(int ntimes, int nms);
 void send_simple_opcode_frame(const uint8_t op);
 
+// Steer Controller function:
 void processSteerController();
-void processThrottleController();
 void enableSteerController(bool enabled);
-void enableThrottleController(bool enabled);
 void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &steer_controller_params);
-void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &throttle_controller_params);
-void setSteerControllerSetpoint_Steer(int16_t pos);
 void setSteerOpenLoopSetpoint_Steer(int16_t speed);
+void setSteerControllerSetpoint_Steer(int16_t pos);
+
+// Throttle Controller Function:
+void processThrottleController();
+void enableThrottleController(bool enabled);
+void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &throttle_controller_params);
 void setSteerOpenLoopSetpoint_VehVel(float ol_vel_mps);
 void setSteerControllerSetpoint_VehVel(float vel_mps);
+
 void initSensorsForController();
 
 // Global vars:

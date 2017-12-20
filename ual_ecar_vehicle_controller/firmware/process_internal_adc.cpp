@@ -32,8 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "steer_controller_declarations.h"
-#include "steer_controller2pc-structs.h"
+#include "vehicle_controller_declarations.h"
+#include "vehicle_controller2pc-structs.h"
 #include "libclaraquino/uart.h"
 #include "libclaraquino/millis_timer.h"
 #include "libclaraquino/adc_internal.h"

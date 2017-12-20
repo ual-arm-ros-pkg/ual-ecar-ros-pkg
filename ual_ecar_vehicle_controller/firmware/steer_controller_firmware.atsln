@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Atmel Studio Solution File, Format Version 11.00
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "steer_controller_firmware", "steer_controller_firmware.cppproj", "{30951E78-4960-4941-9B07-DD091C881534}"
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "vehicle_controller_firmware", "vehicle_controller_firmware.cppproj", "{30951E78-4960-4941-9B07-DD091C881534}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C11E8498-0DF8-4F82-85C9-050AC4FE1D4E} = {C11E8498-0DF8-4F82-85C9-050AC4FE1D4E}
 	EndProjectSection
