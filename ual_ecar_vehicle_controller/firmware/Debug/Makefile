@@ -32,24 +32,15 @@ LIB_DEP:=
 LINKER_SCRIPT_DEP:=
 
 # Every subdirectory with source files must be described here
-SUBDIRS :=  \
-../common
+SUBDIRS := 
 
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
-../common/adc_internal.cpp \
-../common/gpio.cpp \
-../common/leds.cpp \
-../common/millis_timer.cpp \
-../common/pwm.cpp \
-../common/spi.cpp \
-../common/uart.cpp \
 ../main.cpp \
-../mod_dac_max5500.cpp \
+../process_abs_enc.cpp \
 ../process_internal_adc.cpp \
 ../process_command.cpp \
-../mod_ems22a.cpp \
 ../process_encoder.cpp \
 ../process_steer_controller.cpp \
 ../serial.cpp
@@ -62,69 +53,37 @@ ASM_SRCS +=
 
 
 OBJS +=  \
-common/adc_internal.o \
-common/gpio.o \
-common/leds.o \
-common/millis_timer.o \
-common/pwm.o \
-common/spi.o \
-common/uart.o \
 main.o \
-mod_dac_max5500.o \
+process_abs_enc.o \
 process_internal_adc.o \
 process_command.o \
-mod_ems22a.o \
 process_encoder.o \
 process_steer_controller.o \
 serial.o
 
 OBJS_AS_ARGS +=  \
-common/adc_internal.o \
-common/gpio.o \
-common/leds.o \
-common/millis_timer.o \
-common/pwm.o \
-common/spi.o \
-common/uart.o \
 main.o \
-mod_dac_max5500.o \
+process_abs_enc.o \
 process_internal_adc.o \
 process_command.o \
-mod_ems22a.o \
 process_encoder.o \
 process_steer_controller.o \
 serial.o
 
 C_DEPS +=  \
-common/adc_internal.d \
-common/gpio.d \
-common/leds.d \
-common/millis_timer.d \
-common/pwm.d \
-common/spi.d \
-common/uart.d \
 main.d \
-mod_dac_max5500.d \
+process_abs_enc.d \
 process_internal_adc.d \
 process_command.d \
-mod_ems22a.d \
 process_encoder.d \
 process_steer_controller.d \
 serial.d
 
 C_DEPS_AS_ARGS +=  \
-common/adc_internal.d \
-common/gpio.d \
-common/leds.d \
-common/millis_timer.d \
-common/pwm.d \
-common/spi.d \
-common/uart.d \
 main.d \
-mod_dac_max5500.d \
+process_abs_enc.d \
 process_internal_adc.d \
 process_command.d \
-mod_ems22a.d \
 process_encoder.d \
 process_steer_controller.d \
 serial.d
@@ -158,33 +117,10 @@ LINKER_SCRIPT_DEP+=
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-common/%.o: ../common/%.cpp
-	@echo Building file: $<
-	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa" -c -std=c++11 -Wall -pedantic -Wextra -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
-	@echo Finished building: $<
-	
-
 ./%.o: .././%.cpp
 	@echo Building file: $<
-	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa" -c -std=c++11 -Wall -pedantic -Wextra -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Invoking: AVR8/GNU C Compiler : 4.9.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\include" -I"../claraquino"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa" -c -std=c++11 -Wall -pedantic -Wextra -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
 	@echo Finished building: $<
 	
 
@@ -212,8 +148,8 @@ all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
 
 $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP) $(LINKER_SCRIPT_DEP)
 	@echo Building target: $@
-	@echo Invoking: AVR8/GNU Linker : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="steer_controller_firmware.map" -Wl,--start-group -Wl,-lm  -Wl,--end-group -Wl,--gc-sections -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa"  
+	@echo Invoking: AVR8/GNU Linker : 4.9.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="steer_controller_firmware.map" -Wl,--start-group -Wl,-lm -Wl,-lclaraquino  -Wl,--end-group -Wl,-L"../claraquino/libclaraquino/Debug"  -Wl,--gc-sections -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa"  
 	@echo Finished building target: $@
 	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "steer_controller_firmware.elf" "steer_controller_firmware.hex"
 	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "steer_controller_firmware.elf" "steer_controller_firmware.eep" || exit 0

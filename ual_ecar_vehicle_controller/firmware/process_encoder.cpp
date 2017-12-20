@@ -1,38 +1,22 @@
-﻿/*
- * Software License Agreement (BSD License)
+﻿/* libclaraquino (C) Copyright 2016-2018 University of Almeria 
  *
- *  Copyright (c) 2016-17, Universidad de Almeria
- *  All rights reserved.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
- *  are met:
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above
- *     copyright notice, this list of conditions and the following
- *     disclaimer in the documentation and/or other materials provided
- *     with the distribution.
- *   * Neither the name of Willow Garage, Inc. nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "steer_controller2pc-structs.h"
+#include <libclaraquino/mod_quad_encoder.h>
+
 #include "libclaraquino/claraquino_config.h"
 #include "libclaraquino/gpio.h"
 #include "libclaraquino/millis_timer.h"
@@ -43,74 +27,8 @@ uint32_t	PC_last_millis = 0;
 uint16_t	PC_sampling_period_ms_tenths = 5000;
 bool		ENCODERS_active       = false;
 
-struct EncoderStatus
-{
-	// Config:
-	volatile int8_t encA_pin=0;  // =0 means disabled.
-	volatile int8_t encB_valid=0,encB_bit=0, encB_port=0;
-	volatile int8_t encZ_valid=0,encZ_bit=0, encZ_port=0; // encZ_port=0 means no Z
-	volatile bool led = false;
-	
-	// Current encoder tick counter value:
-	volatile int32_t  COUNTER = 0;
-	// Init:
-	EncoderStatus()
-	{ }
-};
-
-EncoderStatus ENC_STATUS[TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS];
-
 TFrame_ENCODERS_readings_payload_t enc_last_reading;
 
-// Minimum pulse width: ~3 us (ISR takes 2.8us @ 20MHz)
-
-// Forward:
-//        ------      ------
-// A:     |    |      |    |
-//    ____|    |______|    |_____
-//          ------      ------
-// B:       |    |      |    |
-//   _______|    |______|    |_____
-//
-//
-template <uint8_t index>  // Generic template to generate N functions for different index of encoder=0,1,...
-static void onEncoder_Raising_A()
-{
-#ifdef USE_ENCODER_DEBUG_LED
-	ENC_STATUS[index].led = !ENC_STATUS[index].led;
-#endif
-
-	// Avoid: gpio_pin_read() "slow" call
-	if (ENC_STATUS[index].encB_valid)
-	{
-		const bool B = (*portInputRegister(ENC_STATUS[index].encB_port) & ENC_STATUS[index].encB_bit);
-		if (B) ENC_STATUS[index].COUNTER--;
-		else ENC_STATUS[index].COUNTER++;
-	}
-	else 
-	{
-		ENC_STATUS[index].COUNTER++;
-	}
-
-	if (ENC_STATUS[index].encZ_valid)
-	{
-		const bool Z = (*portInputRegister(ENC_STATUS[index].encZ_port) & ENC_STATUS[index].encZ_bit);
-		if (Z) {
-			ENC_STATUS[index].COUNTER=0;
-		}
-	}
-}
-
-// List of function pointers, required by Arduino attachInterrupt() and also 
-// to be able to dynamically get a pointer by index, which is not directly allowed
-// with template arguments.
-typedef void (*func_ptr)(void);
-func_ptr my_encoder_ISRs[TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS] = 
-{
-	&onEncoder_Raising_A<0>,
-	&onEncoder_Raising_A<1>
-	//... Add more if needed in the future
-};
 
 void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 {
@@ -119,40 +37,7 @@ void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 	// For each software-based encoder:
 	for (uint8_t i=0;i<TFrameCMD_ENCODERS_start_payload_t::NUM_ENCODERS;i++)
 	{
-		ENC_STATUS[i] = EncoderStatus();
-
-		ENC_STATUS[i].encA_pin = cmd.encA_pin[i];
-		
-		// Is it enabled by the user?
-		if (cmd.encA_pin[i]>0) 
-		{
-			gpio_pin_mode(cmd.encA_pin[i], INPUT_PULLUP);
-			if (cmd.encB_pin[i]>0)
-			{
-				gpio_pin_mode(cmd.encB_pin[i], INPUT_PULLUP);
-
-				// Cache these calls to avoid repeating them in readDigital() inside the interrupt vector ;-)
-				ENC_STATUS[i].encB_bit = digitalPinToBitMask( cmd.encB_pin[i] );
-				ENC_STATUS[i].encB_port = digitalPinToPort(cmd.encB_pin[i]);
-				ENC_STATUS[i].encB_valid = true;
-			}
-			else 				
-				ENC_STATUS[i].encB_valid = false;
-
-			if (cmd.encZ_pin[i]>0)
-			{
-				ENC_STATUS[i].encZ_bit = digitalPinToBitMask(cmd.encZ_pin[i]);
-				ENC_STATUS[i].encZ_port = digitalPinToPort(cmd.encZ_pin[i]);
-				ENC_STATUS[i].encZ_valid = true;
-			}
-			else
-			{
-				ENC_STATUS[i].encZ_valid = false;
-				ENC_STATUS[i].encZ_bit = ENC_STATUS[i].encZ_port = 0;
-			}
-
-			gpio_attach_interrupt(cmd.encA_pin[i],my_encoder_ISRs[i], INTERRUPT_ON_RISING_EDGE);
-		}
+		mod_quad_encoder_init(i, cmd.encA_pin[i], cmd.encB_pin[i], cmd.encZ_pin[i]);
 	}
 }
 
