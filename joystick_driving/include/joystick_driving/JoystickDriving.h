@@ -24,7 +24,7 @@ public:
 	ros::NodeHandle m_nh_params = ros::NodeHandle("~");
 
 	ros::Subscriber m_sub_enable_joystick;
-	ros::Publisher  m_pub_rev_relay, m_pub_eje_x, m_pub_eje_y, m_pub_contr_status;
+        ros::Publisher  m_pub_eje_x, m_pub_eje_y, m_pub_contr_status[2],m_pub_autonomous_driving;
 
 	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
 	  * \return false on error */
@@ -37,6 +37,6 @@ protected:
 	// Local class members:
 	mrpt::hwdrivers::CJoystick m_joy;
 
-	float aux_s[2] = {0,0};
-	float aux_r[2] = {0,0};
+        float aux_s = 0;
+        float aux_r = 0;
 };

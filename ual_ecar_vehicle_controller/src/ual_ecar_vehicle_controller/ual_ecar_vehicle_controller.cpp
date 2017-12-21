@@ -106,30 +106,30 @@ bool VehicleControllerLowLevel::iterate()
 			m_mode_openloop_throttle ? "MANUAL" : "AUTO"
 		);
 	}
-	
-	// New joystick 
+
+	// New joystick
 	if (!m_autonomous_driving_mode && m_joy_changed)
 	{
 		// X: Steering
 		if (m_mode_openloop_steer)
 		{
 			TFrameCMD_OPENLOOP_STEERING_SETPOINT cmd;
-			cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_sub_eje_x * 255.0;
+                        cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_joy_x * 255.0;
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
-			
-			ROS_INFO("Sending openloop STEER: %f",m_sub_eje_x);
+
+                        ROS_INFO("Sending openloop STEER: %f",m_joy_x);
 		}
 		else
 		{
 			MRPT_TODO("Recalibrate steer pos range");
-			int16_t steer_pos = 512 * m_sub_eje_x;
-			
+                        int16_t steer_pos = 512 * m_joy_x;
+
 			TFrameCMD_CONTROL_STEERING_SETPOINT cmd;
 			cmd.payload.SETPOINT_STEER_POS  = steer_pos;
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
-			
+
 			ROS_INFO("Sending closedloop STEER: %d",steer_pos);
 		}
 
@@ -137,16 +137,16 @@ bool VehicleControllerLowLevel::iterate()
 		if (m_mode_openloop_throttle)
 		{
 			TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
-			cmd.payload.SETPOINT_OPENLOOP_THROTTLE = static_cast<float>(m_sub_eje_y);
+                        cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
 			
-			ROS_INFO("Sending openloop THROTTLE: %f",m_sub_eje_y);
+                        ROS_INFO("Sending openloop THROTTLE: %f",m_joy_y);
 		}
 		else
 		{
 			const float MAX_VEL_MPS = 2.0;
-			float vel_mps = m_sub_eje_y * MAX_VEL_MPS;
+                        float vel_mps = m_joy_y * MAX_VEL_MPS;
 			
 			TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
 			cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED  = vel_mps;
