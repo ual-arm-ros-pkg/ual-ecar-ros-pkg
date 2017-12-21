@@ -38,9 +38,9 @@ bool JoystickDriving::initialize()
 
 	{
 		std_msgs::Float64 msg_f;
-		msg_f.data = 1.0;
+		msg_f.data = 0.0;
 		m_pub_eje_x.publish(msg_f);
-		m_pub_eje_x.publish(msg_f);
+		m_pub_eje_y.publish(msg_f);
 	}
 
 }
