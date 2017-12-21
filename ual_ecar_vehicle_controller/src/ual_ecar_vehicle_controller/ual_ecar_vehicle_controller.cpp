@@ -39,8 +39,19 @@ bool VehicleControllerLowLevel::initialize()
 		return false;
 	}
 
-	m_pub_controller_status = m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>("vehicle_controller_status", 10);
-	/*Pub: Encoders, Control signal, ADC*/
+	// Publisher: Controller Status
+	m_pub_controller_status	= m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>("vehicle_controller_status", 10);
+
+	// Publisher: ADC data
+	m_pub_ADC				= m_nh.advertise<ual_ecar_vehicle_controller::AnalogReading>("claraquino_adc", 10);
+
+	// Publisher: ENC data
+	m_pub_ENC				= m_nh.advertise<ual_ecar_vehicle_controller::EncodersReading>("claraquino_encoders", 10);
+
+	// Publisher: ABS ENC data
+	m_pub_ENC_ABS			= m_nh.advertise<ual_ecar_vehicle_controller::EncoderAbsReading>("claraquino__abs_encoder", 10);
+
+	/*Pub: TODO:: Control signal*/
 
 	m_sub_contr_status[0]	= m_nh.subscribe("vehicle_openloop_mode_steering", 10, &VehicleControllerLowLevel::modeSteeringCallback, this);
 	m_sub_contr_status[1]	= m_nh.subscribe("vehicle_openloop_mode_throttle", 10, &VehicleControllerLowLevel::modeThrottleCallback, this);
@@ -114,16 +125,16 @@ bool VehicleControllerLowLevel::iterate()
 		if (m_mode_openloop_steer)
 		{
 			TFrameCMD_OPENLOOP_STEERING_SETPOINT cmd;
-                        cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_joy_x * 255.0;
+			cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_joy_x * 255.0;
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
 
-                        ROS_INFO("Sending openloop STEER: %f",m_joy_x);
+			ROS_INFO("Sending openloop STEER: %f",m_joy_x);
 		}
 		else
 		{
 			MRPT_TODO("Recalibrate steer pos range");
-                        int16_t steer_pos = 512 * m_joy_x;
+			int16_t steer_pos = 512 * m_joy_x;
 
 			TFrameCMD_CONTROL_STEERING_SETPOINT cmd;
 			cmd.payload.SETPOINT_STEER_POS  = steer_pos;
@@ -137,22 +148,22 @@ bool VehicleControllerLowLevel::iterate()
 		if (m_mode_openloop_throttle)
 		{
 			TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
-                        cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
+			cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
-			
-                        ROS_INFO("Sending openloop THROTTLE: %f",m_joy_y);
+
+			ROS_INFO("Sending openloop THROTTLE: %f",m_joy_y);
 		}
 		else
 		{
 			const float MAX_VEL_MPS = 2.0;
-                        float vel_mps = m_joy_y * MAX_VEL_MPS;
+			float vel_mps = m_joy_y * MAX_VEL_MPS;
 			
 			TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
 			cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED  = vel_mps;
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
-			
+
 			ROS_INFO("Sending closedloop THROTTLE: %.03f m/s",vel_mps);
 		}
 	}
@@ -217,50 +228,40 @@ void VehicleControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& 
 
 void VehicleControllerLowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_payload_t &data)
 {
-	MRPT_TODO("Append data to ControllerStatus");
-#if 0
-	arduino_daq::AnalogReading msg;
+	ual_ecar_vehicle_controller::AnalogReading msg;
 
-	msg.timestamp_ms = data.timestamp_ms;
-	for (int i=0;i<sizeof(data.adc_data)/sizeof(data.adc_data[0]);i++) {
+	msg.timestamp_ms = data.timestamp_ms_tenths;
+	for (int i=0;i<sizeof(data.adc_data)/sizeof(data.adc_data[0]);i++)
 		 msg.adc_data[i] = data.adc_data[i];
-	}
 
 	m_pub_ADC.publish(msg);
-#endif
 }
 
 void VehicleControllerLowLevel::daqOnNewENCCallback(const TFrame_ENCODERS_readings_payload_t &data)
 {
-	MRPT_TODO("Append data to ControllerStatus");
-#if 0
-	arduino_daq::EncodersReading msg;
+	ual_ecar_vehicle_controller::EncodersReading msg;
 
-	msg.timestamp_ms = data.timestamp_ms;
-	msg.period_ms = data.period_ms;
+	msg.timestamp_ms = data.timestamp_ms_tenths;
+	msg.period_ms = data.period_ms_tenths;
 	const int N =sizeof(data.encoders)/sizeof(data.encoders[0]);
 
 	msg.encoder_values.resize(N);
-	for (int i=0;i<N;i++) {
+	for (int i=0;i<N;i++)
 		 msg.encoder_values[i] = data.encoders[i];
-	}
 
 	m_pub_ENC.publish(msg);
-#endif
 }
 
 void VehicleControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_reading_payload_t &data)
 {
-	MRPT_TODO("Append data to ControllerStatus");
-#if 0
-	arduino_daq::EncoderAbsReading msg;
+	ual_ecar_vehicle_controller::EncoderAbsReading msg;
 
-	msg.timestamp_ms   = data.timestamp_ms;
+	msg.timestamp_ms   = data.timestamp_ms_tenths;
 	msg.encoder_status = data.enc_status;
 	msg.encoder_value  = data.enc_pos;
 
 	m_pub_ENC_ABS.publish(msg);
-#endif
+
 }
 
 bool VehicleControllerLowLevel::AttemptConnection()
