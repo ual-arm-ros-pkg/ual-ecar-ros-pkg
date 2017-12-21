@@ -49,9 +49,10 @@ bool VehicleControllerLowLevel::initialize()
 	m_pub_ENC				= m_nh.advertise<ual_ecar_vehicle_controller::EncodersReading>("claraquino_encoders", 10);
 
 	// Publisher: ABS ENC data
-	m_pub_ENC_ABS			= m_nh.advertise<ual_ecar_vehicle_controller::EncoderAbsReading>("claraquino__abs_encoder", 10);
+	m_pub_ENC_ABS			= m_nh.advertise<ual_ecar_vehicle_controller::EncoderAbsReading>("claraquino_abs_encoder", 10);
 
-	/*Pub: TODO:: Control signal*/
+	// Publisher: Control signal data
+	m_pub_Control_signal	= m_nh.advertise<ual_ecar_vehicle_controller::ControlSignal>("claraquino_control_signal", 10);
 
 	m_sub_contr_status[0]	= m_nh.subscribe("vehicle_openloop_mode_steering", 10, &VehicleControllerLowLevel::modeSteeringCallback, this);
 	m_sub_contr_status[1]	= m_nh.subscribe("vehicle_openloop_mode_throttle", 10, &VehicleControllerLowLevel::modeThrottleCallback, this);
@@ -93,6 +94,14 @@ void VehicleControllerLowLevel::processIncommingFrame(const std::vector<uint8_t>
 				TFrame_ENCODER_ABS_reading rx;
 				::memcpy((uint8_t*)&rx, &rxFrame[0], sizeof(rx));
 				daqOnNewENCAbsCallback(rx.payload);
+			}
+			break;
+
+			case RESP_CONTROL_SIGNAL:
+			{
+				TFrame_CONTROL_SIGNAL rx;
+				::memcpy((uint8_t*)&rx, &rxFrame[0], sizeof(rx));
+				daqOnNewControlSignalCallback(rx.payload);
 			}
 			break;
 		};
@@ -261,7 +270,16 @@ void VehicleControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_
 	msg.encoder_value  = data.enc_pos;
 
 	m_pub_ENC_ABS.publish(msg);
+}
 
+void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTROL_SIGNAL_payload_t &data)
+{
+	ual_ecar_vehicle_controller::ControlSignal msg;
+
+	msg.timestamp_ms   = data.timestamp_ms_tenth;
+	msg.encoder_status = data.Control_signal;
+
+	m_pub_Control_signal.publish(msg);
 }
 
 bool VehicleControllerLowLevel::AttemptConnection()

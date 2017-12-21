@@ -92,6 +92,7 @@ enum opcode_t {
 	RESP_ADC_READINGS     = 0x92,
 	RESP_ENCODER_READINGS = 0x93,
 	RESP_EMS22A_READINGS  = 0x94,
+	RESP_CONTROL_SIGNAL   = 0x95,
 	RESP_CPU_USAGE_STATS  = 0xA0,
 
 	// error codes:
@@ -305,6 +306,19 @@ struct TFrame_ENCODER_ABS_reading : public TBaseFrame<TFrame_ENCODER_ABS_reading
 {
 	// Defaults:
 	TFrame_ENCODER_ABS_reading() : TBaseFrame(RESP_EMS22A_READINGS)
+	{
+	}
+};
+
+struct TFrame_CONTROL_SIGNAL_payload_t
+{
+	uint32_t timestamp_ms_tenth;
+	int16_t Control_signal;
+};
+struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
+{
+	// Default:
+	TFrame_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL)
 	{
 	}
 };

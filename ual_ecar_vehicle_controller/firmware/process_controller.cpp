@@ -118,9 +118,9 @@ float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
 
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
-uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
+int32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
 uint32_t SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
-uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
+int32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
 
 template <typename T, size_t N>
 void do_shift(T (&v)[N])
@@ -356,6 +356,14 @@ void processSteerController()
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
 	// PWM direction:
 	gpio_pin_write(PWM_DIR, u_steer_dir);
+
+	TFrame_CONTROL_SIGNAL tx;
+
+	tx.payload.timestamp_ms_tenth = tnow;
+	tx.payload.Control_signal = U_control[0];
+	tx.calc_and_update_checksum();
+
+	UART::Write((uint8_t*)&tx,sizeof(tx));
 
 }
 void processThrottleController()
