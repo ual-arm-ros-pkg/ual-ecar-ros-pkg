@@ -14,8 +14,6 @@ using namespace mrpt::utils;
 int pwm_steering_const = 0;
 float eje_x = 0;
 float eje_y = 0;
-bool rev_btn = false;
-bool control_btn = true;
 
 
 bool JoystickDriving::initialize()
