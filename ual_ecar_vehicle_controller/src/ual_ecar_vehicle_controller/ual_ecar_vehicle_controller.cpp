@@ -19,8 +19,6 @@
    |		VARIABLES		|
    +------------------------+*/
 
-bool mode_manual = false;	/*Variable para la comprobacion del modo de control*/
-
 bool VehicleControllerLowLevel::initialize()
 {
 	ROS_INFO("VehicleControllerLowLevel::inicialize() ok.");
@@ -44,9 +42,11 @@ bool VehicleControllerLowLevel::initialize()
 	m_pub_controller_status = m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>("vehicle_controller_status", 10);
 	/*Pub: Encoders, Control signal, ADC*/
 
-	m_sub_contr_status	= m_nh.subscribe("vehicle_manual_mode", 10, &VehicleControllerLowLevel::statusCallback, this);
+	m_sub_contr_status[0]	= m_nh.subscribe("vehicle_openloop_mode_steering", 10, &VehicleControllerLowLevel::modeSteeringCallback, this);
+	m_sub_contr_status[1]	= m_nh.subscribe("vehicle_openloop_mode_throttle", 10, &VehicleControllerLowLevel::modeThrottleCallback, this);
 	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &VehicleControllerLowLevel::ejexCallback, this);
 	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &VehicleControllerLowLevel::ejeyCallback, this);
+	m_sub_autonomous_driving = m_nh.subscribe("vehicle_autonomous_mode", 10, &VehicleControllerLowLevel::autonomousModeCallback, this);
 	/*Sub:	1. Joystick[Axis & control modes]
 			2. System_Identification[Controller & Smith predictor params, Feedforwards...]
 	*/
@@ -91,6 +91,72 @@ void VehicleControllerLowLevel::processIncommingFrame(const std::vector<uint8_t>
 
 bool VehicleControllerLowLevel::iterate()
 {
+	// Housekeeping -------
+	// Controller mode changed?
+	if (m_modes_changed)
+	{
+		m_modes_changed = false;
+		TFrameCMD_CONTROL_MODE cmd;
+		cmd.payload.steer_enable = !m_mode_openloop_steer;
+		cmd.payload.throttle_enable = !m_mode_openloop_throttle;
+		cmd.calc_and_update_checksum();
+		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
+		ROS_INFO("Sending new controller modes: STEER=%s THROTTLE=%s", 
+			m_mode_openloop_steer ? "MANUAL" : "AUTO",
+			m_mode_openloop_throttle ? "MANUAL" : "AUTO"
+		);
+	}
+	
+	// New joystick 
+	if (!m_autonomous_driving_mode && m_joy_changed)
+	{
+		// X: Steering
+		if (m_mode_openloop_steer)
+		{
+			TFrameCMD_OPENLOOP_STEERING_SETPOINT cmd;
+			cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_sub_eje_x * 255.0;
+			cmd.calc_and_update_checksum();
+			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
+			
+			ROS_INFO("Sending openloop STEER: %f",m_sub_eje_x);
+		}
+		else
+		{
+			MRPT_TODO("Recalibrate steer pos range");
+			int16_t steer_pos = 512 * m_sub_eje_x;
+			
+			TFrameCMD_CONTROL_STEERING_SETPOINT cmd;
+			cmd.payload.SETPOINT_STEER_POS  = steer_pos;
+			cmd.calc_and_update_checksum();
+			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
+			
+			ROS_INFO("Sending closedloop STEER: %d",steer_pos);
+		}
+
+		// Y: throttle
+		if (m_mode_openloop_throttle)
+		{
+			TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
+			cmd.payload.SETPOINT_OPENLOOP_THROTTLE = static_cast<float>(m_sub_eje_y);
+			cmd.calc_and_update_checksum();
+			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
+			
+			ROS_INFO("Sending openloop THROTTLE: %f",m_sub_eje_y);
+		}
+		else
+		{
+			const float MAX_VEL_MPS = 2.0;
+			float vel_mps = m_sub_eje_y * MAX_VEL_MPS;
+			
+			TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
+			cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED  = vel_mps;
+			cmd.calc_and_update_checksum();
+			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
+			
+			ROS_INFO("Sending closedloop THROTTLE: %.03f m/s",vel_mps);
+		}
+	}
+
 	// Main module loop code.
 	const size_t MAX_FRAMES_PER_ITERATE = 20;
 	size_t nFrames = 0;
@@ -122,25 +188,31 @@ bool VehicleControllerLowLevel::iterate()
 	return true;
 }
 
-void VehicleControllerLowLevel::statusCallback(const std_msgs::Bool::ConstPtr& msg)
-{
-	mode_manual = msg->data;
-	MRPT_TODO("Enviar al controlador!?");
 
+void VehicleControllerLowLevel::autonomousModeCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	m_autonomous_driving_mode = msg->data;
+}
+
+void VehicleControllerLowLevel::modeSteeringCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	m_mode_openloop_steer = msg->data;
+}
+void VehicleControllerLowLevel::modeThrottleCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	m_mode_openloop_throttle = msg->data;
 }
 
 void VehicleControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	const double eje_x = msg->data;
-
-	MRPT_TODO("Enviar al controlador!?");
+	m_joy_x = msg->data;
+	m_joy_changed = true;
 }
 
 void VehicleControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	const double eje_y = msg->data;
-	MRPT_TODO("Enviar al controlador!?");
-
+	m_joy_y = msg->data;
+	m_joy_changed = true;
 }
 
 void VehicleControllerLowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_payload_t &data)

@@ -230,11 +230,13 @@ void setSteerOpenLoopSetpoint_VehVel(float ol_vel_mps)
 {
 	SETPOINT_OPENLOOP_THROTTLE = ol_vel_mps;
 	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = millis();
+	#warning watchdog
 }
 void setSteerControllerSetpoint_VehVel(float vel_mps)
 {
 	SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
 	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
+		#warning watchdog
 }
 
 // Stopwatch: 0.35 ms

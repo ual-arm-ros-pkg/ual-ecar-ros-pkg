@@ -38,7 +38,7 @@ public:
 
 	ros::Publisher  m_pub_controller_status;
 	/*Pub: Encoders, Control signal, ADC*/
-	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status;
+	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status[2], m_sub_autonomous_driving;
 	/*Sub:	1. Joystick[Axis & control modes]
 			2. System_Identification[Controller & Smith predictor params, Feedforwards...]
 	*/
@@ -48,7 +48,9 @@ public:
 	bool iterate();
 
   protected:
-	void statusCallback(const std_msgs::Bool::ConstPtr& msg);
+	void modeSteeringCallback(const std_msgs::Bool::ConstPtr& msg);
+	void modeThrottleCallback(const std_msgs::Bool::ConstPtr& msg);
+	void autonomousModeCallback(const std_msgs::Bool::ConstPtr& msg);
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void daqOnNewADCCallback(const TFrame_ADC_readings_payload_t &data);
@@ -63,6 +65,15 @@ public:
 	int         m_serial_port_baudrate;
 	CSerialPort m_serial;  //!< The serial COMMS object
 	int         m_NOP_sent_counter {0};
+
+	bool m_mode_openloop_steer { true };	/*Variable para la comprobacion del modo de control*/
+	bool m_mode_openloop_throttle { true };	/*Variable para la comprobacion del modo de control*/
+	bool m_modes_changed {true};
+		
+	bool m_autonomous_driving_mode { false };
+		
+	double m_joy_x {.0}, m_joy_y{.0};
+	bool   m_joy_changed { false };
 
 	// Local methods:
 	bool AttemptConnection();   //!< Returns true if connected OK, false on error.
