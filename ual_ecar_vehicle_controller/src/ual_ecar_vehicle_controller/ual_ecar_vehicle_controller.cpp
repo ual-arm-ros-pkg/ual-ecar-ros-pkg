@@ -319,7 +319,7 @@ bool VehicleControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame, cons
 			s+=mrpt::format("TX frame (%u bytes): ", (unsigned int) full_frame_len);
 			for (size_t i=0;i< full_frame_len;i++)
 				s+=mrpt::format("%02X ", full_frame[i]);
-			MRPT_LOG_DEBUG_FMT("Tx frame: %s", s.c_str());
+			MRPT_LOG_INFO_FMT("Tx frame: %s", s.c_str());
 		}
 #endif
 
@@ -360,7 +360,7 @@ bool VehicleControllerLowLevel::SendFrameAndWaitAnswer(
 			if (RX_OPCODE==expected_ans_opcode)
 			{
 				// We received the ACK from the uC, yay!
-				MRPT_LOG_DEBUG_FMT("SendFrameAndWaitAnswer(): Rx ACK for OPCODE=0x%02X after %i retries.",full_frame_len>2 ? full_frame[1] : 0, iter);
+				MRPT_LOG_INFO_FMT("SendFrameAndWaitAnswer(): Rx ACK for OPCODE=0x%02X after %i retries.",full_frame_len>2 ? full_frame[1] : 0, iter);
 				return true;
 			}
 			else
@@ -436,7 +436,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> 
 		if (!nFrameBytes && buf[0]!= FRAME_START_FLAG )
 		{
 			is_ok = false;
-			MRPT_LOG_DEBUG("[rx] Reset frame (start flag)");
+			MRPT_LOG_INFO("[rx] Reset frame (start flag)");
 		}
 
 		if (nFrameBytes>2 && nFrameBytes+nRead==lengthField)
@@ -444,7 +444,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> 
 			if (buf[nFrameBytes+nRead-1]!=FRAME_END_FLAG)
 			{
 				is_ok= false;
-				MRPT_LOG_DEBUG("[rx] Reset frame (end flag)");
+				MRPT_LOG_INFO("[rx] Reset frame (end flag)");
 			}
 		}
 
@@ -472,7 +472,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> 
 			s+=mrpt::format("RX frame (%u bytes): ", (unsigned int) lengthField);
 			for (size_t i=0;i< lengthField;i++)
 				s+=mrpt::format("%02X ", rxFrame[i]);
-			MRPT_LOG_DEBUG_FMT("%s", s.c_str());
+			MRPT_LOG_INFO_FMT("%s", s.c_str());
 		}
 #endif
 
