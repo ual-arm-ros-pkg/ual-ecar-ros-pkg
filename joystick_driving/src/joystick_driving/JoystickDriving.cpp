@@ -14,6 +14,7 @@ using namespace mrpt::utils;
 int pwm_steering_const = 0;
 float eje_x[2] = {0,0};
 float eje_y[2] = {0,0};
+bool button[3] = {0,0,0};
 
 
 bool JoystickDriving::initialize()
@@ -113,7 +114,9 @@ bool JoystickDriving::iterate()
 	if(eje_x[0] != eje_x[1] || eje_y[0] != eje_y[1] || steer_btn != button[0] || throttle_btn != button[1] || autonomous_btn != button[2])
 		ROS_INFO("Joy: x:%f y:%f steer_btn=%i throttle_btn=%i autonomous_btn=%i", eje_x[0],eje_y[0], steer_btn ? 1:0, throttle_btn ? 1:0, autonomous_btn);
 
-	bool button[3] = { steer_btn, throttle_btn, autonomous_btn};
+	button[0] = steer_btn;
+	button[1] = throttle_btn;
+	button[2] = autonomous_btn;
 	eje_x[1] = eje_x[0];
 	eje_y[1] = eje_y[0];
 
