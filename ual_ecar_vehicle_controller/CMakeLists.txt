@@ -20,12 +20,13 @@ find_package(MRPT 1.5 REQUIRED hwdrivers)
 
 ## Generate messages in the 'msg' folder
 add_message_files(
+  DIRECTORY msg
   FILES
- SteerControllerStatus.msg
- AnalogReading.msg
- ControlSignal.msg
- EncoderAbsReading.msg
- EncodersReading.msg
+  AnalogReading.msg
+  EncodersReading.msg
+  EncoderAbsReading.msg
+  SteerControllerStatus.msg
+  ControlSignal.msg
  )
 
 ## Generate added messages and services with any dependencies listed here
