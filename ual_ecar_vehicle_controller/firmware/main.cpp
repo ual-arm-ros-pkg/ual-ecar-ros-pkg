@@ -64,19 +64,26 @@ int main(void)
 
 void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &frame)
 {
-	auto &s = frame.payload;
+	TFrame_CPU_USAGE_STATS s;
 
+	// Decimate the number of msgs sent to the PC:
+	static uint8_t decim0 = 0;
+	if (++decim0>100)
+	{
+		decim0=0;
+		
 	// Accumulate stats:
-	s.loop_average_time+=dt;
-	if (dt>s.loop_max_time) s.loop_max_time=dt;
-	if (dt<s.loop_min_time) s.loop_min_time=dt;
+	s.payload.loop_average_time+=dt;
+	if (dt>s.payload.loop_max_time) s.payload.loop_max_time=dt;
+	if (dt<s.payload.loop_min_time) s.payload.loop_min_time=dt;
 
 	// Send to main PC?
 	const int CPU_STATS_DECIMATE = 0x1000;
-	s.loop_average_time /= CPU_STATS_DECIMATE;
-	s.timestamp_ms_tenths = millis();
-		
-	frame.calc_and_update_checksum();
-	UART::Write((uint8_t*)&frame,sizeof(frame));
-	s.clear();
+	s.payload.loop_average_time /= CPU_STATS_DECIMATE;
+	s.payload.timestamp_ms_tenths = millis();
+	s.calc_and_update_checksum();
+	s.payload.clear();
+
+	UART::Write((uint8_t*)&s,sizeof(s));
+	}
 }

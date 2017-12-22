@@ -354,16 +354,22 @@ void processSteerController()
 
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
+
 	// PWM direction:
 	gpio_pin_write(PWM_DIR, u_steer_dir);
 
 	TFrame_CONTROL_SIGNAL tx;
+	// Decimate the number of msgs sent to the PC:
+	static uint8_t decim0 = 0;
+	if (++decim0>10)
+	{
+		decim0=0;
+		tx.payload.timestamp_ms_tenth = tnow;
+		tx.payload.Control_signal = U_control[0];
+		tx.calc_and_update_checksum();
 
-	tx.payload.timestamp_ms_tenth = tnow;
-	tx.payload.Control_signal = U_control[0];
-	tx.calc_and_update_checksum();
-
-	UART::Write((uint8_t*)&tx,sizeof(tx));
+		UART::Write((uint8_t*)&tx,sizeof(tx));
+	}
 
 }
 void processThrottleController()
