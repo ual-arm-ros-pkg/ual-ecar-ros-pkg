@@ -12,8 +12,8 @@ using namespace mrpt;
 using namespace mrpt::utils;
 
 int pwm_steering_const = 0;
-float eje_x = 0;
-float eje_y = 0;
+float eje_x[2] = {0,0};
+float eje_y[2] = {0,0};
 
 
 bool JoystickDriving::initialize()
@@ -56,7 +56,7 @@ bool JoystickDriving::iterate()
 		ROS_ERROR("JoystickDriving: Error reading Joystick!");
 		return false;
 	}
-	const bool steer_btn = (buttons.size()>8 && !buttons[8]);
+	const bool steer_btn = (buttons.size()>7 && !buttons[7]);
 	{
 		std_msgs::Bool a;
 		a.data = steer_btn;
@@ -68,50 +68,54 @@ bool JoystickDriving::iterate()
 		b.data = throttle_btn;
 		m_pub_contr_status[1].publish(b);
 	}
-	const bool autonomous_btn = (buttons.size()>7 && !buttons[7]);
+	const bool autonomous_btn = (buttons.size()>8 && !buttons[8]);
 	{
 		std_msgs::Bool c;
 		c.data = autonomous_btn;
 		m_pub_autonomous_driving.publish(c);
 	}
 
-		// Eje X
-		{
-		std_msgs::Float64 msg_f;
-		//  Aumento de resolucion
+	std_msgs::Float64 msg_f;
+	
+	// Axis X
+	{
+		//  Resolution increase
 		if (buttons[4])
-                        aux_s = z * 0.2;
+			eje_x[0] = z * 0.2;
 		else
-                        aux_s = z * 0.5;
-		// Saturacion
-                if (eje_x + aux_s > 1)
-                        aux_s = 1 - eje_x;
-                if (eje_x + aux_s < -1)
-                        aux_s = -1 - eje_x;
+			eje_x[0] = z * 0.5;
+		// Saturation
+		if (eje_x[0] > 1)
+			eje_x[0] = 1;
+		if (eje_x[0] < -1)
+			eje_x[0] = -1;
 
-                msg_f.data = aux_s;
+		msg_f.data = eje_x[0];
 		m_pub_eje_x.publish(msg_f);
 	}
-	// Eje y
+	// Axis y
 	{
-		//  Aumento de resolucion
+		//  Resolution increase
 		if (buttons[5])
-                        aux_r =(float)((-y) * 0.2);
+			eje_y[0] =(float)((-y) * 0.2);
 		else
-                        aux_r =(float)((-y) * 0.5);
+			eje_y[0] =(float)((-y) * 0.5);
 		// Saturacion
-                if (eje_y + aux_r > 1)
-                        aux_r = 1 - eje_y;
-                if (eje_y + aux_r < 0)
-                        aux_r = - eje_y;
+		if (eje_y[0] > 1)
+			eje_y[0] = 1;
+		if (eje_y[0] < -1)
+			eje_y[0] = - 1;
 
-		std_msgs::Float64 msg_f;
-                msg_f.data = aux_r;
-
+		msg_f.data = eje_y[0];
 		m_pub_eje_y.publish(msg_f);
 	}
 
-        ROS_INFO("Joy: x:%f y:%f steer_btn=%i throttle_btn=%i autonomous_btn=%i", aux_s,aux_r, buttons[6] ? 1:0, buttons[7] ? 1:0, buttons[8] ? 1:0);
+	if(eje_x[0] != eje_x[1] || eje_y[0] != eje_y[1] || steer_btn != button[0] || throttle_btn != button[1] || autonomous_btn != button[2])
+		ROS_INFO("Joy: x:%f y:%f steer_btn=%i throttle_btn=%i autonomous_btn=%i", eje_x[0],eje_y[0], steer_btn ? 1:0, throttle_btn ? 1:0, autonomous_btn);
+
+	bool button[3] = { steer_btn, throttle_btn, autonomous_btn};
+	eje_x[1] = eje_x[0];
+	eje_y[1] = eje_y[0];
 
 	return true;
 }

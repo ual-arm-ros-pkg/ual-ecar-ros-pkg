@@ -36,7 +36,4 @@ public:
 protected:
 	// Local class members:
 	mrpt::hwdrivers::CJoystick m_joy;
-
-        float aux_s = 0;
-        float aux_r = 0;
 };
