@@ -72,13 +72,11 @@ void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &frame)
 	if (dt<s.loop_min_time) s.loop_min_time=dt;
 
 	// Send to main PC?
-	if (++s.loop_iterations>=0x100)
-	{
-		s.loop_average_time /= 0x100;
-		s.timestamp_ms_tenths = millis();
+	const int CPU_STATS_DECIMATE = 0x1000;
+	s.loop_average_time /= CPU_STATS_DECIMATE;
+	s.timestamp_ms_tenths = millis();
 		
-		frame.calc_and_update_checksum();
-		UART::Write((uint8_t*)&frame,sizeof(frame));
-		s.clear();
-	}
+	frame.calc_and_update_checksum();
+	UART::Write((uint8_t*)&frame,sizeof(frame));
+	s.clear();
 }
