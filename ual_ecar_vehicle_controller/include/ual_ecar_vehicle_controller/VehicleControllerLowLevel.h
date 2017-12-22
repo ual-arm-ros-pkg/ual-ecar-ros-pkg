@@ -58,7 +58,7 @@ public:
 	void daqOnNewADCCallback(const TFrame_ADC_readings_payload_t &data);
 	void daqOnNewENCCallback(const TFrame_ENCODERS_readings_payload_t &data);
 	void daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_reading_payload_t &data);
-	void daqOnNewControlSignalCallback(const TFrame_CONTROL_SIGNAL_payload_t &data)
+	void daqOnNewControlSignalCallback(const TFrame_CONTROL_SIGNAL_payload_t &data);
 
 	bool CMD_GPIO_output(int pin, bool pinState);
 	bool CMD_DAC(int dac_index, double dac_value_volts);

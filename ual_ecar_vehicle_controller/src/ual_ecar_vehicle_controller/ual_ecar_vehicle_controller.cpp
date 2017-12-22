@@ -8,6 +8,10 @@
 #include <thread>
 #include <ros/console.h>
 #include <ual_ecar_vehicle_controller/SteerControllerStatus.h>
+#include <ual_ecar_vehicle_controller/AnalogReading.h>
+#include <ual_ecar_vehicle_controller/EncodersReading.h>
+#include <ual_ecar_vehicle_controller/EncoderAbsReading.h>
+#include <ual_ecar_vehicle_controller/ControlSignal.h>
 #include <cstring>
 #include <array>
 #include <iostream>
