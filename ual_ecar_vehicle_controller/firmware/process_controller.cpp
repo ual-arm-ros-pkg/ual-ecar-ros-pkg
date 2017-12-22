@@ -54,7 +54,7 @@ const int8_t ENCODER_ABS_DO         = 0x22; //PB2
 const int8_t ENCODER_DIFF_A         = 0x42; // PD2
 const int8_t ENCODER_DIFF_B         = 0x43; // PD3
 const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
-const int8_t PWM_DIR                = 0x47; // CW/CCW
+const int8_t PWM_DIR                = 0x44; // CW/CCW
 const int8_t RELAY_FRWD_REV         = 0x11;
 #define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
 #define PWM_OUT_PIN                 PWM_PIN_OCnB
@@ -75,7 +75,7 @@ float	Antiwindup[2]	=	{0,0};			//
 // Auxiliary vars:
 bool	lim				=	false;
 float	max_p			=	500;
-const float	sat_ref			=	100;
+const	float	sat_ref			=	100;
 float	enc_init		=	.0f;
 static	uint8_t adjust	=	0;
 float	pedal			=	.0f; /* [0,1] */
@@ -91,10 +91,10 @@ float	Q_STEER_INT[3]				= { - 0.2838f, 0.1986f, .0f };
 float	Q_THROTTLE[3]				= {0,0,0};
 float	Q_STEER_EXT[3]				= { 46.6728f, - -91.1049f, 44.4444f };
 float	P_SMITH_SPEED[5]			= {0.2977f,.0f,1,-0.7023f,.0f}; /*{b0,b1,a0,a1,a2}*/
-uint8_t	U_STEER_FEEDFORWARD[2]		= {0,0}; /*Weight,other*/
-uint8_t	U_STEER_DECOUPLING[2]		= {0,0}; /*battery-charge,speed*/
-uint8_t	U_THROTTLE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/	
-uint8_t U_THROTTLE_DECOUPLING		= 0; /*battery-charge*/
+int16_t	U_STEER_FEEDFORWARD[2]		= {0,0}; /*Weight,other*/
+int16_t	U_STEER_DECOUPLING[2]		= {0,0}; /*battery-charge,speed*/
+int16_t	U_THROTTLE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/	
+int16_t U_THROTTLE_DECOUPLING		= 0; /*battery-charge*/
 
 /** Desired setpoint for steering angle. 
   * -512:max right, +511: max left
@@ -104,7 +104,7 @@ int16_t  SETPOINT_STEER_POS = 0;
 /** Desired setpoint for steering angle in Open Loop. 
   * -254:max right, +254: max left
   */
-uint16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
+int16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
 
 /** Desired setpoint for throttle in Open Loop. 
   * [-1,0]V:max reverse, [0,+1]V: max forward
@@ -118,9 +118,9 @@ float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
 
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
-int32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
+uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
 uint32_t SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
-int32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
+uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
 
 template <typename T, size_t N>
 void do_shift(T (&v)[N])

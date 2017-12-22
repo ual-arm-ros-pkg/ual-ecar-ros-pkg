@@ -392,7 +392,7 @@ struct TFrameCMD_CONTROL_MODE : public TBaseFrame<TFrameCMD_CONTROL_MODE_payload
 struct TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t
 {
 	float Q_STEER_INT[3] = {0,0,0}, Q_STEER_EXT[3]={0,0,0}, P_SMITH_SPEED[5] = {0,0,0,0,0};
-	uint8_t U_STEER_FEEDFORWARD[2]={0,0}/*Weight,other*/, U_STEER_DECOUPLING[2]={0,0}; /*battery-charge,speed*/
+	int16_t U_STEER_FEEDFORWARD[2]={0,0}/*Weight,other*/, U_STEER_DECOUPLING[2]={0,0}; /*battery-charge,speed*/
 };
 struct TFrameCMD_CONTROL_STEERING_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t>
 {
@@ -405,7 +405,7 @@ struct TFrameCMD_CONTROL_STEERING_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTR
 struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t
 {
 	float Q_THROTTLE_CONTROLLER[3] = {0,0,0};
-	uint8_t U_THROTTLE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_THROTTLE_DECOUPLING = 0; /*battery-charge*/
+	int16_t U_THROTTLE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_THROTTLE_DECOUPLING = 0; /*battery-charge*/
 };
 struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t>
 {
