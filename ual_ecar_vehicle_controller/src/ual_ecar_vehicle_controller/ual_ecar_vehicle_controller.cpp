@@ -66,7 +66,7 @@ bool VehicleControllerLowLevel::initialize()
 	/*Sub:	1. Joystick[Axis & control modes]
 			2. System_Identification[Controller & Smith predictor params, Feedforwards...]
 	*/
-	
+
 	return true;
 }
 
@@ -281,7 +281,7 @@ void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTR
 	ual_ecar_vehicle_controller::ControlSignal msg;
 
 	msg.timestamp_ms   = data.timestamp_ms_tenth;
-	msg.encoder_status = data.Control_signal;
+	msg.Control_signal = data.Control_signal;
 
 	m_pub_Control_signal.publish(msg);
 }
