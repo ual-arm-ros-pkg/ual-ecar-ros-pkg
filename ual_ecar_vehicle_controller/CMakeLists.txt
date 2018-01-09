@@ -11,8 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 )
 
-# TODO: recheck 2.0 and find comms instead
-find_package(MRPT 1.5 REQUIRED hwdrivers)
+find_package(MRPT 1.9.9 COMPONENTS comms)
+if (NOT MRPT_FOUND)
+	find_package(MRPT REQUIRED hwdrivers)
+endif()
+message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
 
 ################################################
 ## Declare ROS messages, services and actions ##

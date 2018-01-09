@@ -15,7 +15,14 @@ find_package(catkin REQUIRED COMPONENTS
 
 
 # System dependencies are found with CMake's conventions
-find_package(MRPT REQUIRED hwdrivers)
+find_package(MRPT 1.5 REQUIRED)
+message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
+if (MRPT_VERSION VERSION_LESS 1.9.9)
+	find_package(MRPT REQUIRED hwdrivers)
+else()
+	find_package(MRPT REQUIRED comms)
+endif()
+
 
 ################################################
 ## Declare ROS messages, services and actions ##
