@@ -245,7 +245,9 @@ void VehicleControllerLowLevel::daqOnNewADCCallback(
   ual_ecar_vehicle_controller::AnalogReading msg;
 
   msg.timestamp_ms = data.timestamp_ms_tenths;
-  for (int i = 0; i < sizeof(data.adc_data) / sizeof(data.adc_data[0]); i++)
+  const int N = sizeof(data.adc_data) / sizeof(data.adc_data[0]);
+  msg.adc_data.resize(N);
+  for (int i = 0; i < N; i++)
     msg.adc_data[i] = data.adc_data[i];
 
   m_pub_ADC.publish(msg);
