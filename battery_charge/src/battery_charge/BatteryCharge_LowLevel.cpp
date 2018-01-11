@@ -43,15 +43,31 @@
 
 #include <ros/console.h>
 
+#include <mrpt/version.h>
+#if MRPT_VERSION<0x199
+#include <mrpt/utils/utils_defs.h>
+using mrpt::utils::VerbosityLevel;
+using namespace mrpt::utils;
+#else
+#include <mrpt/core/format.h>
+#include <mrpt/core/exceptions.h>
+using mrpt::system::VerbosityLevel;
+using namespace mrpt::system;
+#endif
+
+
 #include <iostream>
 
 using namespace std;
 using namespace mrpt;
-using namespace mrpt::utils;
 
 #define DEBUG_TRACES
 
-void log_callback(const std::string &msg, const mrpt::utils::VerbosityLevel level, const std::string &loggerName, const mrpt::system::TTimeStamp timestamp, void *userParam)
+#if MRPT_VERSION<0x199
+void log_callback(const std::string &msg, const VerbosityLevel level, const std::string &loggerName, const mrpt::system::TTimeStamp timestamp, void *userParam)
+#else
+void log_callback(const std::string &msg, const VerbosityLevel level, const std::string &loggerName, const mrpt::system::TTimeStamp timestamp)
+#endif
 {
 	ROS_INFO("%s",msg.c_str());
 }
@@ -62,10 +78,14 @@ BatteryCharge_LowLevel::BatteryCharge_LowLevel() :
 	m_serial_port_name("/dev/serial/by-id/usb-Ual-ARM-eCAMR_Monitor_de_baterías_AL1L20Ez-if00-port0"), //Cambiar
 	m_serial_port_baudrate(115200)
 {
+#if MRPT_VERSION<0x199
 	this->logRegisterCallback(&log_callback, this);
+#else
+	this->logRegisterCallback(&log_callback);
+#endif
 
 #ifdef DEBUG_TRACES
-	this->setMinLoggingLevel(mrpt::utils::LVL_DEBUG);
+	this->setMinLoggingLevel(LVL_DEBUG);
 #endif
 }
 
@@ -206,7 +226,11 @@ bool BatteryCharge_LowLevel::WriteBinaryFrame(const uint8_t *full_frame, const s
 		}
 #endif
 
+#if MRPT_VERSION<0x199
 		m_serial.WriteBuffer(full_frame,full_frame_len);
+#else
+		m_serial.Write(full_frame,full_frame_len);
+#endif
 		return true;
 	}
 	catch (std::exception &)

@@ -7,9 +7,15 @@
 #include <joystick_driving/JoystickDriving.h>
 #include <ros/console.h>
 
+#include <mrpt/version.h>
+#if MRPT_VERSION<0x199
+#include <mrpt/utils/utils_defs.h>
+#else
+#include <mrpt/core/common.h>
+#endif
+
 using namespace std;
 using namespace mrpt;
-using namespace mrpt::utils;
 
 int pwm_steering_const = 0;
 float eje_x[2] = {0,0};
