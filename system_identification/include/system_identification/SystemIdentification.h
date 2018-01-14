@@ -11,8 +11,6 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/UInt8.h>
 #include <mrpt/utils/COutputLogger.h>
-#include <arduino_daq/EncodersReading.h>
-#include <arduino_daq/EncoderAbsReading.h>
 #include <functional>
 
 
@@ -51,14 +49,9 @@ public:
 
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
-	void encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg);
-	void encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg);
 	void PWMCallback(const std_msgs::UInt8::ConstPtr& msg);
 	void DACCallback(const std_msgs::Float64::ConstPtr& msg);
 
-
-	double m_Encoder[2] = {0,0};
-	double m_Encoder_Abs[2] = {0,0};
 	double m_q_ext[3] = {0,0,0};
 	double m_q_int[3] = {0,0,0};
 

@@ -26,8 +26,8 @@ using namespace mrpt::utils;
 float m_eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
 float m_eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
 float Tm = 0.05;			/*Tiempo entre iteraciones en segundos*/
-double m_Encoder_Absoluto;	/*Variable para la lectura del encoder absoluto*/
-double m_enc_inc = 0;		/*Valor actual del encoder incremental*/
+double m_Encoder_Absoluto;		/*Variable para la lectura del encoder absoluto*/
+double m_enc_inc = 0;			/*Valor actual del encoder incremental*/
 /*ESTIMADOR*/
 
 
@@ -50,25 +50,23 @@ bool SystemIdentification::initialize()
 	m_pub_systemparameters	= m_nh.advertise<system_identification::System_parameters>("system_parameters", 10);
 
 	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &SystemIdentification::ejexCallback, this);
-	m_sub_eje_y			= m_nh.subscribe("joystick_eje_y", 10, &SystemIdentification::ejeyCallback, this);
-	m_sub_encoder		= m_nh.subscribe("arduino_daq_encoders", 10, &SystemIdentification::encoderCallback, this);
-	m_sub_encoder_abs	= m_nh.subscribe("arduino_daq_abs_encoder", 10, &SystemIdentification::encoderAbsCallback, this);
+	m_sub_eje_y		= m_nh.subscribe("joystick_eje_y", 10, &SystemIdentification::ejeyCallback, this);
 	m_sub_pwm_steering	= m_nh.subscribe("arduino_daq_pwm6", 10, &SystemIdentification::PWMCallback, this);
 	m_sub_voltage_pedal	= m_nh.subscribe("arduino_daq_dac0", 10, &SystemIdentification::DACCallback, this);
 
 	// Inicialization
 	{
 		std::vector<double> msg_f;
-		msg_f.data[3] = {1.0, 1.0, 1.0};
+		msg_f.data = {1.0, 1.0, 1.0};
 		m_pub_controller_pos.publish(msg_f);
-//		m_pub_controller_speed.publish(msg_f);
+		m_pub_controller_speed.publish(msg_f);
 	}
-/*	{
+	{
 		system_identification::System_parameters msg_fsys;
-		msg_fsys.data[3] = {1.0, 1.0, 1.0};
+		msg_fsys.data = {1.0, 1.0, 1.0};
 		m_pub_systemparameters.publish(msg_fsys);
 	}
-*/
+
 }
 
 bool SystemIdentification::iterate()
@@ -86,7 +84,7 @@ bool SystemIdentification::iterate()
 	std::vector<double> msg_fp;
 /*	system_identification::Controller_parameters msg_fs;
 	system_identification::System_parameters msg_fsys;
-	
+
 	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
 
 	msg_fp.data = - m_q_ext;
@@ -109,17 +107,6 @@ void SystemIdentification::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 void SystemIdentification::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	m_eje_y = msg->data;
-}
-
-void SystemIdentification::encoderCallback(const arduino_daq::EncodersReading::ConstPtr& msg)
-{
-	m_enc_inc = (msg->encoder_values[0]) / 1824.9; //( ppv * reductor * n vueltas ) / ang_max 
-	//	m_Encoder_m[0] = (msg->encoder_values[1]);	// Comprobar valor del encoder
-}
-
-void SystemIdentification::encoderAbsCallback(const arduino_daq::EncoderAbsReading::ConstPtr& msg)
-{
-	m_Encoder_Absoluto = (msg->encoder_value);
 }
 
 void SystemIdentification::PWMCallback(const std_msgs::UInt8::ConstPtr& msg)

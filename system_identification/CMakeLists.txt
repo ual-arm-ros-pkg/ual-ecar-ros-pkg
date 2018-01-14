@@ -9,9 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   roscpp
   std_msgs
-  arduino_daq
 )
-
+find_package(MRPT 1.9.9 COMPONENTS comms)
 # System dependencies are found with CMake's conventions
 #find_package(MRPT REQUIRED hwdrivers)
 
