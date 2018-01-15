@@ -284,7 +284,8 @@ void VehicleControllerLowLevel::daqOnNewControlSignalCallback(
   ual_ecar_vehicle_controller::ControlSignal msg;
 
   msg.timestamp_ms = data.timestamp_ms_tenth;
-  msg.Control_signal = data.Control_signal;
+  msg.Steer_controller_signal = data.Steer_control_signal;
+  msg.Throttle_controller_signal = data.Throttle_control_signal;
 
   m_pub_Control_signal.publish(msg);
 }

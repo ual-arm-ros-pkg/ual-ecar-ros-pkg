@@ -48,8 +48,8 @@ int main(void)
 		processADCs();
 		processEncoders();
 		processEMS22A();
-		processSteerController();
 		processThrottleController();
+		processSteerController();
 		process_timeouts(); // Handle possible timeouts of previous commands:
 
 		const uint32_t t_end = millis();

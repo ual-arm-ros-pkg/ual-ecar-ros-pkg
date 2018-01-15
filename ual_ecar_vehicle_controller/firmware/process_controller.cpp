@@ -65,7 +65,8 @@ const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
 float	Ys[4]			=	{0,0,0,0};		// Smith predictor output
 float	T				=	0.01f;			// Sample time
 float	Encoder_dir[2]	=	{0,0};			// Direction value
-float	U_control[6]	=	{0,0,0,0,0,0};	// Control signal
+float	U_steer_controller[6]	=	{0,0,0,0,0,0};	// Steer controller signal
+float	U_throttle_controller[6] = {0,0,0,0,0,0};
 float	Ref_pos[2]		=	{0,0};			// Position reference
 float	Ref_speed[2]	=	{0,0};			// Speed reference
 float	Error_pos[3]	=	{0,0,0};		// Position error
@@ -265,12 +266,12 @@ void processSteerController()
 	// -------------------------------------------------------------
 	/*	Encoder reading and Smith Predictor implementation*/
 	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
-	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_control[1+3] + P_SMITH_SPEED[1] * U_control[2+3])/P_SMITH_SPEED[2];
+	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_steer_controller[1+3] + P_SMITH_SPEED[1] * U_steer_controller[2+3])/P_SMITH_SPEED[2];
 
 	// Manual mode
 	if (!STEERCONTROL_active)
 	{
-		U_control[0] = SETPOINT_OPENLOOP_STEER_SPEED;
+		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
 		/*	Protection to detect the limit of mechanism */
 		if (abs(Encoder_dir[0]) >= max_p)
 			lim = true;
@@ -278,10 +279,10 @@ void processSteerController()
 			lim = false;
 		if (lim)
 		{
-			if(Encoder_dir[0] > 0 && U_control[0] > 0)
-				U_control[0] = 0;
-			if(Encoder_dir[0] < 0 && U_control[0] < 0)
-				U_control[0] = 0;
+			if(Encoder_dir[0] > 0 && U_steer_controller[0] > 0)
+				U_steer_controller[0] = 0;
+			if(Encoder_dir[0] < 0 && U_steer_controller[0] < 0)
+				U_steer_controller[0] = 0;
 		}
 	}
 	// Automatic mode
@@ -305,30 +306,30 @@ void processSteerController()
 	/*	Speed error. Intern loop*/
 		Error_speed[0] = Ref_speed[0] - Ys[0] - (rpm - Ys[3]);
 	/*	Speed controller */
-		U_control[0] = U_control[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2];
+		U_steer_controller[0] = U_steer_controller[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2];
 	/*	Control Signal with feedforward & decoupling*/
-		U_control[0] = U_control[0] + U_STEER_DECOUPLING[0] + U_STEER_DECOUPLING[1] + U_STEER_FEEDFORWARD[0] + U_STEER_FEEDFORWARD[1];
+		U_steer_controller[0] = U_steer_controller[0] + U_STEER_DECOUPLING[0] + U_STEER_DECOUPLING[1] + U_STEER_FEEDFORWARD[0] + U_STEER_FEEDFORWARD[1];
 	/*	Variable to Anti-windup technique*/
-		int m_v= round(U_control[0]);
+		int m_v= round(U_steer_controller[0]);
 	/*	Saturation */
 		bool has_sat = false;
-		if (U_control[0] > 254)
+		if (U_steer_controller[0] > 254)
 		{
-			U_control[0] = 254;
+			U_steer_controller[0] = 254;
 			has_sat = true;
 		}
-		if (U_control[0] < -254)
+		if (U_steer_controller[0] < -254)
 		{
-			U_control[0] = -254;
+			U_steer_controller[0] = -254;
 			has_sat = true;
 		}
 	/*	Anti-windup technique*/
 		if(has_sat)
-			Antiwindup[0] = (U_control[0] - m_v) / ANTIWINDUP_CTE;
+			Antiwindup[0] = (U_steer_controller[0] - m_v) / ANTIWINDUP_CTE;
 		else
 			Antiwindup[0] = 0;
 
-		U_control[0] = round(0.5 * (2 * U_control[0] + T * (Antiwindup[0] + Antiwindup[1])));
+		U_steer_controller[0] = round(0.5 * (2 * U_steer_controller[0] + T * (Antiwindup[0] + Antiwindup[1])));
 	} // end automatic control
 
 	/* Values actualization*/
@@ -339,16 +340,16 @@ void processSteerController()
 	do_shift(Error_speed);
 	do_shift(Encoder_dir);
 	do_shift(Ys);
-	do_shift(U_control);
+	do_shift(U_steer_controller);
 
 	/*	Direction*/
 	bool u_steer_dir = false;
-	if (U_control[0] < 0)
+	if (U_steer_controller[0] < 0)
 		u_steer_dir = false;
 	else
 		u_steer_dir = true;
 
-	uint8_t u_steer = abs(U_control[0]);
+	uint8_t u_steer = abs(U_steer_controller[0]);
 
 	#warning Check max current and stop?
 
@@ -365,13 +366,14 @@ void processSteerController()
 	{
 		decim0=0;
 		tx.payload.timestamp_ms_tenth = tnow;
-		tx.payload.Control_signal = U_control[0];
+		tx.payload.Steer_control_signal = U_steer_controller[0];
+		tx.payload.Throttle_control_signal = U_throttle_controller[0];
 		tx.calc_and_update_checksum();
 
 		UART::Write((uint8_t*)&tx,sizeof(tx));
 	}
-
 }
+
 void processThrottleController()
 {
 	const uint32_t tnow = millis();
@@ -400,8 +402,10 @@ void processThrottleController()
 		gpio_pin_write(RELAY_FRWD_REV,false);
 
 	// Output value:
-	uint16_t veh_speed_dac = 1.0 + abs(pedal) * 4; /* 1.0 : Offset */
-	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
-
+	U_throttle_controller[0] = 1.0 + abs(pedal) * 4; /* 1.0 : Offset */
+	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, U_throttle_controller[0]);
+	
+	/* Values actualization*/
+	do_shift(U_throttle_controller);
 }
 
