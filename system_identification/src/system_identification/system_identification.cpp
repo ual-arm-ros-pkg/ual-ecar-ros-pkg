@@ -30,6 +30,7 @@ double m_Encoder_Absoluto = 0;		/*Variable para la lectura del encoder absoluto*
 double m_enc_inc = 0;			/*Valor actual del encoder incremental*/
 int m_pwm_steering = 0;
 double m_dac_pedal = 0;
+const int params_number = 3;
 /*ESTIMADOR*/
 
 
@@ -47,18 +48,19 @@ bool SystemIdentification::initialize()
 {
 	ROS_INFO("SystemIdentification::inicialize() ok.");
 
-	m_pub_steer_controller_pos	= m_nh.advertise<system_identification::Controller_parameters>("controller_pos", 10);
-	m_pub_steer_controller_speed	= m_nh.advertise<system_identification::Controller_parameters>("controller_speed", 10);
-	m_pub_steer_systemparameters	= m_nh.advertise<system_identification::System_parameters>("system_parameters", 10);
+	m_pub_steer_controller_pos	= m_nh.advertise<system_identification::Controller_parameters>("steer_controller_pos", 10);
+	m_pub_steer_controller_speed	= m_nh.advertise<system_identification::Controller_parameters>("steer_controller_speed", 10);
+	m_pub_steer_systemparameters	= m_nh.advertise<system_identification::System_parameters>("steer_system_parameters", 10);
 
 	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &SystemIdentification::ejexCallback, this);
 	m_sub_eje_y		= m_nh.subscribe("joystick_eje_y", 10, &SystemIdentification::ejeyCallback, this);
-	m_sub_pwm_steering	= m_nh.subscribe("arduino_daq_pwm6", 10, &SystemIdentification::PWMCallback, this);
-	m_sub_voltage_pedal	= m_nh.subscribe("arduino_daq_dac0", 10, &SystemIdentification::DACCallback, this);
+	m_sub_pwm_steering	= m_nh.subscribe("arduino_daq_pwm6", 10, &SystemIdentification::PWMCallback, this);  	/*CHANGE*/
+	m_sub_voltage_pedal	= m_nh.subscribe("arduino_daq_dac0", 10, &SystemIdentification::DACCallback, this);	/*CHANGE*/
 
 	// Inicialization
 	{
 		system_identification::Controller_parameters msg_fp;
+		msg_fp.controller_values.resize(params_number);
 		for (int i = 0; i < 2; i++)
 			msg_fp.controller_values[i] = m_q_steer_ext[i];
 		m_pub_steer_controller_pos.publish(msg_fp);
@@ -66,12 +68,14 @@ bool SystemIdentification::initialize()
 	}
 	{
 		system_identification::System_parameters msg_fsys;
+		msg_fsys.system_values_a.resize(params_number);
+		msg_fsys.system_values_b.resize(params_number);
 		for (int i = 0; i < 2; i++)
 		{
 			msg_fsys.system_values_a[i] = m_steer_a[i];
-               		msg_fsys.system_values_b[i] = m_steer_b[i];
-       		 }
-        	m_pub_steer_systemparameters.publish(msg_fsys);
+			msg_fsys.system_values_b[i] = m_steer_b[i];
+		}
+		m_pub_steer_systemparameters.publish(msg_fsys);
 	}
 }
 
@@ -94,17 +98,24 @@ bool SystemIdentification::iterate()
 
 //	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
 
+
+
+	// PUB
 	system_identification::Controller_parameters msg_fp;
+	msg_fp.controller_values.resize(params_number);
 	for (int i = 0; i < 2; i++)
 		msg_fp.controller_values[i] = m_q_steer_ext[i];
 	m_pub_steer_controller_pos.publish(msg_fp);
 
 	system_identification::Controller_parameters msg_fs;
+	msg_fs.controller_values.resize(params_number);
 	for (int i = 0; i < 2; i++)
 		msg_fp.controller_values[i] = m_q_steer_int[i];
 	m_pub_steer_controller_speed.publish(msg_fs);
 
 	system_identification::System_parameters msg_fsys;
+	msg_fsys.system_values_a.resize(params_number);
+        msg_fsys.system_values_b.resize(params_number);
 	for (int i = 0;i<2;i++)
 	{
 		msg_fsys.system_values_a[i] = m_steer_a[i];
@@ -125,12 +136,12 @@ void SystemIdentification::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 	m_eje_y = msg->data;
 }
 
-void SystemIdentification::PWMCallback(const std_msgs::UInt8::ConstPtr& msg)
+void SystemIdentification::PWMCallback(const std_msgs::UInt8::ConstPtr& msg)	/*CHANGE*/
 {
 	m_pwm_steering = msg->data;
 }
 
-void SystemIdentification::DACCallback(const std_msgs::Float64::ConstPtr& msg)
+void SystemIdentification::DACCallback(const std_msgs::Float64::ConstPtr& msg)	/*CHANGE*/
 {
 	m_dac_pedal = msg->data;
 }
