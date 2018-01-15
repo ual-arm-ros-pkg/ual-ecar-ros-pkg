@@ -45,9 +45,9 @@ bool SystemIdentification::initialize()
 {
 	ROS_INFO("SystemIdentification::inicialize() ok.");
 
-	m_pub_controller_pos	= m_nh.advertise<system_identification::Controller_parameters>("controller_pos", 10);
-//	m_pub_controller_speed	= m_nh.advertise<system_identification::Controller_parameters>("controller_speed", 10);
-	m_pub_systemparameters	= m_nh.advertise<system_identification::System_parameters>("system_parameters", 10);
+	m_pub_steer_controller_pos	= m_nh.advertise<system_identification::Controller_parameters>("controller_pos", 10);
+	m_pub_steer_controller_speed	= m_nh.advertise<system_identification::Controller_parameters>("controller_speed", 10);
+	m_pub_steer_systemparameters	= m_nh.advertise<system_identification::System_parameters>("system_parameters", 10);
 
 	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &SystemIdentification::ejexCallback, this);
 	m_sub_eje_y		= m_nh.subscribe("joystick_eje_y", 10, &SystemIdentification::ejeyCallback, this);
@@ -55,51 +55,66 @@ bool SystemIdentification::initialize()
 	m_sub_voltage_pedal	= m_nh.subscribe("arduino_daq_dac0", 10, &SystemIdentification::DACCallback, this);
 
 	// Inicialization
-/*	{
-		std::vector<double> msg_f;
-		msg_f.data = {1.0, 1.0, 1.0};
-		m_pub_controller_pos.publish(msg_f);
-		m_pub_controller_speed.publish(msg_f);
+	{
+		system_identification::Controller_parameters msg_fp;
+		for (int i = 0; i < 2; i++)
+			msg_fp.controller_values[i] = m_q_steer_ext[i];
+		m_pub_steer_controller_pos.publish(msg_fp);
+		m_pub_steer_controller_speed.publish(msg_fp);
+
 	}
 	{
 		system_identification::System_parameters msg_fsys;
-		msg_fsys.data = {1.0, 1.0, 1.0};
-		m_pub_systemparameters.publish(msg_fsys);
+		for (int i = 0; i < 2; i++)
+		{
+			msg_fsys.system_values_a[i] = m_steer_a[i];
+               		msg_fsys.system_values_b[i] = m_steer_b[i];
+       		 }
+        	m_pub_steer_systemparameters.publish(msg_fsys);
 	}
-*/
 }
 
 bool SystemIdentification::iterate()
 {
 
-	//Pendiente de crear el nodo correpondiente que comunique estos parametros
-		m_q_ext[0] = 1.8903;
-		m_q_ext[1] = - 1.8240;
-		m_q_ext[2] = 0;
-/*		m_q_int[0] = - 2.85;
-		m_q_int[1] = - 0.1765;
-		m_q_int[2] = 0;
+	//TO-DO: Identification
+		m_q_steer_ext[0]	= 2.9082;
+		m_q_steer_ext[1]	= - 2.8061;
+		m_q_steer_ext[2]	= 0;
+		m_q_steer_int[0]	= - 0.4542;
+		m_q_steer_int[1]	= - 0.0281;
+		m_q_steer_int[2]	= 0;
+		m_steer_b[0]		= 0.8291;
+		m_steer_b[1]		= 0;
+		m_steer_b[2]		= 0;
+		m_steer_a[0]		= 1;
+		m_steer_a[1]		= -0.1709;
+		m_steer_a[0]		= 0;
+	//
 
+//	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
 
 	system_identification::Controller_parameters msg_fp;
+	for (int i = 0; i < 2; i++)
+		msg_fp.controller_values[i] = m_q_steer_ext[i];
+	m_pub_steer_controller_pos.publish(msg_fp);
+
 	system_identification::Controller_parameters msg_fs;
+	for (int i = 0; i < 2; i++)
+		msg_fp.controller_values[i] = m_q_steer_int[i];
+	m_pub_steer_controller_speed.publish(msg_fs);
+
 	system_identification::System_parameters msg_fsys;
+	for (int i = 0;i<2;i++)
+	{
+		msg_fsys.system_values_a[i] = m_steer_a[i];
+		msg_fsys.system_values_b[i] = m_steer_b[i];
+	}
+	m_pub_steer_systemparameters.publish(msg_fsys);
 
-	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
-
-	msg_fp.data = - m_q_ext;
-	msg_fs.data = m_q_int;
-	msg_fsys.data = false;
-	m_pub_controller_pos.publish(msg_fp);
-	m_pub_controller_speed.publish(msg_fs);
-	m_pub_systemparameters.publish(msg_fsys);
-
-	msg_fp.controller_values = m_q_ext;
-	m_pub_controller_pos.publish(msg_fp);
-*/
 }
 
-
+// SUB
 void SystemIdentification::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
 {
 	m_eje_x = msg->data;

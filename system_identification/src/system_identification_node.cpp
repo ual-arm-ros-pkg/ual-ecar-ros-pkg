@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 		SystemIdentification  system_identification;
 		system_identification.initialize();
 
-		ros::Rate loop_rate(50); /*50ms es el tiempo tomado para el diseño de los controladores*/
+		ros::Rate loop_rate(100); // f : 100Hz => T = 10 ms
 		while (ros::ok())
 		{
 			ros::spinOnce();
