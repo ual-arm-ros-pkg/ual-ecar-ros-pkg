@@ -45,8 +45,8 @@ bool SystemIdentification::initialize()
 {
 	ROS_INFO("SystemIdentification::inicialize() ok.");
 
-	m_pub_controller_pos	= m_nh.advertise<std::vector<double>>("controller_pos", 10);
-	m_pub_controller_speed	= m_nh.advertise<system_identification::Controller_parameters>("controller_speed", 10);
+	m_pub_controller_pos	= m_nh.advertise<system_identification::Controller_parameters>("controller_pos", 10);
+//	m_pub_controller_speed	= m_nh.advertise<system_identification::Controller_parameters>("controller_speed", 10);
 	m_pub_systemparameters	= m_nh.advertise<system_identification::System_parameters>("system_parameters", 10);
 
 	m_sub_eje_x  		= m_nh.subscribe("joystick_eje_x", 10, &SystemIdentification::ejexCallback, this);
@@ -55,7 +55,7 @@ bool SystemIdentification::initialize()
 	m_sub_voltage_pedal	= m_nh.subscribe("arduino_daq_dac0", 10, &SystemIdentification::DACCallback, this);
 
 	// Inicialization
-	{
+/*	{
 		std::vector<double> msg_f;
 		msg_f.data = {1.0, 1.0, 1.0};
 		m_pub_controller_pos.publish(msg_f);
@@ -66,7 +66,7 @@ bool SystemIdentification::initialize()
 		msg_fsys.data = {1.0, 1.0, 1.0};
 		m_pub_systemparameters.publish(msg_fsys);
 	}
-
+*/
 }
 
 bool SystemIdentification::iterate()
@@ -76,13 +76,13 @@ bool SystemIdentification::iterate()
 		m_q_ext[0] = 1.8903;
 		m_q_ext[1] = - 1.8240;
 		m_q_ext[2] = 0;
-		m_q_int[0] = - 2.85;
+/*		m_q_int[0] = - 2.85;
 		m_q_int[1] = - 0.1765;
 		m_q_int[2] = 0;
 
 
-	std::vector<double> msg_fp;
-/*	system_identification::Controller_parameters msg_fs;
+	system_identification::Controller_parameters msg_fp;
+	system_identification::Controller_parameters msg_fs;
 	system_identification::System_parameters msg_fsys;
 
 	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
@@ -93,9 +93,10 @@ bool SystemIdentification::iterate()
 	m_pub_controller_pos.publish(msg_fp);
 	m_pub_controller_speed.publish(msg_fs);
 	m_pub_systemparameters.publish(msg_fsys);
-*/
-	msg_fp.data = - m_q_ext;
+
+	msg_fp.controller_values = m_q_ext;
 	m_pub_controller_pos.publish(msg_fp);
+*/
 }
 
 
