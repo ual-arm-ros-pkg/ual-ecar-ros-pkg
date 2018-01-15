@@ -26,8 +26,10 @@ using namespace mrpt::utils;
 float m_eje_x = 0;			/*Variable para la lectura del joystick derecho del mando*/
 float m_eje_y = 0;			/*Variable para la lectura del joystick izquierdo del mando*/
 float Tm = 0.05;			/*Tiempo entre iteraciones en segundos*/
-double m_Encoder_Absoluto;		/*Variable para la lectura del encoder absoluto*/
+double m_Encoder_Absoluto = 0;		/*Variable para la lectura del encoder absoluto*/
 double m_enc_inc = 0;			/*Valor actual del encoder incremental*/
+int m_pwm_steering = 0;
+double m_dac_pedal = 0;
 /*ESTIMADOR*/
 
 
@@ -61,7 +63,6 @@ bool SystemIdentification::initialize()
 			msg_fp.controller_values[i] = m_q_steer_ext[i];
 		m_pub_steer_controller_pos.publish(msg_fp);
 		m_pub_steer_controller_speed.publish(msg_fp);
-
 	}
 	{
 		system_identification::System_parameters msg_fsys;
@@ -90,7 +91,6 @@ bool SystemIdentification::iterate()
 		m_steer_a[0]		= 1;
 		m_steer_a[1]		= -0.1709;
 		m_steer_a[0]		= 0;
-	//
 
 //	ROS_INFO_COND_NAMED( m_Encoder_Abs[0] !=  m_Encoder_Abs[1], " test only " , "Encoder_Abs: %f ", m_Encoder_Abs[0]);
 
@@ -127,10 +127,10 @@ void SystemIdentification::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 
 void SystemIdentification::PWMCallback(const std_msgs::UInt8::ConstPtr& msg)
 {
-	int m_pwm_steering = msg->data;
+	m_pwm_steering = msg->data;
 }
 
 void SystemIdentification::DACCallback(const std_msgs::Float64::ConstPtr& msg)
 {
-	double m_dac_pedal = msg->data;
+	m_dac_pedal = msg->data;
 }
