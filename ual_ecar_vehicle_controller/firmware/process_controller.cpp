@@ -396,14 +396,19 @@ void processThrottleController()
 		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
 	}
 	// Output direction:
-	if (pedal<0)
+	if (pedal<0){
+		U_throttle_controller[0] = - 1.0 + pedal * 4; /* 1.0 : Offset */
 		gpio_pin_write(RELAY_FRWD_REV,true);
+	}
 	else
+	{
+		U_throttle_controller[0] = 1.0 + pedal * 4; /* 1.0 : Offset */
 		gpio_pin_write(RELAY_FRWD_REV,false);
+	}
 
 	// Output value:
-	U_throttle_controller[0] = 1.0 + abs(pedal) * 4; /* 1.0 : Offset */
-	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, U_throttle_controller[0]);
+	uint16_t veh_speed_dac = abs(U_throttle_controller[0]);
+	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
 	
 	/* Values actualization*/
 	do_shift(U_throttle_controller);
