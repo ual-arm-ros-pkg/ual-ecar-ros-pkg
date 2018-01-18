@@ -78,12 +78,12 @@ bool JoystickDriving::iterate()
 	const bool autonomous_btn = (buttons.size()>8 && !buttons[8]);
 	{
 		std_msgs::Bool c;
-		c.data = autonomous_btn;
+		c.data = !autonomous_btn;
 		m_pub_autonomous_driving.publish(c);
 	}
 
 	std_msgs::Float64 msg_f;
-	
+
 	// Axis X
 	{
 		//  Resolution increase
@@ -118,7 +118,7 @@ bool JoystickDriving::iterate()
 	}
 
 	if(eje_x[0] != eje_x[1] || eje_y[0] != eje_y[1] || steer_btn != button[0] || throttle_btn != button[1] || autonomous_btn != button[2])
-		ROS_INFO("Joy: x:%f y:%f steer_btn=%i throttle_btn=%i autonomous_btn=%i", eje_x[0],eje_y[0], steer_btn ? 1:0, throttle_btn ? 1:0, autonomous_btn);
+		ROS_INFO("Joy: x:%f y:%f steer_btn=%i throttle_btn=%i autonomous_btn=%i", eje_x[0],eje_y[0], !steer_btn ? 1:0, !throttle_btn ? 1:0, !autonomous_btn);
 
 	button[0] = steer_btn;
 	button[1] = throttle_btn;

@@ -27,7 +27,7 @@ using mrpt::utils::saturate;
 #endif
 
 // Define to see serial communication traces
-#define DEBUG_TRACES
+//#define DEBUG_TRACES
 
 /* +------------------------+
    |		VARIABLES		|
