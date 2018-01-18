@@ -250,7 +250,9 @@ void processSteerController()
 	CONTROL_last_millis_STEER = tnow;
 	// ========= Encoders calibration algorithm ===================================
 	// Incremental encoder reading
+	cli();
 	int32_t enc_diff = enc_last_reading.encoders[0];
+	sei();
 	// Absolute encoder reading
 	// int16_t enc_abs = enc_abs_last_reading.enc_pos;
 	// Calibration
