@@ -14,7 +14,7 @@ Universidad de Almeria
 
 #include <avr/interrupt.h> // sei()
 
-void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &s);
+void processCPUStats(const uint32_t dt);
 
 int main(void)
 {
@@ -36,8 +36,6 @@ int main(void)
 // 	enableSteerController(true);
 // 	setSteerControllerSetpoint_Steer(100);
 
-	TFrame_CPU_USAGE_STATS  cpu_busy_stats;
-	cpu_busy_stats.payload.clear();
 	uint32_t t_ini = millis();
 
 	// ============== Infinite loop ====================
@@ -57,13 +55,14 @@ int main(void)
 		t_ini = millis();
 
 		// ---- CPU busy time stats ----------
-		processCPUStats(dt, cpu_busy_stats);
+		processCPUStats(dt);
 	}
 }
 
-
-void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &s)
+void processCPUStats(const uint32_t dt)
 {
+	static TFrame_CPU_USAGE_STATS  s;
+
 	// Accumulate stats:
 	s.payload.loop_average_time+=dt;
 	if (dt>s.payload.loop_max_time) s.payload.loop_max_time=dt;

@@ -3,7 +3,7 @@
  *
  * Created: 04/10/2017 12:15:44
  *  Author: Francisco José Mañas
- */ 
+ */
 
 #include <Arduino.h>
 #include <batterycharge_declarations.h>
@@ -15,7 +15,7 @@
 struct TimeoutData
 {
 	unsigned long TIMEOUT_TICKS;   //!< Number of millis() ticks to timeout an output signal. Default=1000 ms
-	
+
 	bool BAT_any;
 	unsigned long BAT_last_changed[7];  //!< Last timestamp (millis()) for each DAC channel
 
@@ -83,7 +83,6 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 			memcpy(&bat_req,data, sizeof(bat_req));
 
 			init_encoders(bat_req);
-			ENCODERS_active=true;
 
 			// send answer back:
 			send_simple_opcode_frame(RESP_START_BAT);
@@ -129,7 +128,7 @@ void process_timeouts()
 					pt.BAT_last_changed[i]=0; // reset this one
 					//mod_dac_max5500_update_single_DAC(i,0);
 				}
-				
+
 			}
 		}
 	}

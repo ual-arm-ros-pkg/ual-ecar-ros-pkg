@@ -2,7 +2,7 @@
  * process_controller.cpp
  *
  * Created: 30/10/2017 22:59:28
- *  Author: Francisco Jose Mañas Alvarez, Jose Luis Blanco Claraco
+ *  Author: Francisco Jose Maï¿½as Alvarez, Jose Luis Blanco Claraco
  *
  * Software License Agreement (BSD License)
  *
@@ -94,25 +94,25 @@ float	Q_STEER_EXT[3]				= { 46.6728f, - -91.1049f, 44.4444f };
 float	P_SMITH_SPEED[5]			= {0.2977f,.0f,1,-0.7023f,.0f}; /*{b0,b1,a0,a1,a2}*/
 int16_t	U_STEER_FEEDFORWARD[2]		= {0,0}; /*Weight,other*/
 int16_t	U_STEER_DECOUPLING[2]		= {0,0}; /*battery-charge,speed*/
-int16_t	U_THROTTLE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/	
+int16_t	U_THROTTLE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/
 int16_t U_THROTTLE_DECOUPLING		= 0; /*battery-charge*/
 
-/** Desired setpoint for steering angle. 
+/** Desired setpoint for steering angle.
   * -512:max right, +511: max left
   */
 int16_t  SETPOINT_STEER_POS = 0;
 
-/** Desired setpoint for steering angle in Open Loop. 
+/** Desired setpoint for steering angle in Open Loop.
   * -254:max right, +254: max left
   */
 int16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
 
-/** Desired setpoint for throttle in Open Loop. 
+/** Desired setpoint for throttle in Open Loop.
   * [-1,0]V:max reverse, [0,+1]V: max forward
   */
 float SETPOINT_OPENLOOP_THROTTLE = .0f;
 
-/** Desired setpoint for throttle in Open Loop. 
+/** Desired setpoint for throttle in Open Loop.
   * 0:min speed, 12.5 m/s: max forward
   */
 float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
@@ -139,43 +139,44 @@ void initSensorsForController()
 		TFrameCMD_ENCODERS_start_payload_t cmd;
 		cmd.encA_pin[0] = ENCODER_DIFF_A;
 		cmd.encB_pin[0] = ENCODER_DIFF_B;
-		cmd.sampling_period_ms_tenths = SAMPLING_PERIOD_MSth;
+		cmd.sampling_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		init_encoders(cmd);
 	}
 
 	// ADC: current sense of steering motor, to ADC0 pin
+#if 0 // TODO: Refactor sampling period vs. send USB period
 	{
 		TFrameCMD_ADC_start_payload_t cmd;
 		cmd.active_channels[0] = CURRENT_SENSE_ADC_CH;
 		cmd.use_internal_refvolt = false;
-		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth;
+		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		adc_process_start_cmd(cmd);
 	}
+#endif
 
-	// ABS ENC: 
+	// ABS ENC:
+	// TODO: Refactor sampling period vs. send USB period
 	{
 		init_EMS22A(ENCODER_ABS_CS,ENCODER_ABS_CLK,ENCODER_ABS_DO,SAMPLING_PERIOD_MSth);
 		EMS22A_active = true;
 	}
-	
+
 	// Init DAC:
 	mod_dac_max5500_init();
+	PIN_DAC_MAX5500_CS = DAC_OUT_PIN_NO;
 
 	// PWM:
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
 	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,0x00);
-	// PWM direction:	
+	// PWM direction:
 	gpio_pin_mode(PWM_DIR, OUTPUT);
 	gpio_pin_write(PWM_DIR, false);
 
 	// Relay:
 	gpio_pin_mode(RELAY_FRWD_REV, OUTPUT);
 	gpio_pin_write(RELAY_FRWD_REV, false);
-	
-	// DAC:
-	PIN_DAC_MAX5500_CS = DAC_OUT_PIN_NO;
-	
+
 }
 
 // TODO: "a" constant that converts from diff encoder tick count to abs enc tick count :: 337/(500*100);
@@ -199,7 +200,7 @@ void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_paylo
 	}
 	for (int i=0;i<5;i++)
 		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
-		
+
 	for (int i=0;i<2;i++)
 	{
 		U_STEER_DECOUPLING[i]	= p.U_STEER_DECOUPLING[i];
@@ -210,10 +211,10 @@ void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_pa
 {
 	for (int i=0;i<3;i++)
 		Q_THROTTLE[i] = p.Q_THROTTLE_CONTROLLER[i];
-		
+
 	for (int i=0;i<2;i++)
 		U_THROTTLE_FEEDFORWARD[i] = p.U_THROTTLE_FEEDFORWARD[i];
-		
+
 	U_THROTTLE_DECOUPLING = p.U_THROTTLE_DECOUPLING;
 }
 
@@ -246,7 +247,7 @@ void processSteerController()
 	const uint32_t tnow = millis();
 	if (tnow-CONTROL_last_millis_STEER < CONTROL_sampling_period_ms_tenths)
 		return;
-		
+
 	CONTROL_last_millis_STEER = tnow;
 	// ========= Encoders calibration algorithm ===================================
 	// Incremental encoder reading
@@ -411,8 +412,7 @@ void processThrottleController()
 	// Output value:
 	uint16_t veh_speed_dac = abs(U_throttle_controller[0]);
 	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
-	
+
 	/* Values actualization*/
 	do_shift(U_throttle_controller);
 }
-

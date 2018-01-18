@@ -1,4 +1,4 @@
-﻿/* libclaraquino (C) Copyright 2016-2018 University of Almeria 
+﻿/* libclaraquino (C) Copyright 2016-2018 University of Almeria
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd)
 	{
 		mod_quad_encoder_init(i, cmd.encA_pin[i], cmd.encB_pin[i], cmd.encZ_pin[i]);
 	}
+	ENCODERS_active=true;
 }
 
 void processEncoders()
