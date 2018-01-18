@@ -31,7 +31,7 @@ int main(void)
 	enableSteerController(false);
 	enableThrottleController(false);
 	initSensorsForController();
-	
+
 // 	#warning QUITAR! PRUEBA!
 // 	enableSteerController(true);
 // 	setSteerControllerSetpoint_Steer(100);
@@ -64,26 +64,28 @@ int main(void)
 
 void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &frame)
 {
-	TFrame_CPU_USAGE_STATS s;
+	static TFrame_CPU_USAGE_STATS s;
 
-	// Decimate the number of msgs sent to the PC:
-	static uint8_t decim0 = 0;
-	if (++decim0>100)
-	{
-		decim0=0;
-		
 	// Accumulate stats:
 	s.payload.loop_average_time+=dt;
 	if (dt>s.payload.loop_max_time) s.payload.loop_max_time=dt;
 	if (dt<s.payload.loop_min_time) s.payload.loop_min_time=dt;
 
-	// Send to main PC?
-	const int CPU_STATS_DECIMATE = 0x1000;
-	s.payload.loop_average_time /= CPU_STATS_DECIMATE;
-	s.payload.timestamp_ms_tenths = millis();
-	s.calc_and_update_checksum();
-	s.payload.clear();
+	// Decimate the number of msgs sent to the PC:
+	const uint32_t CPU_STATS_DECIMATE = 4000000;
+	static uint32_t decim0 = 0;
+	if (++decim0>CPU_STATS_DECIMATE)
+	{
+		decim0=0;
 
-	UART::Write((uint8_t*)&s,sizeof(s));
+		// Send to main PC?
+		s.payload.loop_average_time /= CPU_STATS_DECIMATE;
+		s.payload.timestamp_ms_tenths = millis();
+		s.calc_and_update_checksum();
+		s.payload.clear();
+
+		UART::Write((uint8_t*)&s,sizeof(s));
+		// reset
+		s = TFrame_CPU_USAGE_STATS();
 	}
 }
