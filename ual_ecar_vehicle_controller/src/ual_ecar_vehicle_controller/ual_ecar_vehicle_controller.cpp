@@ -130,7 +130,7 @@ bool VehicleControllerLowLevel::iterate() {
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
 
-			ROS_INFO("Sending openloop STEER: %f", m_joy_x);
+			ROS_INFO_THROTTLE(1, "Sending openloop STEER: %f", m_joy_x);
 		} else {
 			MRPT_TODO("Recalibrate steer pos range");
 			int16_t steer_pos = 512 * m_joy_x;
@@ -140,7 +140,7 @@ bool VehicleControllerLowLevel::iterate() {
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
 
-			ROS_INFO("Sending closedloop STEER: %d", steer_pos);
+			ROS_INFO_THROTTLE(1, "Sending closedloop STEER: %d", steer_pos);
 		}
 
 		// Y: throttle
@@ -150,7 +150,7 @@ bool VehicleControllerLowLevel::iterate() {
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
 
-			ROS_INFO("Sending openloop THROTTLE: %f", m_joy_y);
+			ROS_INFO_THROTTLE(1, "Sending openloop THROTTLE: %f", m_joy_y);
 		} else {
 			const float MAX_VEL_MPS = 2.0;
 			float vel_mps = m_joy_y * MAX_VEL_MPS;
@@ -160,7 +160,7 @@ bool VehicleControllerLowLevel::iterate() {
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
 
-			ROS_INFO("Sending closedloop THROTTLE: %.03f m/s", vel_mps);
+			ROS_INFO_THROTTLE(1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
 		}
 	}
 
@@ -194,13 +194,16 @@ bool VehicleControllerLowLevel::iterate() {
 
 void VehicleControllerLowLevel::autonomousModeCallback(const std_msgs::Bool::ConstPtr &msg) {
 	m_autonomous_driving_mode = msg->data;
+	m_modes_changed = true;
 }
 
 void VehicleControllerLowLevel::modeSteeringCallback(const std_msgs::Bool::ConstPtr &msg) {
 	m_mode_openloop_steer = msg->data;
+	m_modes_changed = true;
 }
 void VehicleControllerLowLevel::modeThrottleCallback(const std_msgs::Bool::ConstPtr &msg) {
 	m_mode_openloop_throttle = msg->data;
+	m_modes_changed = true;
 }
 
 void VehicleControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr &msg) {
