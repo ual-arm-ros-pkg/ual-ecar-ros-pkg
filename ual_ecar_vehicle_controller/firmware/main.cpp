@@ -33,8 +33,9 @@ int main(void)
 	initSensorsForController();
 
 // 	#warning QUITAR! PRUEBA!
-// 	enableSteerController(true);
+// 	enableSteerController(false);
 // 	setSteerControllerSetpoint_Steer(100);
+// 	setSteerOpenLoopSetpoint_Steer(-100);
 
 	uint32_t t_ini = millis();
 
@@ -59,17 +60,16 @@ int main(void)
 	}
 }
 
+TFrame_CPU_USAGE_STATS  s;
 void processCPUStats(const uint32_t dt)
 {
-	static TFrame_CPU_USAGE_STATS  s;
-
 	// Accumulate stats:
 	s.payload.loop_average_time+=dt;
 	if (dt>s.payload.loop_max_time) s.payload.loop_max_time=dt;
 	if (dt<s.payload.loop_min_time) s.payload.loop_min_time=dt;
 
 	// Decimate the number of msgs sent to the PC:
-	const uint32_t CPU_STATS_DECIMATE = 4000000;
+	const uint32_t CPU_STATS_DECIMATE = 10000;
 	static uint32_t decim0 = 0;
 	if (++decim0>CPU_STATS_DECIMATE)
 	{

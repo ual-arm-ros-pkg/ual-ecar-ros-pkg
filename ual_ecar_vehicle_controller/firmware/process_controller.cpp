@@ -45,6 +45,7 @@
 #include "libclaraquino/pwm.h"
 #include "libclaraquino/gpio.h"
 #include "math.h"
+#include <avr/interrupt.h> // sei()
 
 // ============== HARDWARE CONFIGURATION =====================
 const uint16_t SAMPLING_PERIOD_MSth = 10 /*ms*/ *10 /*th*/;
@@ -72,11 +73,12 @@ float	Ref_speed[2]	=	{0,0};			// Speed reference
 float	Error_pos[3]	=	{0,0,0};		// Position error
 float	Error_speed[3]	=	{0,0,0};		// Speed error
 float	Antiwindup[2]	=	{0,0};			//
+uint8_t u_steer = 0;
 
 // Auxiliary vars:
 bool	lim				=	false;
 float	max_p			=	500;
-const	float	sat_ref			=	100;
+const	float	sat_ref	=	250/T;
 float	enc_init		=	.0f;
 static	uint8_t adjust	=	0;
 float	pedal			=	.0f; /* [0,1] */
@@ -90,7 +92,7 @@ bool	  THROTTLECONTROL_active = false; //true: controller; false: open loop
 
 float	Q_STEER_INT[3]				= { - 0.2838f, 0.1986f, .0f };
 float	Q_THROTTLE[3]				= {0,0,0};
-float	Q_STEER_EXT[3]				= { 46.6728f, - -91.1049f, 44.4444f };
+float	Q_STEER_EXT[3]				= { 2.8673f, -2.8469f, .0f };
 float	P_SMITH_SPEED[5]			= {0.2977f,.0f,1,-0.7023f,.0f}; /*{b0,b1,a0,a1,a2}*/
 int16_t	U_STEER_FEEDFORWARD[2]		= {0,0}; /*Weight,other*/
 int16_t	U_STEER_DECOUPLING[2]		= {0,0}; /*battery-charge,speed*/
@@ -296,12 +298,12 @@ void processSteerController()
 		+-------------------+ */
 	/*	Position reference reading */
 		Ref_pos[0]	= SETPOINT_STEER_POS;
+		/*	Correction of the wheels' direction */
+		Ref_pos[0] = - Ref_pos[0];
 	/*	Slope reference limit to over current protection*/
 		float pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
 		if (pendiente >= sat_ref)
 			Ref_pos[0] = (Ref_pos[1] + sat_ref);
-	/*	Correction of the wheels' direction */
-		Ref_pos[0] = - Ref_pos[0];
 	/*	Position error. Extern loop*/
 		Error_pos[0] = Ref_pos[0] - Encoder_dir[0];
 	/*	Position controller */
@@ -326,7 +328,9 @@ void processSteerController()
 			U_steer_controller[0] = -254;
 			has_sat = true;
 		}
-	/*	Anti-windup technique*/
+		
+		// REVISAR
+	/*	Anti-windup technique*/ 
 		if(has_sat)
 			Antiwindup[0] = (U_steer_controller[0] - m_v) / ANTIWINDUP_CTE;
 		else
@@ -352,7 +356,7 @@ void processSteerController()
 	else
 		u_steer_dir = true;
 
-	uint8_t u_steer = abs(U_steer_controller[0]);
+	u_steer = abs(U_steer_controller[0]);
 
 	#warning Check max current and stop?
 
