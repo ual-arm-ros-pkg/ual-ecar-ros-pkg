@@ -62,10 +62,8 @@ int main(void)
 }
 
 
-void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &frame)
+void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &s)
 {
-	static TFrame_CPU_USAGE_STATS s;
-
 	// Accumulate stats:
 	s.payload.loop_average_time+=dt;
 	if (dt>s.payload.loop_max_time) s.payload.loop_max_time=dt;
@@ -86,6 +84,6 @@ void processCPUStats(const uint32_t dt, TFrame_CPU_USAGE_STATS &frame)
 
 		UART::Write((uint8_t*)&s,sizeof(s));
 		// reset
-		s = TFrame_CPU_USAGE_STATS();
+		s.payload.clear();
 	}
 }

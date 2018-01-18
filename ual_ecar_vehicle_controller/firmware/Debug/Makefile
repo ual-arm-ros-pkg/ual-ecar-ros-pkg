@@ -42,7 +42,7 @@ C_SRCS +=  \
 ../process_internal_adc.cpp \
 ../process_command.cpp \
 ../process_encoder.cpp \
-../process_steer_controller.cpp \
+../process_controller.cpp \
 ../serial.cpp
 
 
@@ -58,7 +58,7 @@ process_abs_enc.o \
 process_internal_adc.o \
 process_command.o \
 process_encoder.o \
-process_steer_controller.o \
+process_controller.o \
 serial.o
 
 OBJS_AS_ARGS +=  \
@@ -67,7 +67,7 @@ process_abs_enc.o \
 process_internal_adc.o \
 process_command.o \
 process_encoder.o \
-process_steer_controller.o \
+process_controller.o \
 serial.o
 
 C_DEPS +=  \
@@ -76,7 +76,7 @@ process_abs_enc.d \
 process_internal_adc.d \
 process_command.d \
 process_encoder.d \
-process_steer_controller.d \
+process_controller.d \
 serial.d
 
 C_DEPS_AS_ARGS +=  \
@@ -85,12 +85,12 @@ process_abs_enc.d \
 process_internal_adc.d \
 process_command.d \
 process_encoder.d \
-process_steer_controller.d \
+process_controller.d \
 serial.d
 
-OUTPUT_FILE_PATH +=steer_controller_firmware.elf
+OUTPUT_FILE_PATH +=vehicle_controller_firmware.elf
 
-OUTPUT_FILE_PATH_AS_ARGS +=steer_controller_firmware.elf
+OUTPUT_FILE_PATH_AS_ARGS +=vehicle_controller_firmware.elf
 
 ADDITIONAL_DEPENDENCIES:=
 
@@ -119,7 +119,7 @@ LINKER_SCRIPT_DEP+=
 
 ./%.o: .././%.cpp
 	@echo Building file: $<
-	@echo Invoking: AVR8/GNU C Compiler : 4.9.2
+	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\include" -I"../claraquino"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa" -c -std=c++11 -Wall -pedantic -Wextra -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
 	@echo Finished building: $<
 	
@@ -148,14 +148,14 @@ all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
 
 $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP) $(LINKER_SCRIPT_DEP)
 	@echo Building target: $@
-	@echo Invoking: AVR8/GNU Linker : 4.9.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="steer_controller_firmware.map" -Wl,--start-group -Wl,-lm -Wl,-lclaraquino  -Wl,--end-group -Wl,-L"../claraquino/libclaraquino/Debug"  -Wl,--gc-sections -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa"  
+	@echo Invoking: AVR8/GNU Linker : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="vehicle_controller_firmware.map" -Wl,--start-group -Wl,-lm -Wl,-lclaraquino  -Wl,--end-group -Wl,-L"../claraquino/libclaraquino/Debug"  -Wl,--gc-sections -mmcu=atmega164pa -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa"  
 	@echo Finished building target: $@
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "steer_controller_firmware.elf" "steer_controller_firmware.hex"
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "steer_controller_firmware.elf" "steer_controller_firmware.eep" || exit 0
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objdump.exe" -h -S "steer_controller_firmware.elf" > "steer_controller_firmware.lss"
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures "steer_controller_firmware.elf" "steer_controller_firmware.srec"
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-size.exe" "steer_controller_firmware.elf"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "vehicle_controller_firmware.elf" "vehicle_controller_firmware.hex"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "vehicle_controller_firmware.elf" "vehicle_controller_firmware.eep" || exit 0
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objdump.exe" -h -S "vehicle_controller_firmware.elf" > "vehicle_controller_firmware.lss"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures "vehicle_controller_firmware.elf" "vehicle_controller_firmware.srec"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-size.exe" "vehicle_controller_firmware.elf"
 	
 	
 
@@ -167,5 +167,5 @@ $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP) $(LINKER
 clean:
 	-$(RM) $(OBJS_AS_ARGS) $(EXECUTABLES)  
 	-$(RM) $(C_DEPS_AS_ARGS)   
-	rm -rf "steer_controller_firmware.elf" "steer_controller_firmware.a" "steer_controller_firmware.hex" "steer_controller_firmware.lss" "steer_controller_firmware.eep" "steer_controller_firmware.map" "steer_controller_firmware.srec" "steer_controller_firmware.usersignatures"
+	rm -rf "vehicle_controller_firmware.elf" "vehicle_controller_firmware.a" "vehicle_controller_firmware.hex" "vehicle_controller_firmware.lss" "vehicle_controller_firmware.eep" "vehicle_controller_firmware.map" "vehicle_controller_firmware.srec" "vehicle_controller_firmware.usersignatures"
 	

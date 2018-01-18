@@ -18,10 +18,8 @@ ual_ecar_vehicle_controller/firmware/.vs/steer_controller_firmware_6_0/v14/.atsu
 *.elf
 *.lss
 *.srec
-ual_ecar_vehicle_controller/firmware/Release/Makefile
-ual_ecar_vehicle_controller/firmware/Release/steer_controller_firmware.lss
-ual_ecar_vehicle_controller/firmware/Debug/Makefile
-ual_ecar_vehicle_controller/firmware/Debug/Makefile
+ual_ecar_vehicle_controller/firmware/Release
+ual_ecar_vehicle_controller/firmware/Debug
 *.lss
 *.srec
 *.srec
