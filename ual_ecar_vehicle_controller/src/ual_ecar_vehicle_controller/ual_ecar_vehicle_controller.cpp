@@ -118,7 +118,7 @@ bool VehicleControllerLowLevel::iterate() {
 		cmd.payload.throttle_enable = !m_mode_openloop_throttle;
 		cmd.calc_and_update_checksum();
 		WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
-		ROS_INFO("Sending new controller modes: STEER=%s THROTTLE=%s", m_mode_openloop_steer ? "MANUAL" : "AUTO", m_mode_openloop_throttle ? "MANUAL" : "AUTO");
+		ROS_INFO_THROTTLE(1,"Sending new controller modes: STEER=%s THROTTLE=%s", m_mode_openloop_steer ? "MANUAL" : "AUTO", m_mode_openloop_throttle ? "MANUAL" : "AUTO");
 	}
 
 	// New joystick
