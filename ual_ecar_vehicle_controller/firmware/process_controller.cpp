@@ -74,6 +74,7 @@ float	Error_pos[3]	=	{0,0,0};		// Position error
 float	Error_speed[3]	=	{0,0,0};		// Speed error
 float	Antiwindup[2]	=	{0,0};			//
 uint8_t u_steer = 0;
+TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
 // Auxiliary vars:
 bool	lim				=	false;
@@ -146,7 +147,7 @@ void initSensorsForController()
 	}
 
 	// ADC: current sense of steering motor, to ADC0 pin
-#if 0 // TODO: Refactor sampling period vs. send USB period
+//#if 0 // TODO: Refactor sampling period vs. send USB period
 	{
 		TFrameCMD_ADC_start_payload_t cmd;
 		cmd.active_channels[0] = CURRENT_SENSE_ADC_CH;
@@ -154,7 +155,7 @@ void initSensorsForController()
 		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		adc_process_start_cmd(cmd);
 	}
-#endif
+//#endif
 
 	// ABS ENC:
 	// TODO: Refactor sampling period vs. send USB period
@@ -181,7 +182,11 @@ void initSensorsForController()
 
 }
 
-// TODO: "a" constant that converts from diff encoder tick count to abs enc tick count :: 337/(500*100);
+void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control)
+{
+	global_decimate = verbosity_control;
+
+}
 
 void enableSteerController(bool enabled)
 {
@@ -278,17 +283,17 @@ void processSteerController()
 	{
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
 		/*	Protection to detect the limit of mechanism */
-		if (abs(Encoder_dir[0]) >= max_p)
-			lim = true;
-		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim)
-			lim = false;
-		if (lim)
-		{
-			if(Encoder_dir[0] > 0 && U_steer_controller[0] > 0)
-				U_steer_controller[0] = 0;
-			if(Encoder_dir[0] < 0 && U_steer_controller[0] < 0)
-				U_steer_controller[0] = 0;
-		}
+// 		if (abs(Encoder_dir[0]) >= max_p)
+// 			lim = true;
+// 		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim)
+// 			lim = false;
+// 		if (lim)
+// 		{
+// 			if(Encoder_dir[0] > 0 && U_steer_controller[0] > 0)
+// 				U_steer_controller[0] = 0;
+// 			if(Encoder_dir[0] < 0 && U_steer_controller[0] < 0)
+// 				U_steer_controller[0] = 0;
+// 		}
 	}
 	// Automatic mode
 	else
@@ -369,12 +374,13 @@ void processSteerController()
 	TFrame_CONTROL_SIGNAL tx;
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim0 = 0;
-	if (++decim0>10)
+	if (++decim0>global_decimate.decimate_CONTROLSIGNAL)
 	{
 		decim0=0;
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Steer_control_signal = U_steer_controller[0];
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
+		tx.payload.Encoder_signal = Encoder_dir[0];
 		tx.calc_and_update_checksum();
 
 		UART::Write((uint8_t*)&tx,sizeof(tx));

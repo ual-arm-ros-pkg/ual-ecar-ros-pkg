@@ -73,6 +73,7 @@ enum opcode_t {
 	OP_OPENLOOP_STEERING_SETPOINT	= 0x54,
 	OP_OPENLOOP_THROTTLE_SETPOINT	= 0x55,
 	OP_CONTROL_THROTTLE_SETPOINT	= 0x56,
+	OP_VERBOSITY_CONTROL			= 0X57,
 
 	// -----------------------------
 	// Responses uC -> PC
@@ -315,6 +316,7 @@ struct TFrame_CONTROL_SIGNAL_payload_t
 	uint32_t timestamp_ms_tenth;
 	int16_t Steer_control_signal;
 	uint16_t Throttle_control_signal;
+	uint16_t Encoder_signal;
 };
 struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
 {
@@ -476,7 +478,22 @@ struct TFrameCMD_CONTROL_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL
 	}
 };
 
-
+struct TFrameCMD_VERBOSITY_CONTROL_payload_t
+{
+	/** 
+	  */
+	uint8_t decimate_ADC { 10 };
+	uint8_t decimate_ENCABS {10};
+	uint16_t decimate_CPU {10000};
+	uint8_t decimate_CONTROLSIGNAL {10};
+};
+struct TFrameCMD_VERBOSITY_CONTROL : public TBaseFrame<TFrameCMD_VERBOSITY_CONTROL_payload_t>
+{
+	// Defaults:
+	TFrameCMD_VERBOSITY_CONTROL() : TBaseFrame(OP_VERBOSITY_CONTROL)
+	{
+	}
+};
 
 #if !defined(__AVR_MEGA__)
 #	pragma pack(pop)

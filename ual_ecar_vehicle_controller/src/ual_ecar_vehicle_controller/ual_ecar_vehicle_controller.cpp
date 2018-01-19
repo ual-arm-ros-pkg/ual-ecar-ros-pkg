@@ -258,6 +258,7 @@ void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTR
 	msg.timestamp_ms = data.timestamp_ms_tenth;
 	msg.Steer_controller_signal = data.Steer_control_signal;
 	msg.Throttle_controller_signal = data.Throttle_control_signal;
+	msg.Encoder_signal = data.Encoder_signal;
 
 	m_pub_Control_signal.publish(msg);
 }

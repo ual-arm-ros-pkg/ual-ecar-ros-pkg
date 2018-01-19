@@ -37,6 +37,7 @@
 #include "libclaraquino/uart.h"
 #include "libclaraquino/millis_timer.h"
 #include "libclaraquino/adc_internal.h"
+#include <avr/interrupt.h> // sei()
 
 // ADC reading subsystem:
 uint8_t        num_active_ADC_channels = 0;
@@ -94,7 +95,7 @@ void processADCs()
 	}
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim1 = 0;
-	if (++decim1>10)
+	if (++decim1>global_decimate.decimate_ADC)
 	{
 		decim1=0;
 		
@@ -103,5 +104,7 @@ void processADCs()
 
 		UART::Write((uint8_t*)&tx,sizeof(tx));
 	}
+	cli();
 	ADC_last_reading = tx.payload;
+	sei();
 }

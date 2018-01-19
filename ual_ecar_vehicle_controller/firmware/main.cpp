@@ -32,11 +32,6 @@ int main(void)
 	enableThrottleController(false);
 	initSensorsForController();
 
-// 	#warning QUITAR! PRUEBA!
-// 	enableSteerController(false);
-// 	setSteerControllerSetpoint_Steer(100);
-// 	setSteerOpenLoopSetpoint_Steer(-100);
-
 	uint32_t t_ini = millis();
 
 	// ============== Infinite loop ====================
@@ -69,14 +64,13 @@ void processCPUStats(const uint32_t dt)
 	if (dt<s.payload.loop_min_time) s.payload.loop_min_time=dt;
 
 	// Decimate the number of msgs sent to the PC:
-	const uint32_t CPU_STATS_DECIMATE = 10000;
 	static uint32_t decim0 = 0;
-	if (++decim0>CPU_STATS_DECIMATE)
+	if (++decim0>global_decimate.decimate_CPU)
 	{
 		decim0=0;
 
 		// Send to main PC?
-		s.payload.loop_average_time /= CPU_STATS_DECIMATE;
+		s.payload.loop_average_time /= global_decimate.decimate_CPU;
 		s.payload.timestamp_ms_tenths = millis();
 		s.calc_and_update_checksum();
 		s.payload.clear();

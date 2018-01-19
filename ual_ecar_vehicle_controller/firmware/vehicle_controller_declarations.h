@@ -66,8 +66,12 @@ void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_pa
 void setSteerOpenLoopSetpoint_VehVel(float ol_vel_mps);
 void setSteerControllerSetpoint_VehVel(float vel_mps);
 
+// Verbosity Control:
+void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control);
+
 void initSensorsForController();
 
 // Global vars:
 extern TFrame_ENCODERS_readings_payload_t enc_last_reading;
 extern TFrame_ENCODER_ABS_reading_payload_t enc_abs_last_reading;
+extern TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;

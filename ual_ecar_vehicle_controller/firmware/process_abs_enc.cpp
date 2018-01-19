@@ -15,6 +15,7 @@
  */
 
 #include "vehicle_controller2pc-structs.h"
+#include "vehicle_controller_declarations.h"
 #include <libclaraquino/mod_ems22a.h>
 #include <libclaraquino/uart.h>
 #include <libclaraquino/millis_timer.h>
@@ -48,7 +49,7 @@ void processEMS22A()
 	TFrame_ENCODER_ABS_reading tx;
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim0 = 0;
-	if (++decim0>10)
+	if (++decim0>global_decimate.decimate_ENCABS)
 	{
 		decim0=0;
 		
