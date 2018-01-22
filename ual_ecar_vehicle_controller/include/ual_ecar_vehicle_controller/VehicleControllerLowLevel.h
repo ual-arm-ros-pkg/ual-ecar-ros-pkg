@@ -64,6 +64,8 @@ void daqOnNewControlSignalCallback(const TFrame_CONTROL_SIGNAL_payload_t &data);
 bool CMD_GPIO_output(int pin, bool pinState);
 bool CMD_DAC(int dac_index, double dac_value_volts);
 bool CMD_PWM(int pin_index, uint8_t pwm_value);
+bool CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t &Decimation_config);
+
 
 std::string m_serial_port_name;
 int m_serial_port_baudrate;

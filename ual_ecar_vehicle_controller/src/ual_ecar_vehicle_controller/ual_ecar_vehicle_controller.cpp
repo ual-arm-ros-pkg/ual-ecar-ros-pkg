@@ -73,6 +73,28 @@ bool VehicleControllerLowLevel::initialize() {
                   2. System_Identification[Controller & Smith predictor params,
 		Feedforwards...]
 	*/
+	// Decimation params
+	{
+		TFrameCMD_VERBOSITY_CONTROL_payload_t Decimation_config;
+		int decimate_ADC=10, decimate_ENCABS=10, decimate_CPU=10000, decimate_CONTROLSIGNAL = 10;
+
+		m_nh_params.getParam("DECIM_ADC", decimate_ADC);
+		m_nh_params.getParam("DECIM_ENCABS",decimate_ENCABS);
+		m_nh_params.getParam("DECIM_CPU",decimate_CPU);
+		m_nh_params.getParam("DECIM_CONTROLSIGNAL",decimate_CONTROLSIGNAL);
+
+		if (decimate_ADC>0 && decimate_ENCABS>0 && decimate_CPU>0 && decimate_CONTROLSIGNAL>0)
+		{
+			Decimation_config.decimate_ADC = decimate_ADC;
+			Decimation_config.decimate_ENCABS = decimate_ENCABS;
+			Decimation_config.decimate_CPU = decimate_CPU;
+			Decimation_config.decimate_CONTROLSIGNAL = decimate_CONTROLSIGNAL;
+
+			MRPT_LOG_INFO_FMT(" Decimation: ADC=%i  ENCABS=%i  CPU=%i  Control Signal=%i",decimate_ADC, decimate_ENCABS, decimate_CPU, decimate_CONTROLSIGNAL);
+			
+			this->CMD_Decimation_configuration(Decimation_config);
+		}
+	}
 
 	return true;
 }
@@ -258,7 +280,7 @@ void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTR
 	msg.timestamp_ms = data.timestamp_ms_tenth;
 	msg.Steer_controller_signal = data.Steer_control_signal;
 	msg.Throttle_controller_signal = data.Throttle_control_signal;
-	msg.Encoder_signal = data.Encoder_signal;
+	msg.Encoder_controller_signal = data.Encoder_signal;
 
 	m_pub_Control_signal.publish(msg);
 }
@@ -462,4 +484,13 @@ bool VehicleControllerLowLevel::CMD_DAC(int dac_index, double dac_value_volts) {
 
 bool VehicleControllerLowLevel::IsConnected() const {
 	return m_serial.isOpen();
+}
+
+bool VehicleControllerLowLevel::CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t &Decimation_config)
+{
+	TFrameCMD_VERBOSITY_CONTROL cmd;
+	cmd.payload = Decimation_config;
+	cmd.calc_and_update_checksum();
+
+	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
 }

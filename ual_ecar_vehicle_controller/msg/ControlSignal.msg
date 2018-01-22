@@ -5,3 +5,5 @@ uint32  timestamp_ms
 int32   Steer_controller_signal
  # DAC
 float64   Throttle_controller_signal
+# Encoder Signal
+float64   Encoder_controller_signal
