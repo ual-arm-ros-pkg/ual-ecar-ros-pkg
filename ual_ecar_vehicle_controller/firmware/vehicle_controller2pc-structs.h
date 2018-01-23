@@ -316,7 +316,10 @@ struct TFrame_CONTROL_SIGNAL_payload_t
 	uint32_t timestamp_ms_tenth;
 	int16_t Steer_control_signal;
 	uint16_t Throttle_control_signal;
+	int32_t Encoder_incremental;
+	uint32_t Encoder_absoluto;
 	int32_t Encoder_signal;
+	uint16_t ADC_signal;
 };
 struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
 {

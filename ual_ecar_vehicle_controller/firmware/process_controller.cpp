@@ -267,7 +267,7 @@ void processSteerController()
 	if (++adjust>200)
 	{
 		adjust = 0;
-		enc_init = enc_abs_last_reading.enc_pos - enc_last_reading.encoders[0] * 0.0067;
+		enc_init = enc_abs_last_reading.enc_pos - enc_diff * 0.0067;
 	}
 	Encoder_dir[0] = enc_init + enc_diff * 0.0067; /* *0.0067 = *337 / (500 * 100); */
 	// ========= Control algorithm for: (i) steering, (ii) vehicle main motor =====
@@ -334,7 +334,7 @@ void processSteerController()
 			has_sat = true;
 		}
 		
-		// REVISAR
+		#warning Check max current and stop?
 	/*	Anti-windup technique*/ 
 		if(has_sat)
 			Antiwindup[0] = (U_steer_controller[0] - m_v) / ANTIWINDUP_CTE;
@@ -363,8 +363,6 @@ void processSteerController()
 
 	u_steer = abs(U_steer_controller[0]);
 
-	#warning Check max current and stop?
-
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
 
@@ -380,7 +378,11 @@ void processSteerController()
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Steer_control_signal = U_steer_controller[0];
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
+		tx.payload.Encoder_absoluto = enc_abs_last_reading.enc_pos;
+		tx.payload.Encoder_incremental = enc_diff;
 		tx.payload.Encoder_signal = Encoder_dir[0];
+		tx.payload.ADC_signal = ADC_last_reading.adc_data[0];
+
 		tx.calc_and_update_checksum();
 
 		UART::Write((uint8_t*)&tx,sizeof(tx));

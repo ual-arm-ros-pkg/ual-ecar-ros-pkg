@@ -7,3 +7,9 @@ int32   Steer_controller_signal
 float64   Throttle_controller_signal
 # Encoder Signal
 float64   Encoder_controller_signal
+# Encoder Absolute
+int32     Encoder_Absoluto
+# Encoder Incremental
+float64   Encoder_Incremental
+# ADC value
+float64   ADC_value
