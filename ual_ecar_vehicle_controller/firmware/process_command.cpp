@@ -104,7 +104,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		static bool dac_init = false;
 		if (!dac_init)
 		{
-			mod_dac_max5500_init();
+			mod_dac_max5500_init(0x24);
 			dac_init = true;
 		}
 		const uint16_t dac_value = (uint16_t(dac_req.dac_value_HI) << 8) | dac_req.dac_value_LO;

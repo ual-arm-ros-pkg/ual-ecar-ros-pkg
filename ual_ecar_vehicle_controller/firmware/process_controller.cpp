@@ -165,12 +165,11 @@ void initSensorsForController()
 	}
 
 	// Init DAC:
-	mod_dac_max5500_init();
-	PIN_DAC_MAX5500_CS = DAC_OUT_PIN_NO;
+	mod_dac_max5500_init(DAC_OUT_PIN_NO);
 
 	// PWM:
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
-	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );
+	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_8 );  // freq_PWM = F_CPU / (prescaler*510)
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,0x00);
 	// PWM direction:
 	gpio_pin_mode(PWM_DIR, OUTPUT);
