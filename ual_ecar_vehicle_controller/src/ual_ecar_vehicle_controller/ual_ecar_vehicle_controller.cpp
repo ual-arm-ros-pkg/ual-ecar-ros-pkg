@@ -282,8 +282,9 @@ void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTR
 	msg.Throttle_controller_signal = data.Throttle_control_signal;
 	msg.Encoder_Absoluto = data.Encoder_absoluto;
 	msg.Encoder_Incremental = data.Encoder_incremental;
-	msg.ADC_value = data.ADC_signal;
+	msg.Steer_ADC_current_sense = data.Steer_ADC_current_sense* 5.0/1023.0;
 	msg.Encoder_controller_signal = data.Encoder_signal;
+	msg.Throttle_analog_feedback = data.Throttle_analog_feedback* 5.0/1023.0;
 
 	m_pub_Control_signal.publish(msg);
 }

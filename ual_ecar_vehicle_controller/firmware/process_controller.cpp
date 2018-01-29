@@ -55,6 +55,7 @@ const int8_t ENCODER_ABS_DO         = 0x22; //PB2
 const int8_t ENCODER_DIFF_A         = 0x42; // PD2
 const int8_t ENCODER_DIFF_B         = 0x43; // PD3
 const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
+const int8_t THROTTLE_FEEDBACK_ADC_CH= 2;   // ADC #2
 const int8_t PWM_DIR                = 0x44; // CW/CCW
 const int8_t RELAY_FRWD_REV         = 0x11;
 #define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
@@ -147,15 +148,14 @@ void initSensorsForController()
 	}
 
 	// ADC: current sense of steering motor, to ADC0 pin
-//#if 0 // TODO: Refactor sampling period vs. send USB period
 	{
 		TFrameCMD_ADC_start_payload_t cmd;
 		cmd.active_channels[0] = CURRENT_SENSE_ADC_CH;
+		cmd.active_channels[1] = THROTTLE_FEEDBACK_ADC_CH;
 		cmd.use_internal_refvolt = false;
 		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		adc_process_start_cmd(cmd);
 	}
-//#endif
 
 	// ABS ENC:
 	// TODO: Refactor sampling period vs. send USB period
@@ -377,10 +377,11 @@ void processSteerController()
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Steer_control_signal = U_steer_controller[0];
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
+		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
 		tx.payload.Encoder_absoluto = enc_abs_last_reading.enc_pos;
 		tx.payload.Encoder_incremental = enc_diff;
 		tx.payload.Encoder_signal = Encoder_dir[0];
-		tx.payload.ADC_signal = ADC_last_reading.adc_data[0];
+		tx.payload.Steer_ADC_current_sense = ADC_last_reading.adc_data[0];
 
 		tx.calc_and_update_checksum();
 

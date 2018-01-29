@@ -11,5 +11,7 @@ float64   Encoder_controller_signal
 int32     Encoder_Absoluto
 # Encoder Incremental
 float64   Encoder_Incremental
-# ADC value
-float64   ADC_value
+# ADC value for steer motor current sensor (Volts)
+float64   Steer_ADC_current_sense 
+# ADC value for pedal feedback (Volts)
+float64   Throttle_analog_feedback 
