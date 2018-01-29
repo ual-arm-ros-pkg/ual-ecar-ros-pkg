@@ -396,7 +396,7 @@ void processThrottleController()
 
 	CONTROL_last_millis_THROTTLE = tnow;
 
-		// (ii) CONTROL FOR MAIN VEHICLE MOTOR
+	// (ii) CONTROL FOR MAIN VEHICLE MOTOR
 	// -------------------------------------------------------------
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
@@ -421,7 +421,7 @@ void processThrottleController()
 	}
 
 	// Output value:
-	uint16_t veh_speed_dac = abs(U_throttle_controller[0]);
+	uint16_t veh_speed_dac = abs(U_throttle_controller[0]* 4095/5.0);
 	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
 
 	/* Values actualization*/
