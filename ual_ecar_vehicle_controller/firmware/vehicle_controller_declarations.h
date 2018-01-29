@@ -56,15 +56,15 @@ void send_simple_opcode_frame(const uint8_t op);
 void processSteerController();
 void enableSteerController(bool enabled);
 void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &steer_controller_params);
-void setSteerOpenLoopSetpoint_Steer(int16_t speed);
-void setSteerControllerSetpoint_Steer(int16_t pos);
+void setOpenLoopSetpoint_Steer(int16_t speed);
+void setControllerSetpoint_Steer(int16_t pos);
 
 // Throttle Controller Function:
 void processThrottleController();
 void enableThrottleController(bool enabled);
 void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &throttle_controller_params);
-void setSteerOpenLoopSetpoint_VehVel(float ol_vel_mps);
-void setSteerControllerSetpoint_VehVel(float vel_mps);
+void setOpenLoopSetpoint_VehVel(float ol_vel_mps);
+void setControllerSetpoint_VehVel(float vel_mps);
 
 // Verbosity Control:
 void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control);

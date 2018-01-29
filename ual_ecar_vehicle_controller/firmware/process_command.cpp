@@ -268,7 +268,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		
 		TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t control_steer_setpoint;
 		memcpy(&control_steer_setpoint,data, sizeof(control_steer_setpoint));
-		setSteerControllerSetpoint_Steer(control_steer_setpoint.SETPOINT_STEER_POS);
+		setControllerSetpoint_Steer(control_steer_setpoint.SETPOINT_STEER_POS);
 	}
 	break;
 	
@@ -278,7 +278,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		
 		TFrameCMD_OPENLOOP_STEERING_SETPOINT_payload_t ol_steer_setpoint;
 		memcpy(&ol_steer_setpoint,data, sizeof(ol_steer_setpoint));
-		setSteerOpenLoopSetpoint_Steer(ol_steer_setpoint.SETPOINT_OPENLOOP_STEER_SPEED);
+		setOpenLoopSetpoint_Steer(ol_steer_setpoint.SETPOINT_OPENLOOP_STEER_SPEED);
 	}
 	break;
 	
@@ -288,7 +288,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		
 		TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t ol_throttle_setpoint;
 		memcpy(&ol_throttle_setpoint,data, sizeof(ol_throttle_setpoint));
-		setSteerOpenLoopSetpoint_VehVel(ol_throttle_setpoint.SETPOINT_OPENLOOP_THROTTLE);
+		setOpenLoopSetpoint_VehVel(ol_throttle_setpoint.SETPOINT_OPENLOOP_THROTTLE);
 	}
 	break;
 	
@@ -298,7 +298,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		
 		TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t control_throttle_setpoint;
 		memcpy(&control_throttle_setpoint,data, sizeof(control_throttle_setpoint));
-		setSteerControllerSetpoint_VehVel(control_throttle_setpoint.SETPOINT_CONTROL_THROTTLE_SPEED);
+		setControllerSetpoint_VehVel(control_throttle_setpoint.SETPOINT_CONTROL_THROTTLE_SPEED);
 	}
 	break;
 

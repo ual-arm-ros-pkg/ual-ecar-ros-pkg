@@ -63,6 +63,9 @@ const int8_t RELAY_FRWD_REV         = 0x11;
 const int8_t PWM_PIN_NO             = 0x46;
 const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
 // ===========================================================
+
+const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (both, openloop & controller, vehvel & steer)
+
 // Control vars:
 float	Ys[4]			=	{0,0,0,0};		// Smith predictor output
 float	T				=	0.01f;			// Sample time
@@ -224,27 +227,25 @@ void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_pa
 	U_THROTTLE_DECOUPLING = p.U_THROTTLE_DECOUPLING;
 }
 
-void setSteerOpenLoopSetpoint_Steer(int16_t speed)
+void setOpenLoopSetpoint_Steer(int16_t speed)
 {
 	SETPOINT_OPENLOOP_STEER_SPEED = speed;
 	SETPOINT_OPENLOOP_STEER_TIMESTAMP = millis();
 }
-void setSteerControllerSetpoint_Steer(int16_t pos)
+void setControllerSetpoint_Steer(int16_t pos)
 {
 	SETPOINT_STEER_POS=pos;
 	SETPOINT_STEER_TIMESTAMP = millis();
 }
-void setSteerOpenLoopSetpoint_VehVel(float ol_vel_mps)
+void setOpenLoopSetpoint_VehVel(float ol_vel_mps)
 {
 	SETPOINT_OPENLOOP_THROTTLE = ol_vel_mps;
 	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = millis();
-	#warning watchdog
 }
-void setSteerControllerSetpoint_VehVel(float vel_mps)
+void setControllerSetpoint_VehVel(float vel_mps)
 {
 	SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
 	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
-		#warning watchdog
 }
 
 // Stopwatch: 0.35 ms
@@ -280,6 +281,9 @@ void processSteerController()
 	// Manual mode
 	if (!STEERCONTROL_active)
 	{
+		if (tnow>(SETPOINT_OPENLOOP_STEER_TIMESTAMP+ WATCHDOG_TIMEOUT_msth))
+			SETPOINT_OPENLOOP_STEER_SPEED = 0;
+
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
 		/*	Protection to detect the limit of mechanism */
 // 		if (abs(Encoder_dir[0]) >= max_p)
@@ -300,6 +304,8 @@ void processSteerController()
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
 		+-------------------+ */
+		if (tnow>(SETPOINT_STEER_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
+			SETPOINT_STEER_POS = 0;
 	/*	Position reference reading */
 		Ref_pos[0]	= SETPOINT_STEER_POS;
 		/*	Correction of the wheels' direction */
@@ -404,9 +410,17 @@ void processThrottleController()
 		+-----------------------+
 	*/
 	if (!THROTTLECONTROL_active)
+	{
+		if (tnow>(SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
+			SETPOINT_OPENLOOP_THROTTLE = 0;
+
 		pedal = SETPOINT_OPENLOOP_THROTTLE;
+	}
 	else
 	{
+		if (tnow>(SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
+			SETPOINT_CONTROL_THROTTLE_SPEED = 0;
+
 		// Throttle-by-wire controller here!!
 		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
 	}
