@@ -77,16 +77,14 @@ float	Ref_speed[2]	=	{0,0};			// Speed reference
 float	Error_pos[3]	=	{0,0,0};		// Position error
 float	Error_speed[3]	=	{0,0,0};		// Speed error
 float	Antiwindup[2]	=	{0,0};			//
-uint8_t u_steer = 0;
 TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
 // Auxiliary vars:
-bool	lim				=	false;
-float	max_p			=	500;
+bool	steer_mech_limit_reached = false;
+float	steer_mech_limit_pos     = 500; // In units of incr encoder
 const	float	sat_ref	=	250/T;
-float	enc_init		=	.0f;
-static	uint8_t adjust	=	0;
-float	pedal			=	.0f; /* [0,1] */
+float	enc_offset_correction		=	.0f;
+uint8_t adjust	=	0;
 const float ANTIWINDUP_CTE = sqrt(0.0283);
 
 uint32_t  CONTROL_last_millis_STEER = 0;
@@ -172,7 +170,7 @@ void initSensorsForController()
 
 	// PWM:
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
-	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_8 );  // freq_PWM = F_CPU / (prescaler*510)
+	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );  // freq_PWM = F_CPU / (prescaler*510)
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,0x00);
 	// PWM direction:
 	gpio_pin_mode(PWM_DIR, OUTPUT);
@@ -248,6 +246,7 @@ void setControllerSetpoint_VehVel(float vel_mps)
 	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
 }
 
+// CONTROL FOR STEERING WHEEL
 // Stopwatch: 0.35 ms
 void processSteerController()
 {
@@ -259,44 +258,39 @@ void processSteerController()
 	// ========= Encoders calibration algorithm ===================================
 	// Incremental encoder reading
 	cli();
-	int32_t enc_diff = enc_last_reading.encoders[0];
+	const int32_t enc_diff = enc_last_reading.encoders[0];
 	sei();
-	// Absolute encoder reading
-	// int16_t enc_abs = enc_abs_last_reading.enc_pos;
-	// Calibration
+
+	// Read abs encoder:
+	cli();
+	uint16_t abs_enc_pos = enc_abs_last_reading.enc_pos; // Abs encoder (10 bit resolution)
+	sei();
+
+	// Calibration with absolute encoder:
+	// TODO: Explain constant!!
+	const float K_enc_diff = 337.0f / (500.0f * 100.0f);
+
 	if (++adjust>200)
 	{
 		adjust = 0;
-		enc_init = enc_abs_last_reading.enc_pos - enc_diff * 0.0067;
+		enc_offset_correction = abs_enc_pos - enc_diff * K_enc_diff;
 	}
-	Encoder_dir[0] = enc_init + enc_diff * 0.0067; /* *0.0067 = *337 / (500 * 100); */
-	// ========= Control algorithm for: (i) steering, (ii) vehicle main motor =====
+	Encoder_dir[0] = enc_offset_correction + enc_diff * K_enc_diff;
 
-	// (i) CONTROL FOR STEERING WHEEL
-	// -------------------------------------------------------------
+	// Control:
 	/*	Encoder reading and Smith Predictor implementation*/
 	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
 	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_steer_controller[1+3] + P_SMITH_SPEED[1] * U_steer_controller[2+3])/P_SMITH_SPEED[2];
 
-	// Manual mode
 	if (!STEERCONTROL_active)
 	{
+		// open-loop mode:
+
+		// Watchdog timer:
 		if (tnow>(SETPOINT_OPENLOOP_STEER_TIMESTAMP+ WATCHDOG_TIMEOUT_msth))
 			SETPOINT_OPENLOOP_STEER_SPEED = 0;
 
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
-		/*	Protection to detect the limit of mechanism */
-// 		if (abs(Encoder_dir[0]) >= max_p)
-// 			lim = true;
-// 		if (abs(Encoder_dir[0]) <= (max_p - 5) && lim)
-// 			lim = false;
-// 		if (lim)
-// 		{
-// 			if(Encoder_dir[0] > 0 && U_steer_controller[0] > 0)
-// 				U_steer_controller[0] = 0;
-// 			if(Encoder_dir[0] < 0 && U_steer_controller[0] < 0)
-// 				U_steer_controller[0] = 0;
-// 		}
 	}
 	// Automatic mode
 	else
@@ -349,6 +343,21 @@ void processSteerController()
 		U_steer_controller[0] = round(0.5 * (2 * U_steer_controller[0] + T * (Antiwindup[0] + Antiwindup[1])));
 	} // end automatic control
 
+	/* for both, open & closed loop: protection against steering mechanical limits: */
+	if (abs(Encoder_dir[0]) >= steer_mech_limit_pos)
+		steer_mech_limit_reached = true;
+	else if (abs(Encoder_dir[0]) <= (steer_mech_limit_pos - 5) && steer_mech_limit_reached)
+		steer_mech_limit_reached = false;
+
+	// Disallow going further outwards:
+	if (steer_mech_limit_reached)
+	{
+		if(Encoder_dir[0] > 0 && U_steer_controller[0] > 0)
+	 		U_steer_controller[0] = 0;
+		if(Encoder_dir[0] < 0 && U_steer_controller[0] < 0)
+	 		U_steer_controller[0] = 0;
+	}
+
 	/* Values actualization*/
 	do_shift(Ref_pos);
 	do_shift(Antiwindup);
@@ -360,19 +369,14 @@ void processSteerController()
 	do_shift(U_steer_controller);
 
 	/*	Direction*/
-	bool u_steer_dir = false;
-	if (U_steer_controller[0] < 0)
-		u_steer_dir = false;
-	else
-		u_steer_dir = true;
-
-	u_steer = abs(U_steer_controller[0]);
+	const bool u_steer_is_positive = (U_steer_controller[0] >= 0);
+	const uint8_t u_steer = abs(U_steer_controller[0]);
 
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
 
 	// PWM direction:
-	gpio_pin_write(PWM_DIR, u_steer_dir);
+	gpio_pin_write(PWM_DIR, u_steer_is_positive);
 
 	TFrame_CONTROL_SIGNAL tx;
 	// Decimate the number of msgs sent to the PC:
@@ -384,7 +388,7 @@ void processSteerController()
 		tx.payload.Steer_control_signal = U_steer_controller[0];
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
 		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
-		tx.payload.Encoder_absoluto = enc_abs_last_reading.enc_pos;
+		tx.payload.Encoder_absoluto = abs_enc_pos;
 		tx.payload.Encoder_incremental = enc_diff;
 		tx.payload.Encoder_signal = Encoder_dir[0];
 		tx.payload.Steer_ADC_current_sense = ADC_last_reading.adc_data[0];
@@ -395,6 +399,7 @@ void processSteerController()
 	}
 }
 
+// CONTROL FOR MAIN VEHICLE MOTOR
 void processThrottleController()
 {
 	const uint32_t tnow = millis();
@@ -403,12 +408,11 @@ void processThrottleController()
 
 	CONTROL_last_millis_THROTTLE = tnow;
 
-	// (ii) CONTROL FOR MAIN VEHICLE MOTOR
-	// -------------------------------------------------------------
 	/*	+-----------------------+
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
+	float pedal = .0f; /* [0,1] */
 	if (!THROTTLECONTROL_active)
 	{
 		if (tnow>(SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
@@ -421,22 +425,17 @@ void processThrottleController()
 		if (tnow>(SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
 			SETPOINT_CONTROL_THROTTLE_SPEED = 0;
 
-		// Throttle-by-wire controller here!!
+		// TODO: Throttle-by-wire controller here!!
 		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
 	}
+
 	// Output direction:
-	if (pedal<0){
-		U_throttle_controller[0] = - 1.0 + pedal * 4; /* 1.0 : Offset */
-		gpio_pin_write(RELAY_FRWD_REV,true);
-	}
-	else
-	{
-		U_throttle_controller[0] = 1.0 + pedal * 4; /* 1.0 : Offset */
-		gpio_pin_write(RELAY_FRWD_REV,false);
-	}
+	// Relay output = HIGH if going BACKWARDS.
+	U_throttle_controller[0] = (pedal<0 ? -1 : 1) + pedal * 4; /* 1.0 : Offset */
+	gpio_pin_write(RELAY_FRWD_REV,(pedal<0));
 
 	// Output value:
-	uint16_t veh_speed_dac = abs(U_throttle_controller[0]* 4095/5.0);
+	uint16_t veh_speed_dac = abs(U_throttle_controller[0]* 4095/5.0); // 12bit DAC constant
 	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
 
 	/* Values actualization*/
