@@ -20,7 +20,7 @@ Examples of use & demos:
 
 ## How to program the uC via Atmel JTAG ICE programmer from Ubuntu
 
-	avrdude -p m164p -c jtag2 -U flash:w:"ual_ecar_vehicle_controller/firmware/Release/vehicle_controller_firmware.hex":i
-	
-JL: Please, check if the "-c XXX" is another one, depending on the specific programmer model. 
-See this: http://www.ladyada.net/learn/avr/avrdude.html
+	sudo avrdude -p m164p -c atmelice -U flash:w:"ual_ecar_vehicle_controller/firmware/Release/vehicle_controller_firmware.hex":i
+
+To use another programmer, see list with `avrdude -c ?`
+
