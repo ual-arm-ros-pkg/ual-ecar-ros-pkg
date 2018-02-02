@@ -490,6 +490,7 @@ struct TFrameCMD_VERBOSITY_CONTROL_payload_t
 	uint8_t decimate_ENCABS {10};
 	uint16_t decimate_CPU {10000};
 	uint8_t decimate_CONTROLSIGNAL {10};
+	uint8_t decimate_ENCINC {10};
 };
 struct TFrameCMD_VERBOSITY_CONTROL : public TBaseFrame<TFrameCMD_VERBOSITY_CONTROL_payload_t>
 {

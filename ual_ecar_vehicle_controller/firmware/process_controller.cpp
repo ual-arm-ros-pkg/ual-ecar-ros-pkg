@@ -81,7 +81,7 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
 // Auxiliary vars:
 bool	steer_mech_limit_reached = false;
-float	steer_mech_limit_pos     = 500; // In units of incr encoder
+float	steer_mech_limit_pos     = 550; // In units of incr encoder
 const	float	sat_ref	=	250/T;
 float	enc_offset_correction		=	.0f;
 uint8_t adjust	=	0;
@@ -263,7 +263,7 @@ void processSteerController()
 
 	// Read abs encoder:
 	cli();
-	uint16_t abs_enc_pos = enc_abs_last_reading.enc_pos; // Abs encoder (10 bit resolution)
+	uint16_t abs_enc_pos = enc_abs_last_reading.enc_pos - 130; // Abs encoder (10 bit resolution) Offset= 130 ticks
 	sei();
 
 	// Calibration with absolute encoder:
@@ -346,7 +346,7 @@ void processSteerController()
 	/* for both, open & closed loop: protection against steering mechanical limits: */
 	if (abs(Encoder_dir[0]) >= steer_mech_limit_pos)
 		steer_mech_limit_reached = true;
-	else if (abs(Encoder_dir[0]) <= (steer_mech_limit_pos - 5) && steer_mech_limit_reached)
+	else if (abs(Encoder_dir[0]) <= (steer_mech_limit_pos - 50) && steer_mech_limit_reached)
 		steer_mech_limit_reached = false;
 
 	// Disallow going further outwards:

@@ -16,6 +16,7 @@
 
 #include "vehicle_controller2pc-structs.h"
 #include <libclaraquino/mod_quad_encoder.h>
+#include "vehicle_controller_declarations.h"
 
 #include "libclaraquino/claraquino_config.h"
 #include "libclaraquino/gpio.h"
@@ -70,7 +71,7 @@ void processEncoders()
 
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim = 0;
-	if (++decim>10)
+	if (++decim>global_decimate.decimate_ENCINC)
 	{
 		decim=0;
 		tx.calc_and_update_checksum();
