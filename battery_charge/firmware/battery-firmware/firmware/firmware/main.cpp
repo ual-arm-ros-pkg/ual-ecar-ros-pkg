@@ -5,26 +5,32 @@
  * Author : Francisco José Mañas
  */ 
 
-#include <Arduino.h>
-#include <avr/io.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <config.h>
-#include <batterycharge_declarations.h>
+#include "libclaraquino/uart.h"
+#include "libclaraquino/leds.h"
+#include "libclaraquino/delays.h"
+#include "libclaraquino/millis_timer.h"
+#include "batterycharge_declarations.h"
 
+#include <avr/interrupt.h> // sei()
 
-void setup()
+int main(void)
 {
-	Serial.begin(115200);
+	// ================== Setup hardware ==================
+	UART::Configure(500000);
+	millis_init();
+
+	// Enable interrupts:
+	sei();
+
+	flash_led(3,100);
+
+	//TODO: Init all sensors, etc. 
+
+	// ============== Infinite loop ====================
+	while(1)
+	{
+		// ---- Run scheduled tasks ----------
+		processIncommingPkts();
+		processBattery();
+	}
 }
-
-void loop()
-{
-	processIncommingPkts();
-
-	processBattery();
-
-	// Handle possible timeouts of previous commands:
-	process_timeouts();
-}
-
