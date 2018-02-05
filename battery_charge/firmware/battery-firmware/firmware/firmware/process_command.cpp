@@ -5,7 +5,9 @@
  *  Author: Francisco José Mañas
  */
 
-#include <batterycharge_declarations.h>
+#include "batterycharge_declarations.h"
+#include <libclaraquino/gpio.h>
+#include <string.h>
 
 struct TimeoutData
 {
@@ -27,7 +29,7 @@ TimeoutData PendingTimeouts;
 void send_simple_opcode_frame(const uint8_t op)
 {
 	const uint8_t rx[] = { FRAME_START_FLAG, op, 0x00, 0x00, FRAME_END_FLAG };
-	Serial.write(rx,sizeof(rx));
+	//Serial.write(rx,sizeof(rx));
 }
 
 void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*data)
@@ -49,8 +51,8 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 
 			const uint8_t pin_no = data[0];
 			const uint8_t pin_val = data[1];
-			pinMode(pin_no, OUTPUT);
-			digitalWrite(pin_no, pin_val);
+			gpio_pin_mode(pin_no, OUTPUT);
+			gpio_pin_write(pin_no, pin_val);
 
 			// send answer back:
 			send_simple_opcode_frame(RESP_SET_OPTO);

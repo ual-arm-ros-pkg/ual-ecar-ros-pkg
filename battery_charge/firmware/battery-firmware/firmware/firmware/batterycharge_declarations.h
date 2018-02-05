@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <batterycharge2pc-structs.h>
+#include "batterycharge2pc-structs.h"
 #include <stdint.h>
 
 // Function prototypes:
