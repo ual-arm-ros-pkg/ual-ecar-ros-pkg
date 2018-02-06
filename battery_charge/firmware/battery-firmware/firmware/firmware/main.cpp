@@ -22,9 +22,13 @@ int main(void)
 	// Enable interrupts:
 	sei();
 
-	flash_led(3,100);
+/*	flash_led(3,100);*/
 
-	//TODO: Init all sensors, etc. 
+	process_batery_init();
+	
+	
+	
+	
 
 	// ============== Infinite loop ====================
 	while(1)

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #if !defined(__AVR_MEGA__)
 #	pragma pack(push, 1) // exact fit - no padding
