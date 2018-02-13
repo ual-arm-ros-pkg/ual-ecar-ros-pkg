@@ -81,7 +81,9 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
 // Auxiliary vars:
 bool	steer_mech_limit_reached = false;
-float	steer_mech_limit_pos     = 550; // In units of incr encoder
+#warning Cambiar limite
+float	steer_mech_limit_pos     = 1400; // In units of incr encoder
+uint16_t abs_enc_pos	= 0;
 const	float	sat_ref	=	250/T;
 float	enc_offset_correction		=	.0f;
 uint8_t adjust	=	0;
@@ -263,9 +265,14 @@ void processSteerController()
 
 	// Read abs encoder:
 	cli();
-	uint16_t abs_enc_pos = enc_abs_last_reading.enc_pos - 130; // Abs encoder (10 bit resolution) Offset= 130 ticks
+	uint16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - 130; // Abs encoder (10 bit resolution) Offset= 130 ticks
 	sei();
-
+	if (abs(abs_enc_pos_new - abs_enc_pos)>1050)
+		abs_enc_pos = abs_enc_pos;
+	else
+		abs_enc_pos = abs_enc_pos_new;
+	
+	
 	// Calibration with absolute encoder:
 	// TODO: Explain constant!!
 	const float K_enc_diff = 337.0f / (500.0f * 100.0f);
