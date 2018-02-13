@@ -431,7 +431,8 @@ void processThrottleController()
 
 	// Output direction:
 	// Relay output = HIGH if going BACKWARDS.
-	U_throttle_controller[0] = (pedal<0 ? -1 : 1) + pedal * 4; /* 1.0 : Offset */
+	/*U_throttle_controller[0] = (pedal<0 ? -1 : 1) + pedal * 4; / * 1.0 : Offset * /*/
+	U_throttle_controller[0] = pedal * 5;
 	gpio_pin_write(RELAY_FRWD_REV,(pedal<0));
 
 	// Output value:
