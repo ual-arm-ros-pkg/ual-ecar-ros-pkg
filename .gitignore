@@ -30,4 +30,5 @@ ual_ecar_vehicle_controller/firmware/Release/Makefile
 ual_ecar_vehicle_controller/firmware/Debug/Makefile
 build
 CMakeLists.txt.user
+ual_ecar_config/launch/rawlog-grabber-novatel.ini
 
