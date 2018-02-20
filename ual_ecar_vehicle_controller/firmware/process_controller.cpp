@@ -58,6 +58,7 @@ const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
 const int8_t THROTTLE_FEEDBACK_ADC_CH= 2;   // ADC #2
 const int8_t PWM_DIR                = 0x44; // CW/CCW
 const int8_t RELAY_FRWD_REV         = 0x11;
+const int8_t RELAY_PEDAL_INTERLOCK  = 0x12;
 #define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
 #define PWM_OUT_PIN                 PWM_PIN_OCnB
 const int8_t PWM_PIN_NO             = 0x46;
@@ -419,7 +420,7 @@ void processThrottleController()
 		|	THROTTLE-BY-WIRE	|
 		+-----------------------+
 	*/
-	float pedal = .0f; /* [0,1] */
+	float pedal = .0f; /* [-1,1] */
 	if (!THROTTLECONTROL_active)
 	{
 		if (tnow>(SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
@@ -436,11 +437,17 @@ void processThrottleController()
 		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
 	}
 
+	// Ensure normalized speed is in range [-1,1]
+	if (pedal>1) pedal=1;
+	else if (pedal<-1) pedal=-1;
+
 	// Output direction:
 	// Relay output = HIGH if going BACKWARDS.
-	/*U_throttle_controller[0] = (pedal<0 ? -1 : 1) + pedal * 4; / * 1.0 : Offset * /*/
 	U_throttle_controller[0] = pedal * 5;
 	gpio_pin_write(RELAY_FRWD_REV,(pedal<0));
+
+	// Pedal enable relay (to Curtis controller J1-8 pin)
+	gpio_pin_write(RELAY_PEDAL_INTERLOCK,abs(pedal)>0.1f);
 
 	// Output value:
 	uint16_t veh_speed_dac = abs(U_throttle_controller[0]* 4095/5.0); // 12bit DAC constant
