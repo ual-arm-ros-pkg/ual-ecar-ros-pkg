@@ -1,6 +1,8 @@
 <launch>
   <node name="ual_ecar_vehicle_controller" pkg="ual_ecar_vehicle_controller" type="ual_ecar_vehicle_controller_node" output="screen">
   </node>
+  <node name="phidgets_high_speed_encoder" pkg="phidgets_high_speed_encoder" type="phidgets_high_speed_encoder" output="screen">
+  </node>
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
   </node>
 

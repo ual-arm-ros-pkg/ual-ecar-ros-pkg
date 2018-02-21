@@ -88,9 +88,9 @@ bool JoystickDriving::iterate()
 	{
 		//  Resolution increase
 		if (buttons[4])
-			eje_x[0] = z * 0.5;
+			eje_x[0] = z * 0.25;
 		else
-			eje_x[0] = z * 1.0;
+			eje_x[0] = z * 0.5;
 		// Saturation
 		if (eje_x[0] > 1)
 			eje_x[0] = 1;
