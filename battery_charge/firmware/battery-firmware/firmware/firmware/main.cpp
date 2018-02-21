@@ -2,7 +2,7 @@
  * firmware.cpp
  *
  * Created: 04/10/2017 10:46:02
- * Author : Francisco José Mañas
+ * Author : Francisco Jose Manas
  */ 
 
 #include "libclaraquino/uart.h"

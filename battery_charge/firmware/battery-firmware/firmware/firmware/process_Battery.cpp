@@ -2,12 +2,16 @@
  * process_Battery.cpp
  *
  * Created: 05/10/2017 9:25:36
- *  Author: Francisco José Mañas
+ *  Author: Francisco Jose Manas
  */ 
 #include "libclaraquino/gpio.h"
 #include "libclaraquino/modules/adc_ad7606/ad7606.h"
 #include "libclaraquino/uart.h"
+#include "batterycharge_declarations.h"
 #include <stdio.h>
+
+uint32_t	PC_last_millis = 0;
+uint16_t	PC_sampling_period_ms_tenths = 5000;
 
  // TODO: Define an xxxx_init();
 void process_batery_init()
@@ -28,28 +32,24 @@ void process_batery_init()
 	cfg.PIN_RESET	= 0x26;
 	
 	mod_ad7606_init(cfg);
-	
-	//----
-	for (;;)
-	{
-		mod_ad7606_convst();
-		mod_ad7606_wait_busy();
-		int16_t buf[8];
-		mod_ad7606_read_all(buf);
-	
-		char str[100];
-		sprintf(str,"V0=%i V1=%i\r\n", buf[0],buf[1]);
-		UART::WriteString(str);
-	}
 }
 
 void processBattery()
 {
+	const uint32_t tnow = millis();
+	if (tnow-PC_last_millis < PC_sampling_period_ms_tenths)
+	return;
+
+	PC_last_millis = tnow;
 	
+	TFrame_BATTERY_readings tx;
+	//----
+	mod_ad7606_convst();
+	mod_ad7606_wait_busy();
+	int16_t buf[8];
+	mod_ad7606_read_all(buf);
+	
+	char str[100];
+	sprintf(str,"V0=%i V1=%i\r\n", buf[0],buf[1]);
+	UART::WriteString(str);
 }
- // Call AD7606_init()
-
- // Loop
-
-
-
