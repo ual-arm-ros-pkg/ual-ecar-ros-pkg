@@ -265,14 +265,15 @@ void processSteerController()
 	sei();
 
 	// Read abs encoder:
-	cli();
-	uint16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - 130; // Abs encoder (10 bit resolution) Offset= 130 ticks
-	sei();
-	if (abs(abs_enc_pos_new - abs_enc_pos)>1050)
-		abs_enc_pos = abs_enc_pos;
-	else
-		abs_enc_pos = abs_enc_pos_new;
-	
+	{
+		cli();
+		const uint16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - 130; // Abs encoder (10 bit resolution) Offset= 130 ticks
+		sei();
+
+		// Filter out clearly erroneous readings from the abs encoder: 
+		if (abs(abs_enc_pos_new - abs_enc_pos)<1050)
+			abs_enc_pos = abs_enc_pos_new;
+	}
 	
 	// Calibration with absolute encoder:
 	// TODO: Explain constant!!
