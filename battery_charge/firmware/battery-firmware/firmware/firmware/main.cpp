@@ -2,7 +2,7 @@
  * firmware.cpp
  *
  * Created: 04/10/2017 10:46:02
- * Author : Francisco José Mañas
+ * Author : Francisco Jose Manas
  */ 
 
 #include "libclaraquino/uart.h"
@@ -25,10 +25,6 @@ int main(void)
 /*	flash_led(3,100);*/
 
 	process_batery_init();
-	
-	
-	
-	
 
 	// ============== Infinite loop ====================
 	while(1)
