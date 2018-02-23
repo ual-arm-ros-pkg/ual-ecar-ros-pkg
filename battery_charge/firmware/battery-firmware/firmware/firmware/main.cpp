@@ -25,10 +25,6 @@ int main(void)
 /*	flash_led(3,100);*/
 
 	process_batery_init();
-	
-	
-	
-	
 
 	// ============== Infinite loop ====================
 	while(1)

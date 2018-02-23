@@ -137,7 +137,7 @@ struct TFrameCMD_OPTO_read : public TBaseFrame<TFrameCMD_OPTO_read_payload_t>
 
 struct TFrameCMD_BATTERY_start_payload_t
 {
-	static const uint8_t NUM_BATTERIES = 6;
+	static const uint8_t NUM_BATTERIES = 8;
 
 	uint16_t sampling_period_ms;
 
@@ -169,10 +169,10 @@ struct TFrameCMD_BATTERY_stop : public TBaseFrame<TFrameCMD_BATTERY_stop_payload
 
 struct TFrame_BATTERY_readings_payload_t
 {
-	uint32_t timestamp_ms;
-	double  bat_volts[6]; /*Float64[]*/
+	uint32_t timestamp_ms_tenths;
+	double  bat_volts[8]; /*Float64[]*/
 	double  bat_current;  /*Float64*/
-	uint32_t period_ms;
+	uint32_t period_ms_tenths;
 };
 struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_payload_t>
 {
