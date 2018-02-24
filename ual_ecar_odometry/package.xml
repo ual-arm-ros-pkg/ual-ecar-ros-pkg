@@ -13,11 +13,12 @@
   <build_depend>nav_msgs</build_depend>
 	<build_depend>message_generation</build_depend>
   <build_depend>phidgets_high_speed_encoder</build_depend>
+  <build_depend>mrpt_bridge</build_depend>
 
   <run_depend>roscpp</run_depend>
   <run_depend>nav_msgs</run_depend>
-  <run_depend>arduino_daq</run_depend>
   <run_depend>phidgets_high_speed_encoder</run_depend>
+  <run_depend>mrpt_bridge</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

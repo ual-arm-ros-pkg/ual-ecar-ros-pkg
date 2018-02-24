@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
 	tf
 	phidgets_high_speed_encoder
+	mrpt_bridge
 )
 
 # System dependencies are found with CMake's conventions
@@ -32,7 +33,7 @@ find_package(MRPT REQUIRED obs)
 catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-CATKIN_DEPENDS nav_msgs
+CATKIN_DEPENDS nav_msgs mrpt_bridge
 #  DEPENDS system_lib
 )
 

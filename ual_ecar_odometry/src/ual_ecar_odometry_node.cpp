@@ -11,6 +11,7 @@
 #include <ros/console.h>
 #include <tf/transform_broadcaster.h>
 #include <phidgets_high_speed_encoder/EncoderDecimatedSpeed.h>
+#include <mrpt_bridge/time.h>  // ros2mrpt bridge
 #include <array>
 #include <cmath>
 #include <string>
@@ -221,7 +222,7 @@ class OdometryNode
 
 				// publish odometry as ROS tf: odom -> base_link
 				{
-					odom_trans.header.stamp = current_time;
+					odom_trans.header.stamp = new_enc_pos_.timestamp;
 					odom_trans.transform.translation.x = global_odometry_.x;
 					odom_trans.transform.translation.y = global_odometry_.y;
 					odom_trans.transform.translation.z = 0.0;
@@ -239,7 +240,8 @@ class OdometryNode
 				if (out_rawlog_obs_.is_open())
 				{
 					auto odom = mrpt::obs::CObservationOdometry::Create();
-					odom->timestamp = mrpt::system::now();
+					mrpt_bridge::convert(
+						new_enc_pos_.timestamp, odom->timestamp);
 					odom->sensorLabel = "ODOMETRY";
 					odom->odometry = mrpt::poses::CPose2D(global_odometry_);
 					odom->hasVelocities = true;
@@ -262,7 +264,7 @@ class OdometryNode
 			// publish odom topic:
 			{
 				nav_msgs::Odometry odom;
-				odom.header.stamp = current_time;
+				odom.header.stamp = new_enc_pos_.timestamp;
 				odom.header.frame_id = "odom";
 
 				// set the position
