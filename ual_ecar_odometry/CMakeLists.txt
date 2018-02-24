@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ual_ecar_odometry)
+add_definitions(-std=c++14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,9 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 # System dependencies are found with CMake's conventions
-#find_package(MRPT REQUIRED hwdrivers)
-
-add_definitions(-std=c++11)
+find_package(MRPT REQUIRED obs)
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -59,6 +58,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 # Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
+	 ${MRPT_LIBRARIES}
 )
 
 #############

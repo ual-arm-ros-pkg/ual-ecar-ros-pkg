@@ -1,37 +1,292 @@
+/* +---------------------------------------------------------------------------+
+   |                  University of Almeria ARM-eCar module                    |
+   |                                                                           |
+   |   Copyright (C) 2018  University of Almeria                               |
+   +---------------------------------------------------------------------------+
+ */
+
+#include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <ros/console.h>
-#include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <phidgets_high_speed_encoder/EncoderDecimatedSpeed.h>
+#include <array>
+#include <cmath>
+#include <string>
+#include <mrpt/math/lightweight_geom_data.h>
+#include <mrpt/obs/CObservationOdometry.h>
+#include <mrpt/io/CFileGZOutputStream.h>
+#include <mrpt/serialization/CArchive.h>
+#include <mrpt/system/filesystem.h>
 
-ros::Time last_encoder_pos_time;
-double last_encoder_pos[2] = {0.0, 0.0};
-
-ros::Time last_encoder_vel_time;
-double last_encoder_vel[2] = {0.0, 0.0};
-
-void onNewEncoderState(const sensor_msgs::JointState::Ptr& msg)
+class OdometryNode
 {
-	ROS_INFO(
-		"Received encoder pos: [0]=%12f [1]=%12f", msg->position[0],
-		msg->position[1]);
+   private:
+	ros::NodeHandle n_, nh_params_;
+	ros::Subscriber sub_encoders_, sub_enc_decim_speed_[2];
+	ros::Publisher odom_pub_;
+	tf::TransformBroadcaster odom_broadcaster;
 
-	last_encoder_pos_time = msg->header.stamp;
-	last_encoder_pos[0] = msg->position[0];
-	last_encoder_pos[1] = msg->position[1];
-}
+	// Node variables & data types:
+	struct EncoderPos
+	{
+		ros::Time timestamp;
+		std::array<double, 2> pos{0.0, 0.0};  // tick counts
+	};
+	EncoderPos last_enc_pos_, new_enc_pos_;
+	bool first_enc_pos_{true};
+	ros::Time last_encoder_vel_time_;
+	std::array<double, 2> last_encoder_vel_{0.0, 0.0};
 
-void onNewEncoderSpeed(
-	const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,
-	int index)
-{
-	ROS_ASSERT(index < 2);
-	last_encoder_vel_time = msg->header.stamp;
-	ROS_INFO("Received encoder avr_speed: [%d]=%12f", index, msg->avr_speed);
+	// Node parameters:
+	double ODOM_PUBLISH_RATE_{5.0};  // Hz
+	std::string rawlog_asf_prefix_;  // If not empty, generate action-SF rawlog
+	std::string rawlog_obs_prefix_;  // If not empty, generate obs-only rawlog
+	double left_K_{2.5e-6}, right_K_{-10e-6}, wheels_dist_{1.5};
 
-	last_encoder_vel[index] = msg->avr_speed;
-}
+	mrpt::math::TPose2D global_odometry_{0, 0, 0};
+	mrpt::math::TTwist2D cur_vel_{0, 0, 0};
+
+	mrpt::io::CFileGZOutputStream out_rawlog_obs_, out_rawlog_actsf_;
+
+	// callback for topic /joint_states
+	void onNewEncoderState(const sensor_msgs::JointState::Ptr& msg)
+	{
+		ROS_DEBUG(
+			"Received encoder pos: [0]=%12f [1]=%12f", msg->position[0],
+			msg->position[1]);
+
+		new_enc_pos_.timestamp = msg->header.stamp;
+		new_enc_pos_.pos[0] = msg->position[0];
+		new_enc_pos_.pos[1] = msg->position[1];
+	}
+
+	// callback for topics /joint_states_ch{0,1}_decim_speed
+	void onNewEncoderSpeed(
+		const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,
+		int index)
+	{
+		ROS_ASSERT(index < 2);
+		last_encoder_vel_time_ = msg->header.stamp;
+		ROS_DEBUG(
+			"Received encoder avr_speed: [%d]=%12f", index, msg->avr_speed);
+
+		last_encoder_vel_[index] = msg->avr_speed;
+	}
+
+	/** The odometry model: converts encoder ticks to pose increments, using
+	 * the parameter loaded from the config file */
+	void differentialOdometryModel(
+		mrpt::math::TPose2D& out_increment, double left_tick_incr,
+		double right_tick_incr) const
+	{
+		double As =
+			0.5 * (right_K_ * right_tick_incr + left_K_ * left_tick_incr);
+		double Aphi = (right_K_ * right_tick_incr - left_K_ * left_tick_incr) /
+					  wheels_dist_;
+		//    cout << "As_left = " << left_K_*left_tick_incr << " ticks: " <<
+		//    left_tick_incr << endl; cout << "As_right = " <<
+		//    right_K_*right_tick_incr << " ticks: " << right_tick_incr <<
+		//    endl;
+
+		out_increment.x = cos(Aphi) * As;
+		out_increment.y = sin(Aphi) * As;
+		out_increment.phi = Aphi;
+	}
+
+	/** The odometry model in velocity: converts encoder velocities to vehicle
+	 * velocities, using the parameter loaded from the config file */
+	void differentialOdometryModelVel(
+		double& out_v, double& out_w, const double left_ticks_vel,
+		const double right_ticks_vel) const
+	{
+		out_v = 0.5 * (right_K_ * right_ticks_vel + left_K_ * left_ticks_vel);
+		out_w = (right_K_ * right_ticks_vel - left_K_ * left_ticks_vel) /
+				wheels_dist_;
+	}
+
+   public:
+	// ctor:
+	OdometryNode() : n_(), nh_params_{ros::NodeHandle("~")}
+	{
+		// Nothing else to do
+	}
+
+	void init()
+	{
+		// Node parameters:
+		nh_params_.getParam("ODOM_PUBLISH_RATE", ODOM_PUBLISH_RATE_);
+		nh_params_.getParam("rawlog_asf_prefix", rawlog_asf_prefix_);
+		nh_params_.getParam("rawlog_obs_prefix", rawlog_obs_prefix_);
+		nh_params_.getParam("left_K", left_K_);
+		nh_params_.getParam("right_K", right_K_);
+		nh_params_.getParam("wheels_dist", wheels_dist_);
+
+		// now() must be called after Nodehandle
+		last_encoder_vel_time_ = new_enc_pos_.timestamp =
+			last_enc_pos_.timestamp = ros::Time::now();
+
+		sub_encoders_ = n_.subscribe(
+			"joint_states", 10, &OdometryNode::onNewEncoderState, this);
+		sub_enc_decim_speed_[0] =
+			n_.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+				"joint_states_ch0_decim_speed", 10,
+				boost::bind(&OdometryNode::onNewEncoderSpeed, this, _1, 0));
+		sub_enc_decim_speed_[1] =
+			n_.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+				"joint_states_ch1_decim_speed", 10,
+				boost::bind(&OdometryNode::onNewEncoderSpeed, this, _1, 1));
+
+		odom_pub_ = n_.advertise<nav_msgs::Odometry>("odom", 50);
+
+		// Open rawlog files:
+		mrpt::system::TTimeParts parts;
+		mrpt::system::timestampToParts(mrpt::system::now(), parts, true);
+		std::string rawlog_postfix = mrpt::format(
+			"_%04u-%02u-%02u_%02uh%02um%02us.rawlog", (unsigned int)parts.year,
+			(unsigned int)parts.month, (unsigned int)parts.day,
+			(unsigned int)parts.hour, (unsigned int)parts.minute,
+			(unsigned int)parts.second);
+		rawlog_postfix =
+			mrpt::system::fileNameStripInvalidChars(rawlog_postfix);
+
+		if (!rawlog_obs_prefix_.empty())
+		{
+			std::string fil = rawlog_obs_prefix_ + rawlog_postfix;
+			ROS_INFO("Writing rawlog (obs-only format) to: %s", fil.c_str());
+			out_rawlog_obs_.open(fil);
+		}
+		if (!rawlog_asf_prefix_.empty())
+		{
+			std::string fil = rawlog_asf_prefix_ + rawlog_postfix;
+			ROS_INFO("Writing rawlog (act-sf format) to: %s", fil.c_str());
+			out_rawlog_actsf_.open(fil);
+		}
+
+	}  // end init()
+
+	void run()
+	{
+		// static data for TF odom:
+		geometry_msgs::TransformStamped odom_trans;
+		odom_trans.header.frame_id = "odom";
+		odom_trans.child_frame_id = "base_link";
+
+		ros::Rate r(ODOM_PUBLISH_RATE_);
+		while (n_.ok())
+		{
+			// check for incoming messages. Single threaded model:
+			ros::spinOnce();
+			const ros::Time current_time = ros::Time::now();
+			const mrpt::system::TTimeStamp mrpt_cur_time = mrpt::system::now();
+
+			bool has_new_pos_or_vel = false;
+
+			// new encoder position data?
+			if (new_enc_pos_.timestamp != last_enc_pos_.timestamp)
+			{
+				has_new_pos_or_vel = true;
+				// Yes: process new encoder positions:
+				MRPT_TODO("Handle potential encoders overflow!!");
+
+				// Compute increment:
+				double left_incr = new_enc_pos_.pos[0] - last_enc_pos_.pos[0];
+				double right_incr = new_enc_pos_.pos[1] - last_enc_pos_.pos[1];
+
+				// if we are in the first read, discard the increment and start
+				// from the current count values:
+				if (first_enc_pos_)
+				{
+					first_enc_pos_ = false;
+					left_incr = right_incr = 0;
+				}
+
+				// Store new as old:
+				last_enc_pos_ = new_enc_pos_;
+
+				// kinematic model:
+				mrpt::math::TPose2D odo_incr;
+				this->differentialOdometryModel(
+					odo_incr, left_incr, right_incr);
+				ROS_INFO(
+					"incrs: (%f,%f) -> %s", left_incr, right_incr,
+					odo_incr.asString().c_str());
+
+				// Cummulative odometry:
+				global_odometry_ = global_odometry_ + odo_incr;
+				std::string sOdo;
+				global_odometry_.asString(sOdo);
+				ROS_DEBUG_STREAM("New odometry: " << sOdo);
+
+				// publish odometry as ROS tf: odom -> base_link
+				{
+					odom_trans.header.stamp = current_time;
+					odom_trans.transform.translation.x = global_odometry_.x;
+					odom_trans.transform.translation.y = global_odometry_.y;
+					odom_trans.transform.translation.z = 0.0;
+					odom_trans.transform.rotation =
+						tf::createQuaternionMsgFromYaw(global_odometry_.phi);
+					;
+
+					odom_broadcaster.sendTransform(odom_trans);
+				}
+
+				// if enabled, save to act-sf rawlog:
+				// TODO!
+
+				// if enabled, save to obs-only rawlog:
+				if (out_rawlog_obs_.is_open())
+				{
+					auto odom = mrpt::obs::CObservationOdometry::Create();
+					odom->timestamp = mrpt::system::now();
+					odom->sensorLabel = "ODOMETRY";
+					odom->odometry = mrpt::poses::CPose2D(global_odometry_);
+					odom->hasVelocities = true;
+					odom->velocityLocal = cur_vel_;
+					odom->hasEncodersInfo = true;
+					odom->encoderLeftTicks = left_incr;
+					odom->encoderRightTicks = right_incr;
+
+					// Serialize:
+					auto arch =
+						mrpt::serialization::archiveFrom(out_rawlog_obs_);
+					arch << odom;
+				}
+			}  // end new odom pos data
+
+			MRPT_TODO("process new vel");
+
+			MRPT_TODO("reset vel to zero if no news");
+
+			// publish odom topic:
+			{
+				nav_msgs::Odometry odom;
+				odom.header.stamp = current_time;
+				odom.header.frame_id = "odom";
+
+				// set the position
+				odom.pose.pose.position.x = global_odometry_.x;
+				odom.pose.pose.position.y = global_odometry_.y;
+				odom.pose.pose.position.z = 0.0;
+				odom.pose.pose.orientation =
+					tf::createQuaternionMsgFromYaw(global_odometry_.phi);
+
+				// set the velocity
+				odom.child_frame_id = "base_link";
+				odom.twist.twist.linear.x = cur_vel_.vx;
+				odom.twist.twist.linear.y = cur_vel_.vy;
+				odom.twist.twist.angular.z = cur_vel_.omega;
+
+				// publish the message
+				odom_pub_.publish(odom);
+			}
+
+			r.sleep();
+		}
+	}  // end run()
+
+};  // end class OdometryNode
 
 int main(int argc, char** argv)
 {
@@ -39,96 +294,10 @@ int main(int argc, char** argv)
 	{
 		ros::init(argc, argv, "ual_ecar_odometry");
 
-		ros::NodeHandle n;
-		ros::NodeHandle nh_params = ros::NodeHandle("~");
+		OdometryNode node;
 
-		// now() must be called after Nodehandle
-		last_encoder_vel_time = last_encoder_pos_time = ros::Time::now();
-
-		ros::Subscriber sub_encoders =
-			n.subscribe("joint_states", 10, &onNewEncoderState);
-		ros::Subscriber sub_enc_decim_speed[2] = {
-			n.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
-				"joint_states_ch0_decim_speed", 10,
-				boost::bind(&onNewEncoderSpeed, _1, 0)),
-			n.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
-				"joint_states_ch1_decim_speed", 10,
-				boost::bind(&onNewEncoderSpeed, _1, 1))};
-
-		ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
-		tf::TransformBroadcaster odom_broadcaster;
-
-		double x = 0.0;
-		double y = 0.0;
-		double th = 0.0;
-
-		double vx = 0.1;
-		double vy = -0.1;
-		double vth = 0.1;
-
-		ros::Time current_time, last_time;
-		current_time = ros::Time::now();
-		last_time = ros::Time::now();
-
-		ros::Rate r(10.0);
-		while (n.ok())
-		{
-			ros::spinOnce();  // check for incoming messages
-			current_time = ros::Time::now();
-
-			// compute odometry in a typical way given the velocities of the
-			// robot
-			double dt = (current_time - last_time).toSec();
-			double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-			double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
-			double delta_th = vth * dt;
-
-			x += delta_x;
-			y += delta_y;
-			th += delta_th;
-
-			// since all odometry is 6DOF we'll need a quaternion created from
-			// yaw
-			geometry_msgs::Quaternion odom_quat =
-				tf::createQuaternionMsgFromYaw(th);
-
-			// first, we'll publish the transform over tf
-			geometry_msgs::TransformStamped odom_trans;
-			odom_trans.header.stamp = current_time;
-			odom_trans.header.frame_id = "odom";
-			odom_trans.child_frame_id = "base_link";
-
-			odom_trans.transform.translation.x = x;
-			odom_trans.transform.translation.y = y;
-			odom_trans.transform.translation.z = 0.0;
-			odom_trans.transform.rotation = odom_quat;
-
-			// send the transform
-			odom_broadcaster.sendTransform(odom_trans);
-
-			// next, we'll publish the odometry message over ROS
-			nav_msgs::Odometry odom;
-			odom.header.stamp = current_time;
-			odom.header.frame_id = "odom";
-
-			// set the position
-			odom.pose.pose.position.x = x;
-			odom.pose.pose.position.y = y;
-			odom.pose.pose.position.z = 0.0;
-			odom.pose.pose.orientation = odom_quat;
-
-			// set the velocity
-			odom.child_frame_id = "base_link";
-			odom.twist.twist.linear.x = vx;
-			odom.twist.twist.linear.y = vy;
-			odom.twist.twist.angular.z = vth;
-
-			// publish the message
-			odom_pub.publish(odom);
-
-			last_time = current_time;
-			r.sleep();
-		}
+		node.init();
+		node.run();
 	}
 	catch (std::exception& e)
 	{
