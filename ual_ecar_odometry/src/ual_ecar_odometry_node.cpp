@@ -33,12 +33,12 @@ class OdometryNode
 	struct EncoderPos
 	{
 		ros::Time timestamp;
-		std::array<double, 2> pos{0.0, 0.0};  // tick counts
+		std::array<double, 2> pos{{0.0, 0.0}};  // tick counts
 	};
 	EncoderPos last_enc_pos_, new_enc_pos_;
 	bool first_enc_pos_{true};
 	ros::Time last_encoder_vel_time_;
-	std::array<double, 2> last_encoder_vel_{0.0, 0.0};
+	std::array<double, 2> last_encoder_vel_{{0.0, 0.0}};
 
 	// Node parameters:
 	double ODOM_PUBLISH_RATE_{5.0};  // Hz
