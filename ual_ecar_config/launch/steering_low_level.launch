@@ -5,5 +5,10 @@
   </node>
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
   </node>
+  <node name="ual_ecar_odometry" pkg="ual_ecar_odometry" type="ual_ecar_odometry_node" output="screen">
+    <param name="rawlog_obs_prefix" value="/home/ecar/datasets/dataset_odom" />
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find ual_ecar_config)/launch/vis_default.rviz" />
 
 </launch>
