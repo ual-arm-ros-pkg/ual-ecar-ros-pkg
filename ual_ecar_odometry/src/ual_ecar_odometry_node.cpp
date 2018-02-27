@@ -44,7 +44,7 @@ class OdometryNode
 	double ODOM_PUBLISH_RATE_{5.0};  // Hz
 	std::string rawlog_asf_prefix_;  // If not empty, generate action-SF rawlog
 	std::string rawlog_obs_prefix_;  // If not empty, generate obs-only rawlog
-	double left_K_{2.5e-6}, right_K_{-10e-6}, wheels_dist_{1.5};
+	double left_K_{3.1e-5}, right_K_{-1.22e-4}, wheels_dist_{1.26};
 
 	mrpt::math::TPose2D global_odometry_{0, 0, 0};
 	mrpt::math::TTwist2D cur_vel_{0, 0, 0};
