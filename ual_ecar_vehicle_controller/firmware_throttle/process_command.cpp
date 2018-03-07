@@ -41,7 +41,7 @@
 #include "libclaraquino/gpio.h"
 #include "libclaraquino/adc_internal.h"
 #include "libclaraquino/pwm.h"
-#include "vehicle_controller_steer_declarations.h"
+#include "vehicle_controller_throttle_declarations.h"
 
 
 #include "libclaraquino/mod_dac_max5500.h"
@@ -90,6 +90,37 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 
 		// No-operation: just a fake command to check if comms are alive
 		return send_simple_opcode_frame(RESP_NOP);
+	}
+	break;
+	
+	case OP_SET_DAC:
+	{
+		if (datalen!=sizeof(TFrameCMD_SetDAC_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+
+		TFrameCMD_SetDAC_payload_t dac_req;
+		memcpy(&dac_req,data, sizeof(dac_req));
+
+		// Init upon first usage:
+		static bool dac_init = false;
+		if (!dac_init)
+		{
+			mod_dac_max5500_init(0x24);
+			dac_init = true;
+		}
+		const uint16_t dac_value = (uint16_t(dac_req.dac_value_HI) << 8) | dac_req.dac_value_LO;
+		mod_dac_max5500_update_single_DAC(dac_req.dac_index,dac_value);
+
+		if (dac_req.flag_enable_timeout)
+		{
+			if (dac_req.dac_index<sizeof(PendingTimeouts.DAC_last_changed)/sizeof(PendingTimeouts.DAC_last_changed[0]))
+			{
+				PendingTimeouts.DAC_any=true;
+				PendingTimeouts.DAC_last_changed[dac_req.dac_index] = millis();
+			}
+		}
+
+		// send answer back:
+		send_simple_opcode_frame(RESP_SET_DAC);
 	}
 	break;
 	case OP_SET_GPIO:
@@ -168,77 +199,44 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		send_simple_opcode_frame(RESP_STOP_ENCODERS);
 	}
 	break;
-
-	case OP_START_EMS22A:
-	{
-		if (datalen!=sizeof(TFrameCMD_EMS22A_start_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
-
-		TFrameCMD_EMS22A_start_payload_t EMS22A_req;
-		memcpy(&EMS22A_req,data, sizeof(EMS22A_req));
-		if (init_EMS22A(
-			EMS22A_req.ENCODER_ABS_CS,EMS22A_req.ENCODER_ABS_CLK, 
-			EMS22A_req.ENCODER_ABS_DO, EMS22A_req.sampling_period_ms_tenths
-			))
-		{
-
-			EMS22A_active = true;
-			// send answer back:
-			send_simple_opcode_frame(RESP_START_EMS22A);
-		}
-		else
-		{
-			// params error:
-			return send_simple_opcode_frame(RESP_INVALID_PARAMS);
-		}
-	}
-	break;
-
-	case OP_STOP_EMS22A:
-	{
-		EMS22A_active = false;
-		// send answer back:
-		send_simple_opcode_frame(RESP_STOP_EMS22A);
-	}
-	break;
-
 	case OP_CONTROL_MODE:
 	{
 		if (datalen!=sizeof(TFrameCMD_CONTROL_MODE_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
 		TFrameCMD_CONTROL_MODE_payload_t control_req;
 		memcpy(&control_req,data, sizeof(control_req));
-		enableSteerController(control_req.steer_enable);
+		enableThrottleController(control_req.throttle_enable);
 	}
 	break;
-	case OP_CONTROL_STEERING_SET_PARAMS:
+	case OP_CONTROL_THROTTLE_SET_PARAMS:
 	{
-		if (datalen!=sizeof(TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		if (datalen!=sizeof(TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
-		TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t steer_controller_params;
-		memcpy(&steer_controller_params,data, sizeof(steer_controller_params));
-		setSteer_ControllerParams(steer_controller_params);
+		TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t throttle_controller_params;
+		memcpy(&throttle_controller_params,data, sizeof(throttle_controller_params));
+		setThrottle_ControllerParams(throttle_controller_params);
 	}
 	break;
-
-	case OP_CONTROL_STEERING_SETPOINT:
+	case OP_OPENLOOP_THROTTLE_SETPOINT:
 	{
-		if (datalen!=sizeof(TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		if (datalen!=sizeof(TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 		
-		TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t control_steer_setpoint;
-		memcpy(&control_steer_setpoint,data, sizeof(control_steer_setpoint));
-		setControllerSetpoint_Steer(control_steer_setpoint.SETPOINT_STEER_POS);
+		TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t ol_throttle_setpoint;
+		memcpy(&ol_throttle_setpoint,data, sizeof(ol_throttle_setpoint));
+		setOpenLoopSetpoint_VehVel(ol_throttle_setpoint.SETPOINT_OPENLOOP_THROTTLE);
 	}
 	break;
 	
-	case OP_OPENLOOP_STEERING_SETPOINT:
+	case OP_CONTROL_THROTTLE_SETPOINT:
 	{
-		if (datalen!=sizeof(TFrameCMD_OPENLOOP_STEERING_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		if (datalen!=sizeof(TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 		
-		TFrameCMD_OPENLOOP_STEERING_SETPOINT_payload_t ol_steer_setpoint;
-		memcpy(&ol_steer_setpoint,data, sizeof(ol_steer_setpoint));
-		setOpenLoopSetpoint_Steer(ol_steer_setpoint.SETPOINT_OPENLOOP_STEER_SPEED);
+		TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t control_throttle_setpoint;
+		memcpy(&control_throttle_setpoint,data, sizeof(control_throttle_setpoint));
+		setControllerSetpoint_VehVel(control_throttle_setpoint.SETPOINT_CONTROL_THROTTLE_SPEED);
 	}
 	break;
+
 	case OP_VERBOSITY_CONTROL:
 	{
 		if (datalen!=sizeof(TFrameCMD_VERBOSITY_CONTROL_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);

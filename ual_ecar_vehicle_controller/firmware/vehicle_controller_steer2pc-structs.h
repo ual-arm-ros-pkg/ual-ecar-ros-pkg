@@ -56,7 +56,6 @@ enum opcode_t {
 	// COMMANDS PC -> uC
 	// -----------------------------
 	OP_NOP             = 0x00,
-	OP_SET_DAC         = 0x10,
 	OP_SET_GPIO        = 0x11,
 	OP_GET_GPIO        = 0x12,
 	OP_START_CONT_ADC  = 0x20,
@@ -68,11 +67,8 @@ enum opcode_t {
 	// Control:
 	OP_CONTROL_MODE					= 0x50,
 	OP_CONTROL_STEERING_SET_PARAMS	= 0x51,
-	OP_CONTROL_THROTTLE_SET_PARAMS	= 0x52,
 	OP_CONTROL_STEERING_SETPOINT	= 0x53,
 	OP_OPENLOOP_STEERING_SETPOINT	= 0x54,
-	OP_OPENLOOP_THROTTLE_SETPOINT	= 0x55,
-	OP_CONTROL_THROTTLE_SETPOINT	= 0x56,
 	OP_VERBOSITY_CONTROL			= 0X57,
 
 	// -----------------------------
@@ -81,7 +77,6 @@ enum opcode_t {
 	RESP_OFFSET = 0x70,
 	// -----------------------------
 	RESP_NOP              = OP_NOP + RESP_OFFSET,
-	RESP_SET_DAC          = OP_SET_DAC + RESP_OFFSET,
 	RESP_SET_GPIO         = OP_SET_GPIO + RESP_OFFSET,
 	RESP_GET_GPIO         = OP_GET_GPIO + RESP_OFFSET,
 	RESP_START_CONT_ADC   = OP_START_CONT_ADC + RESP_OFFSET,
@@ -149,24 +144,6 @@ struct TFrameCMD_NOP : public TBaseFrame<TFrameCMD_NOP_payload_t>
 	TFrameCMD_NOP() : TBaseFrame(OP_NOP)
 	{
 	}
-};
-
-struct TFrameCMD_SetDAC_payload_t
-{
-    uint8_t  dac_index;
-    uint8_t  dac_value_HI, dac_value_LO;
-    uint8_t  flag_enable_timeout : 1;   // bitfield: 1 bit flag
-    TFrameCMD_SetDAC_payload_t() :
-        dac_index(0), dac_value_HI(0), dac_value_LO(0),flag_enable_timeout(0)
-    {
-    }
-};
-struct TFrameCMD_SetDAC : public TBaseFrame<TFrameCMD_SetDAC_payload_t>
-{
-    // Defaults:
-    TFrameCMD_SetDAC() : TBaseFrame(OP_SET_DAC)
-    {
-    }
 };
 
 struct TFrameCMD_GPIO_output_payload_t
@@ -409,19 +386,6 @@ struct TFrameCMD_CONTROL_STEERING_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTR
 	}
 };
 
-struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t
-{
-	float Q_THROTTLE_CONTROLLER[3] = {0,0,0};
-	int16_t U_THROTTLE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_THROTTLE_DECOUPLING = 0; /*battery-charge*/
-};
-struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t>
-{
-	// Defaults:
-	TFrameCMD_CONTROL_THROTTLE_SET_PARAMS() : TBaseFrame(OP_CONTROL_THROTTLE_SET_PARAMS)
-	{
-	}
-};
-
 struct TFrameCMD_CONTROL_STEERING_SETPOINT_payload_t
 {
 	/** Desired setpoint for steering angle. 
@@ -448,36 +412,6 @@ struct TFrameCMD_OPENLOOP_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_OPENLO
 {
 	// Defaults:
 	TFrameCMD_OPENLOOP_STEERING_SETPOINT() : TBaseFrame(OP_OPENLOOP_STEERING_SETPOINT)
-	{
-	}
-};
-
-struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t
-{
-/** Desired setpoint for throttle in Open Loop. 
-  * [-1,0]:max reverse, [0,1]: max forward
-  */
-	float  SETPOINT_OPENLOOP_THROTTLE { .0f };
-};
-struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t>
-{
-	// Defaults:
-	TFrameCMD_OPENLOOP_THROTTLE_SETPOINT() : TBaseFrame(OP_OPENLOOP_THROTTLE_SETPOINT)
-	{
-	}
-};
-
-struct TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t
-{
-	/** Desired setpoint for throttle in Open Loop. 
-	  * 0:min speed, 12.5 m/s: max forward
-	  */
-	float  SETPOINT_CONTROL_THROTTLE_SPEED { .0f };
-};
-struct TFrameCMD_CONTROL_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t>
-{
-	// Defaults:
-	TFrameCMD_CONTROL_THROTTLE_SETPOINT() : TBaseFrame(OP_CONTROL_THROTTLE_SETPOINT)
 	{
 	}
 };

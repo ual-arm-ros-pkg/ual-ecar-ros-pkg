@@ -37,7 +37,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vehicle_controller_declarations.h"
+#include "vehicle_controller_steer_declarations.h"
 #include "libclaraquino/mod_ems22a.h"
 #include "libclaraquino/mod_dac_max5500.h"
 #include "libclaraquino/millis_timer.h"
@@ -57,12 +57,9 @@ const int8_t ENCODER_DIFF_B         = 0x43; // PD3
 const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
 const int8_t THROTTLE_FEEDBACK_ADC_CH= 2;   // ADC #2
 const int8_t PWM_DIR                = 0x44; // CW/CCW
-const int8_t RELAY_FRWD_REV         = 0x11;
-const int8_t RELAY_PEDAL_INTERLOCK  = 0x13;
 #define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
 #define PWM_OUT_PIN                 PWM_PIN_OCnB
 const int8_t PWM_PIN_NO             = 0x46;
-const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
 // ===========================================================
 
 const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (both, openloop & controller, vehvel & steer)
@@ -72,7 +69,6 @@ float	Ys[4]			=	{0,0,0,0};		// Smith predictor output
 float	T				=	0.01f;			// Sample time
 float	Encoder_dir[2]	=	{0,0};			// Direction value
 float	U_steer_controller[6]	=	{0,0,0,0,0,0};	// Steer controller signal
-float	U_throttle_controller[6] = {0,0,0,0,0,0};
 float	Ref_pos[2]		=	{0,0};			// Position reference
 float	Ref_speed[2]	=	{0,0};			// Speed reference
 float	Error_pos[3]	=	{0,0,0};		// Position error
@@ -94,16 +90,12 @@ uint32_t  CONTROL_last_millis_STEER = 0;
 uint32_t  CONTROL_last_millis_THROTTLE = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;// true: controller; false: open loop
-bool	  THROTTLECONTROL_active = false; //true: controller; false: open loop
 
 float	Q_STEER_INT[3]				= { - 0.2838f, 0.1986f, .0f };
-float	Q_THROTTLE[3]				= {0,0,0};
 float	Q_STEER_EXT[3]				= { 2.8673f, -2.8469f, .0f };
 float	P_SMITH_SPEED[5]			= {0.2977f,.0f,1,-0.7023f,.0f}; /*{b0,b1,a0,a1,a2}*/
 int16_t	U_STEER_FEEDFORWARD[2]		= {0,0}; /*Weight,other*/
 int16_t	U_STEER_DECOUPLING[2]		= {0,0}; /*battery-charge,speed*/
-int16_t	U_THROTTLE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/
-int16_t U_THROTTLE_DECOUPLING		= 0; /*battery-charge*/
 
 /** Desired setpoint for steering angle.
   * -512:max right, +511: max left
@@ -115,21 +107,9 @@ int16_t  SETPOINT_STEER_POS = 0;
   */
 int16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
 
-/** Desired setpoint for throttle in Open Loop.
-  * [-1,0]V:max reverse, [0,+1]V: max forward
-  */
-float SETPOINT_OPENLOOP_THROTTLE = .0f;
-
-/** Desired setpoint for throttle in Open Loop.
-  * 0:min speed, 12.5 m/s: max forward
-  */
-float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
-
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
 uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
-uint32_t SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
-uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
 
 template <typename T, size_t N>
 void do_shift(T (&v)[N])
@@ -168,9 +148,6 @@ void initSensorsForController()
 		EMS22A_active = true;
 	}
 
-	// Init DAC:
-	mod_dac_max5500_init(DAC_OUT_PIN_NO);
-
 	// PWM:
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
 	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );  // freq_PWM = F_CPU / (prescaler*510)
@@ -178,10 +155,6 @@ void initSensorsForController()
 	// PWM direction:
 	gpio_pin_mode(PWM_DIR, OUTPUT);
 	gpio_pin_write(PWM_DIR, false);
-
-	// Relay:
-	gpio_pin_mode(RELAY_FRWD_REV, OUTPUT);
-	gpio_pin_write(RELAY_FRWD_REV, false);
 
 }
 
@@ -194,11 +167,6 @@ void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control
 void enableSteerController(bool enabled)
 {
 	STEERCONTROL_active = enabled;
-}
-
-void enableThrottleController(bool enabled)
-{
-	THROTTLECONTROL_active = enabled;
 }
 
 void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &p)
@@ -217,16 +185,6 @@ void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_paylo
 		U_STEER_FEEDFORWARD[i]	= p.U_STEER_FEEDFORWARD[i];
 	}
 }
-void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &p)
-{
-	for (int i=0;i<3;i++)
-		Q_THROTTLE[i] = p.Q_THROTTLE_CONTROLLER[i];
-
-	for (int i=0;i<2;i++)
-		U_THROTTLE_FEEDFORWARD[i] = p.U_THROTTLE_FEEDFORWARD[i];
-
-	U_THROTTLE_DECOUPLING = p.U_THROTTLE_DECOUPLING;
-}
 
 void setOpenLoopSetpoint_Steer(int16_t speed)
 {
@@ -237,16 +195,6 @@ void setControllerSetpoint_Steer(int16_t pos)
 {
 	SETPOINT_STEER_POS=pos;
 	SETPOINT_STEER_TIMESTAMP = millis();
-}
-void setOpenLoopSetpoint_VehVel(float ol_vel_mps)
-{
-	SETPOINT_OPENLOOP_THROTTLE = ol_vel_mps;
-	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = millis();
-}
-void setControllerSetpoint_VehVel(float vel_mps)
-{
-	SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
-	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
 }
 
 // CONTROL FOR STEERING WHEEL
@@ -395,7 +343,6 @@ void processSteerController()
 		decim0=0;
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Steer_control_signal = U_steer_controller[0];
-		tx.payload.Throttle_control_signal = U_throttle_controller[0];
 		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
 		tx.payload.Encoder_absoluto = abs_enc_pos;
 		tx.payload.Encoder_incremental = enc_diff;
@@ -406,54 +353,4 @@ void processSteerController()
 
 		UART::Write((uint8_t*)&tx,sizeof(tx));
 	}
-}
-
-// CONTROL FOR MAIN VEHICLE MOTOR
-void processThrottleController()
-{
-	const uint32_t tnow = millis();
-	if (tnow-CONTROL_last_millis_THROTTLE < CONTROL_sampling_period_ms_tenths)
-		return;
-
-	CONTROL_last_millis_THROTTLE = tnow;
-
-	/*	+-----------------------+
-		|	THROTTLE-BY-WIRE	|
-		+-----------------------+
-	*/
-	float pedal = .0f; /* [-1,1] */
-	if (!THROTTLECONTROL_active)
-	{
-		if (tnow>(SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
-			SETPOINT_OPENLOOP_THROTTLE = 0;
-
-		pedal = SETPOINT_OPENLOOP_THROTTLE;
-	}
-	else
-	{
-		if (tnow>(SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
-			SETPOINT_CONTROL_THROTTLE_SPEED = 0;
-
-		// TODO: Throttle-by-wire controller here!!
-		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
-	}
-
-	// Ensure normalized speed is in range [-1,1]
-	if (pedal>1) pedal=1;
-	else if (pedal<-1) pedal=-1;
-
-	// Output direction:
-	// Relay output = HIGH if going BACKWARDS.
-	U_throttle_controller[0] = pedal * 5;
-	gpio_pin_write(RELAY_FRWD_REV,(pedal<0));
-
-	// Pedal enable relay (to Curtis controller J1-8 pin)
-	gpio_pin_write(RELAY_PEDAL_INTERLOCK,abs(pedal)>0.1f);
-
-	// Output value:
-	uint16_t veh_speed_dac = abs(U_throttle_controller[0]* 4095/5.0); // 12bit DAC constant
-	mod_dac_max5500_update_single_DAC(0 /*DAC idx*/, veh_speed_dac);
-
-	/* Values actualization*/
-	do_shift(U_throttle_controller);
 }

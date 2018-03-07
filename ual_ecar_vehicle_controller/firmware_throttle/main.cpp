@@ -10,7 +10,7 @@ Universidad de Almeria
 #include "libclaraquino/leds.h"
 #include "libclaraquino/delays.h"
 #include "libclaraquino/millis_timer.h"
-#include "vehicle_controller_steer_declarations.h"
+#include "vehicle_controller_throttle_declarations.h"
 
 #include <avr/interrupt.h> // sei()
 
@@ -28,7 +28,7 @@ int main(void)
 	flash_led(3,100);
 
 	// Make sure all outputs are in a safe state:
-	enableSteerController(false);
+	enableThrottleController(false);
 	initSensorsForController();
 
 	uint32_t t_ini = millis();
@@ -40,8 +40,7 @@ int main(void)
 		processIncommingPkts();
 		processADCs();
 		processEncoders();
-		processEMS22A();
-		processSteerController();
+		processThrottleController();
 		process_timeouts(); // Handle possible timeouts of previous commands:
 
 		const uint32_t t_end = millis();

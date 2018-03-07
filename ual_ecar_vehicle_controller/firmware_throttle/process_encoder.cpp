@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "vehicle_controller_steer2pc-structs.h"
+#include "vehicle_controller_throttle2pc-structs.h"
 #include <libclaraquino/mod_quad_encoder.h>
-#include "vehicle_controller_steer_declarations.h"
+#include "vehicle_controller_throttle_declarations.h"
 
 #include "libclaraquino/claraquino_config.h"
 #include "libclaraquino/gpio.h"

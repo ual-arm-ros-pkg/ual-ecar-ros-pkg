@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "vehicle_controller2pc-structs.h"
-#include "vehicle_controller_declarations.h"
+#include "vehicle_controller_steer2pc-structs.h"
+#include "vehicle_controller_steer_declarations.h"
 #include <libclaraquino/mod_ems22a.h>
 #include <libclaraquino/uart.h>
 #include <libclaraquino/millis_timer.h>

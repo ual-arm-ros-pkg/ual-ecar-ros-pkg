@@ -32,61 +32,38 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vehicle_controller_steer2pc-structs.h"
-#include "vehicle_controller_steer_declarations.h"
-#include "libclaraquino/uart.h"
+#pragma once
 
-// Frame format: see README.md
-uint8_t rx_buf_len = 0;
-uint8_t rx_buf[30];
+#include "vehicle_controller_throttle2pc-structs.h"
 
-void reset_rx_buf()
-{
-	rx_buf_len = 0;
-}
+#include <stdint.h>  // uint8_t, etc.
 
-void processIncommingPkts()
-{
-	uint8_t b=0;
-	while (UART::ReadByte(b))
-	{
-		// sanity:
-		if (rx_buf_len==0)
-			if (b!=FRAME_START_FLAG) {
-				reset_rx_buf();
-				send_simple_opcode_frame(RESP_FRAME_ERROR);
-				continue;
-			}
+// Function prototypes:
+void reset_rx_buf();
+void processIncommingPkts();
+void processADCs();          // 160us per ADC channel
+void adc_process_start_cmd(const TFrameCMD_ADC_start_payload_t &adc_req);
+void adc_process_stop_cmd();
+void processEncoders();
+void init_encoders(const TFrameCMD_ENCODERS_start_payload_t &cmd);
+void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*data);
+void process_timeouts();
+void flash_led(int ntimes, int nms);
+void send_simple_opcode_frame(const uint8_t op);
 
-		// store:
-		rx_buf[rx_buf_len++] = b;
+// Throttle Controller Function:
+void processThrottleController();
+void enableThrottleController(bool enabled);
+void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &throttle_controller_params);
+void setOpenLoopSetpoint_VehVel(float ol_vel_mps);
+void setControllerSetpoint_VehVel(float vel_mps);
 
-		if (rx_buf_len>2 && rx_buf_len==5+rx_buf[2])
-		{
-			// Check if we have a full frame:
-			if (rx_buf[rx_buf_len-1]!=FRAME_END_FLAG) {
-				reset_rx_buf();
-				send_simple_opcode_frame(RESP_FRAME_ERROR);
-				continue;
-			}
-			const uint8_t opcode  = rx_buf[1];
-			const uint8_t datalen = rx_buf[2];
-			const uint8_t *data   = rx_buf+3;
+// Verbosity Control:
+void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control);
 
-			// chksum:
-			uint8_t chksum = 0;
-			for (uint8_t i=0;i<datalen;i++) chksum+=data[i];
-			if (rx_buf[rx_buf_len-2]!=chksum) {
-				reset_rx_buf();
-				send_simple_opcode_frame(RESP_CHECKSUM_ERROR);
-				continue;
-			}
+void initSensorsForController();
 
-			// 100% sure: we have a valid frame: dispatch it:
-			process_command(opcode,datalen,data);
-
-			reset_rx_buf();
-		}
-	}
-}
-
+// Global vars:
+extern TFrame_ENCODERS_readings_payload_t enc_last_reading;
+extern TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
+extern TFrame_ADC_readings_payload_t ADC_last_reading;
