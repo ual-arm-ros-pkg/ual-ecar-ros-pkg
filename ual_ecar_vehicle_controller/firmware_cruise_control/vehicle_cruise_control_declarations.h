@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include "vehicle_controller_throttle2pc-structs.h"
+#include "vehicle_cruise_control2pc-structs.h"
 
 #include <stdint.h>  // uint8_t, etc.
 
@@ -57,6 +57,13 @@ void enableThrottleController(bool enabled);
 void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &throttle_controller_params);
 void setOpenLoopSetpoint_VehVel(float ol_vel_mps);
 void setControllerSetpoint_VehVel(float vel_mps);
+
+// Brake Controller Function:
+void processBrakeController();
+void enableBrakeController(bool enable);
+void setBrake_ControllerParams(const TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t &brake_controller_params);
+void setOpenLoopSetpoint_Brake(float ol_brakeforce);
+void setControllerSetpoint_Brake(float brakeforce);
 
 // Verbosity Control:
 void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control);

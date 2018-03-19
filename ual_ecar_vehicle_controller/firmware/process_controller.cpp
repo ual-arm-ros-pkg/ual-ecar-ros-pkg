@@ -55,7 +55,6 @@ const int8_t ENCODER_ABS_DO         = 0x22; //PB2
 const int8_t ENCODER_DIFF_A         = 0x42; // PD2
 const int8_t ENCODER_DIFF_B         = 0x43; // PD3
 const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
-const int8_t THROTTLE_FEEDBACK_ADC_CH= 2;   // ADC #2
 const int8_t PWM_DIR                = 0x44; // CW/CCW
 #define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
 #define PWM_OUT_PIN                 PWM_PIN_OCnB
@@ -135,7 +134,6 @@ void initSensorsForController()
 	{
 		TFrameCMD_ADC_start_payload_t cmd;
 		cmd.active_channels[0] = CURRENT_SENSE_ADC_CH;
-		cmd.active_channels[1] = THROTTLE_FEEDBACK_ADC_CH;
 		cmd.use_internal_refvolt = false;
 		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		adc_process_start_cmd(cmd);
@@ -219,7 +217,7 @@ void processSteerController()
 		sei();
 
 		// Filter out clearly erroneous readings from the abs encoder: 
-		if (abs(abs_enc_pos_new - abs_enc_pos)<1050)
+		if (abs(abs_enc_pos_new - abs_enc_pos)<1060)
 			abs_enc_pos = abs_enc_pos_new;
 	}
 	
@@ -249,9 +247,9 @@ void processSteerController()
 
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
 	}
-	// Automatic mode
 	else
 	{
+		// Automatic mode
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
 		+-------------------+ */
@@ -279,14 +277,12 @@ void processSteerController()
 		int m_v= round(U_steer_controller[0]);
 	/*	Saturation */
 		bool has_sat = false;
-		if (U_steer_controller[0] > 254)
+		if (abs(U_steer_controller[0]) > 254)
 		{
-			U_steer_controller[0] = 254;
-			has_sat = true;
-		}
-		if (U_steer_controller[0] < -254)
-		{
-			U_steer_controller[0] = -254;
+			if (U_steer_controller[0] < -254)
+				U_steer_controller[0] = -254;
+			else
+				U_steer_controller[0] = 254;
 			has_sat = true;
 		}
 		
@@ -298,7 +294,7 @@ void processSteerController()
 			Antiwindup[0] = 0;
 
 		U_steer_controller[0] = round(0.5 * (2 * U_steer_controller[0] + T * (Antiwindup[0] + Antiwindup[1])));
-	} // end automatic control
+	}
 
 	/* for both, open & closed loop: protection against steering mechanical limits: */
 	if (abs(Encoder_dir[0]) >= steer_mech_limit_pos)
@@ -343,7 +339,6 @@ void processSteerController()
 		decim0=0;
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Steer_control_signal = U_steer_controller[0];
-		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
 		tx.payload.Encoder_absoluto = abs_enc_pos;
 		tx.payload.Encoder_incremental = enc_diff;
 		tx.payload.Encoder_signal = Encoder_dir[0];

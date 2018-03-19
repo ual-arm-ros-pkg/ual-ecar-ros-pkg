@@ -25,7 +25,7 @@ int main(void)
 	// Enable interrupts:
 	sei();
 
-	flash_led(3,100);
+	flash_led(3,10);
 
 	// Make sure all outputs are in a safe state:
 	enableSteerController(false);

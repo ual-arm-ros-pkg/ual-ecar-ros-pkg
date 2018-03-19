@@ -32,8 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vehicle_controller_throttle2pc-structs.h"
-#include "vehicle_controller_throttle_declarations.h"
+#include "vehicle_cruise_control2pc-structs.h"
+#include "vehicle_cruise_control_declarations.h"
 #include "libclaraquino/uart.h"
 
 // Frame format: see README.md

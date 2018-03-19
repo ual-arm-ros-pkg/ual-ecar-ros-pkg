@@ -65,8 +65,11 @@ enum opcode_t {
 	OP_STOP_ENCODERS   = 0x31,
 	// Control:
 	OP_CONTROL_MODE					= 0x50,
+	OP_CONTROL_BRAKE_SET_PARAMS		= 0x51,
 	OP_CONTROL_THROTTLE_SET_PARAMS	= 0x52,
-	OP_OPENLOOP_THROTTLE_SETPOINT	= 0x55,
+	OP_OPENLOOP_BRAKE_SETPOINT		= 0x53,
+	OP_OPENLOOP_THROTTLE_SETPOINT	= 0x54,
+	OP_CONTROL_BRAKE_SETPOINT		= 0x55,
 	OP_CONTROL_THROTTLE_SETPOINT	= 0x56,
 	OP_VERBOSITY_CONTROL			= 0X57,
 
@@ -236,7 +239,6 @@ struct TFrame_ADC_readings : public TBaseFrame<TFrame_ADC_readings_payload_t>
 	}
 };
 
-
 struct TFrameCMD_ENCODERS_start_payload_t
 {
 	static const uint8_t NUM_ENCODERS = 2;
@@ -292,13 +294,12 @@ struct TFrame_ENCODERS_readings : public TBaseFrame<TFrame_ENCODERS_readings_pay
 struct TFrame_CONTROL_SIGNAL_payload_t
 {
 	uint32_t timestamp_ms_tenth;
-	int16_t Steer_control_signal;
 	uint16_t Throttle_control_signal;
+	int16_t Brake_control_signal;
 	uint16_t Throttle_analog_feedback; //!< The analog output of the DAC, converted back to ADC in the uC
-	int32_t Encoder_incremental;
-	uint32_t Encoder_absoluto;
-	int32_t Encoder_signal;
-	uint16_t Steer_ADC_current_sense;
+	int16_t VehSpeed_feedback;			// Phidget Signal
+	int32_t Brake_Encoder_incremental;
+	uint16_t Brake_ADC_current_sense;
 };
 struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
 {
@@ -331,7 +332,7 @@ struct TFrame_CPU_USAGE_STATS : public TBaseFrame<TFrame_CPU_USAGE_STATS_payload
 
 struct TFrameCMD_CONTROL_MODE_payload_t
 {
-	bool steer_enable; //!< false: open loop (no control algorithm)
+	bool brake_enable; //!< false: open loop (no control algorithm)
 	bool throttle_enable; //!< false: open loop (no control algorithm)
 };
 struct TFrameCMD_CONTROL_MODE : public TBaseFrame<TFrameCMD_CONTROL_MODE_payload_t>
@@ -355,6 +356,19 @@ struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTR
 	}
 };
 
+struct TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t
+{
+	float Q_BRAKE_CONTROLLER[3] = {0,0,0};
+	int16_t U_BRAKE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_BRAKE_DECOUPLING = 0; /*battery-charge*/
+};
+struct TFrameCMD_CONTROL_BRAKE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t>
+{
+	// Defaults:
+	TFrameCMD_CONTROL_BRAKE_SET_PARAMS() : TBaseFrame(OP_CONTROL_BRAKE_SET_PARAMS)
+	{
+	}
+};
+
 struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t
 {
 /** Desired setpoint for throttle in Open Loop. 
@@ -366,6 +380,21 @@ struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLO
 {
 	// Defaults:
 	TFrameCMD_OPENLOOP_THROTTLE_SETPOINT() : TBaseFrame(OP_OPENLOOP_THROTTLE_SETPOINT)
+	{
+	}
+};
+
+struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t
+{
+/** Desired setpoint for brake in Open Loop. 
+  * [-255,0]:max reverse, [0,255]: max forward
+  */
+	float  SETPOINT_OPENLOOP_BRAKE { .0f };
+};
+struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_OPENLOOP_BRAKE_SETPOINT() : TBaseFrame(OP_OPENLOOP_BRAKE_SETPOINT)
 	{
 	}
 };
@@ -385,12 +414,25 @@ struct TFrameCMD_CONTROL_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL
 	}
 };
 
+struct TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t
+{
+	/** Desired setpoint for brake in Open Loop. 
+	  */
+	float  SETPOINT_CONTROL_BRAKE_FORCE { .0f };
+};
+struct TFrameCMD_CONTROL_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_CONTROL_BRAKE_SETPOINT() : TBaseFrame(OP_CONTROL_BRAKE_SETPOINT)
+	{
+	}
+};
+
 struct TFrameCMD_VERBOSITY_CONTROL_payload_t
 {
 	/** 
 	  */
 	uint8_t decimate_ADC { 10 };
-	uint8_t decimate_ENCABS {10};
 	uint16_t decimate_CPU {10000};
 	uint8_t decimate_CONTROLSIGNAL {10};
 	uint8_t decimate_ENCINC {10};

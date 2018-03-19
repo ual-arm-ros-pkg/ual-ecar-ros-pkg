@@ -292,8 +292,6 @@ struct TFrame_CONTROL_SIGNAL_payload_t
 {
 	uint32_t timestamp_ms_tenth;
 	int16_t Steer_control_signal;
-	uint16_t Throttle_control_signal;
-	uint16_t Throttle_analog_feedback; //!< The analog output of the DAC, converted back to ADC in the uC
 	int32_t Encoder_incremental;
 	uint32_t Encoder_absoluto;
 	int32_t Encoder_signal;
@@ -362,7 +360,6 @@ struct TFrameCMD_EMS22A_stop : public TBaseFrame<TFrameCMD_EMS22A_stop_payload_t
 struct TFrameCMD_CONTROL_MODE_payload_t
 {
 	bool steer_enable; //!< false: open loop (no control algorithm)
-	bool throttle_enable; //!< false: open loop (no control algorithm)
 };
 struct TFrameCMD_CONTROL_MODE : public TBaseFrame<TFrameCMD_CONTROL_MODE_payload_t>
 {

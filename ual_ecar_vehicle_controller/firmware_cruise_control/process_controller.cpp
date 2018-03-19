@@ -37,7 +37,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vehicle_controller_throttle_declarations.h"
+#include "vehicle_cruise_control_declarations.h"
 #include "libclaraquino/mod_dac_max5500.h"
 #include "libclaraquino/millis_timer.h"
 #include "libclaraquino/uart.h"
@@ -48,17 +48,17 @@
 
 // ============== HARDWARE CONFIGURATION =====================
 const uint16_t SAMPLING_PERIOD_MSth = 10 /*ms*/ *10 /*th*/;
-const int8_t ENCODER_DIFF_A         = 0x42; // PD2
-const int8_t ENCODER_DIFF_B         = 0x43; // PD3
-const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
-const int8_t THROTTLE_FEEDBACK_ADC_CH= 2;   // ADC #2
-const int8_t PWM_DIR                = 0x44; // CW/CCW
-const int8_t RELAY_FRWD_REV         = 0x11;
-const int8_t RELAY_PEDAL_INTERLOCK  = 0x13;
-#define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
-#define PWM_OUT_PIN                 PWM_PIN_OCnB
-const int8_t PWM_PIN_NO             = 0x46;
-const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4
+const int8_t ENCODER_DIFF_A         = 0x42; // PD2		BRAKE
+const int8_t ENCODER_DIFF_B         = 0x43; // PD3		BRAKE
+const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0	BRAKE
+const int8_t THROTTLE_FEEDBACK_ADC_CH= 2;   // ADC #2	THROTTLE
+const int8_t PWM_DIR                = 0x44; // CW/CCW	BRAKE
+const int8_t RELAY_FRWD_REV         = 0x11; //			THROTTLE
+const int8_t RELAY_PEDAL_INTERLOCK  = 0x13; //			THROTTLE
+#define PWM_OUT_TIMER               PWM_TIMER2// PD6=OC2B BRAKE
+#define PWM_OUT_PIN                 PWM_PIN_OCnB//		BRAKE
+const int8_t PWM_PIN_NO             = 0x46;	//			BRAKE
+const int8_t DAC_OUT_PIN_NO         = 0x24; // PB4		THROTTLE
 // ===========================================================
 
 const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (both, openloop & controller, vehvel & steer)
@@ -71,25 +71,44 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 // Auxiliary vars:
 uint32_t  CONTROL_last_millis_THROTTLE = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
-bool	  THROTTLECONTROL_active = false; //true: controller; false: open loop
+bool	  THROTTLECONTROL_active	= false; //true: controller; false: open loop
+bool	  BRAKECONTROL_active		= false; //true: controller; false: open loop
 
 float	Q_THROTTLE[3]				= {0,0,0};
 int16_t	U_THROTTLE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/
 int16_t U_THROTTLE_DECOUPLING		= 0; /*battery-charge*/
 
+float	Q_BRAKE[3]				= {0,0,0};
+int16_t	U_BRAKE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/
+int16_t U_BRAKE_DECOUPLING		= 0; /*battery-charge*/
+
 /** Desired setpoint for throttle in Open Loop.
   * [-1,0]V:max reverse, [0,+1]V: max forward
+  * Time of when the setpoint was last changed (1/10 of ms)
   */
-float SETPOINT_OPENLOOP_THROTTLE = .0f;
+float		SETPOINT_OPENLOOP_THROTTLE = .0f;
+uint32_t	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
+
+/** 
+  *
+  *
+  */
+float		SETPOINT_OPENLOOP_BRAKE = .0f;
+uint32_t	SETPOINT_OPENLOOP_BRAKE_TIMESTAMP = 0;
 
 /** Desired setpoint for throttle in Open Loop.
   * 0:min speed, 12.5 m/s: max forward
+  * Time of when the setpoint was last changed (1/10 of ms)
   */
 float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
-
-/** Time of when the setpoint was last changed (1/10 of ms) */
-uint32_t SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
 uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
+
+/**
+  *
+  *
+  */
+float SETPOINT_CONTROL_BRAKE_FORCE = .0f;
+uint32_t SETPOINT_CONTROL_BRAKE_FORCE_TIMESTAMP = 0;
 
 template <typename T, size_t N>
 void do_shift(T (&v)[N])
@@ -97,7 +116,6 @@ void do_shift(T (&v)[N])
 	for (int i=N-1;i>=1;i--)
 		v[i] = v[i-1];
 }
-
 
 /** Start reading all required sensors at the desired rate */
 void initSensorsForController()
@@ -114,8 +132,8 @@ void initSensorsForController()
 	// ADC: current sense of steering motor, to ADC0 pin
 	{
 		TFrameCMD_ADC_start_payload_t cmd;
-		cmd.active_channels[0] = CURRENT_SENSE_ADC_CH;
-		cmd.active_channels[1] = THROTTLE_FEEDBACK_ADC_CH;
+		cmd.active_channels[0] = CURRENT_SENSE_ADC_CH;		// BRAKE
+		cmd.active_channels[1] = THROTTLE_FEEDBACK_ADC_CH;	// THROTTLE
 		cmd.use_internal_refvolt = false;
 		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		adc_process_start_cmd(cmd);
@@ -149,6 +167,11 @@ void enableThrottleController(bool enabled)
 	THROTTLECONTROL_active = enabled;
 }
 
+void enableBrakeController(bool enabled)
+{
+	BRAKECONTROL_active = enabled;
+}
+
 void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &p)
 {
 	for (int i=0;i<3;i++)
@@ -160,15 +183,39 @@ void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_pa
 	U_THROTTLE_DECOUPLING = p.U_THROTTLE_DECOUPLING;
 }
 
+void setBrake_ControllerParams(const TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t &p)
+{
+	for (int i=0;i<3;i++)
+	Q_BRAKE[i] = p.Q_BRAKE_CONTROLLER[i];
+
+	for (int i=0;i<2;i++)
+	U_BRAKE_FEEDFORWARD[i] = p.U_BRAKE_FEEDFORWARD[i];
+
+	U_BRAKE_DECOUPLING = p.U_BRAKE_DECOUPLING;
+}
+
 void setOpenLoopSetpoint_VehVel(float ol_vel_mps)
 {
 	SETPOINT_OPENLOOP_THROTTLE = ol_vel_mps;
 	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = millis();
 }
+
+void setOpenLoopSetpoint_Brake(float ol_brakeforce)
+{
+	SETPOINT_OPENLOOP_BRAKE = ol_brakeforce;
+	SETPOINT_OPENLOOP_BRAKE_TIMESTAMP = millis();
+}
+
 void setControllerSetpoint_VehVel(float vel_mps)
 {
 	SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
 	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
+}
+
+void setControllerSetpoint_Brake(float brakeforce)
+{
+	SETPOINT_CONTROL_BRAKE_FORCE = brakeforce;
+	SETPOINT_CONTROL_BRAKE_FORCE_TIMESTAMP = millis();
 }
 
 // CONTROL FOR MAIN VEHICLE MOTOR
@@ -215,9 +262,7 @@ void processThrottleController()
 	gpio_pin_write(RELAY_FRWD_REV,(pedal<0));
 
 	// Pedal enable relay (to Curtis controller J1-8 pin)
-	/*gpio_pin_write(RELAY_PEDAL_INTERLOCK,(abs(pedal)>0.1f));*/
-	gpio_pin_write(RELAY_PEDAL_INTERLOCK,(abs(pedal)<0.1f));
-	#warning Cambio solo para comprobar que funciona el rele
+	gpio_pin_write(RELAY_PEDAL_INTERLOCK,(abs(pedal)>0.1f));
 
 	// Output value:
 	uint16_t veh_speed_dac = abs(U_throttle_controller[0]* 4095/5.0); // 12bit DAC constant
@@ -235,11 +280,20 @@ void processThrottleController()
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
 		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
-		tx.payload.Encoder_incremental = enc_diff;
-		tx.payload.Steer_ADC_current_sense = ADC_last_reading.adc_data[0];
+		tx.payload.Brake_Encoder_incremental = enc_diff;
+		tx.payload.Brake_ADC_current_sense = ADC_last_reading.adc_data[0];
 
 		tx.calc_and_update_checksum();
 
 		UART::Write((uint8_t*)&tx,sizeof(tx));
 	}
+}
+
+void processBrakeController()
+{
+	/*	+-------------------+
+		|	BRAKE-BY-WIRE	|
+		+-------------------+
+	*/
+	#warning Hacer completo
 }

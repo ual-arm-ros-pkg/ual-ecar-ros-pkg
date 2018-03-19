@@ -230,10 +230,10 @@
     <Compile Include="serial.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="vehicle_controller_throttle2pc-structs.h">
+    <Compile Include="vehicle_cruise_control2pc-structs.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="vehicle_controller_throttle_declarations.h">
+    <Compile Include="vehicle_cruise_control_declarations.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

@@ -32,8 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vehicle_controller_throttle_declarations.h"
-#include "vehicle_controller_throttle2pc-structs.h"
+#include "vehicle_cruise_control_declarations.h"
+#include "vehicle_cruise_control2pc-structs.h"
 #include "libclaraquino/uart.h"
 #include "libclaraquino/millis_timer.h"
 #include "libclaraquino/adc_internal.h"

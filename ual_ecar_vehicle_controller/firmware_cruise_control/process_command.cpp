@@ -41,7 +41,7 @@
 #include "libclaraquino/gpio.h"
 #include "libclaraquino/adc_internal.h"
 #include "libclaraquino/pwm.h"
-#include "vehicle_controller_throttle_declarations.h"
+#include "vehicle_cruise_control_declarations.h"
 
 
 #include "libclaraquino/mod_dac_max5500.h"
@@ -206,6 +206,7 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		TFrameCMD_CONTROL_MODE_payload_t control_req;
 		memcpy(&control_req,data, sizeof(control_req));
 		enableThrottleController(control_req.throttle_enable);
+		enableBrakeController(control_req.brake_enable);
 	}
 	break;
 	case OP_CONTROL_THROTTLE_SET_PARAMS:
@@ -217,6 +218,15 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setThrottle_ControllerParams(throttle_controller_params);
 	}
 	break;
+	case OP_CONTROL_BRAKE_SET_PARAMS:
+	{
+		if (datalen!=sizeof(TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+
+		TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t brake_controller_params;
+		memcpy(&brake_controller_params,data, sizeof(brake_controller_params));
+		setBrake_ControllerParams(brake_controller_params);
+	}
+	break;
 	case OP_OPENLOOP_THROTTLE_SETPOINT:
 	{
 		if (datalen!=sizeof(TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
@@ -226,7 +236,15 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setOpenLoopSetpoint_VehVel(ol_throttle_setpoint.SETPOINT_OPENLOOP_THROTTLE);
 	}
 	break;
-	
+	case OP_OPENLOOP_BRAKE_SETPOINT:
+	{
+		if (datalen!=sizeof(TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+		TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t ol_brake_setpoint;
+		memcpy(&ol_brake_setpoint,data, sizeof(ol_brake_setpoint));
+		setOpenLoopSetpoint_Brake(ol_brake_setpoint.SETPOINT_OPENLOOP_BRAKE);
+	}
+	break;
 	case OP_CONTROL_THROTTLE_SETPOINT:
 	{
 		if (datalen!=sizeof(TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
@@ -236,7 +254,15 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setControllerSetpoint_VehVel(control_throttle_setpoint.SETPOINT_CONTROL_THROTTLE_SPEED);
 	}
 	break;
-
+	case OP_CONTROL_BRAKE_SETPOINT:
+	{
+		if (datalen!=sizeof(TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+		TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t control_brake_setpoint;
+		memcpy(&control_brake_setpoint,data, sizeof(control_brake_setpoint));
+		setControllerSetpoint_Brake(control_brake_setpoint.SETPOINT_CONTROL_BRAKE_FORCE);
+	}
+	break;
 	case OP_VERBOSITY_CONTROL:
 	{
 		if (datalen!=sizeof(TFrameCMD_VERBOSITY_CONTROL_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
