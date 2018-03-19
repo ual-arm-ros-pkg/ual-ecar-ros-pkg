@@ -101,7 +101,8 @@ bool VehicleControllerLowLevel::initialize() {
 	return true;
 }
 
-void VehicleControllerLowLevel::processIncommingFrame(const std::vector<uint8_t> &rxFrame) {
+// Cruise:
+void VehicleControllerLowLevel::processIncommingFrame1(const std::vector<uint8_t> &rxFrame) {
 	// MRPT_LOG_INFO_STREAM  << "Rx frame, len=" << rxFrame.size();
 	if (rxFrame.size() >= 5) {
 		switch (rxFrame[1]) {
@@ -191,16 +192,16 @@ bool VehicleControllerLowLevel::iterate() {
 	// Main module loop code.
 	const size_t MAX_FRAMES_PER_ITERATE = 20;
 	size_t nFrames = 0;
-
+// ---
 	if (!m_serial.isOpen()) {
 		if (!this->initialize())
 			return false;
 	}
 
 	std::vector<uint8_t> rxFrame;
-	while (ReceiveFrameFromController(rxFrame) && ++nFrames < MAX_FRAMES_PER_ITERATE) {
+	while (ReceiveFrameFromController(rxFrame, m_serial1) && ++nFrames < MAX_FRAMES_PER_ITERATE) {
 		// Process them:
-		processIncommingFrame(rxFrame);
+		processIncommingFrame1(rxFrame); // dupl.
 	}
 
 	// if no frame was received, ping the uC to keep comms alive:
@@ -212,6 +213,8 @@ bool VehicleControllerLowLevel::iterate() {
 		cmd.calc_and_update_checksum();
 		return WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
 	}
+// ---
+
 
 	return true;
 }
@@ -291,6 +294,7 @@ void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTR
 	m_pub_Control_signal.publish(msg);
 }
 
+// DUP:
 bool VehicleControllerLowLevel::AttemptConnection() {
 	if (m_serial.isOpen())
 	return true; // Already open.
@@ -311,7 +315,7 @@ bool VehicleControllerLowLevel::AttemptConnection() {
 }
 
 /** Sends a binary packet (returns false on COMMS error) */
-bool VehicleControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame,const size_t full_frame_len) {
+bool VehicleControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame,const size_t full_frame_len, CSerialPort &serial) {
 	if (!AttemptConnection())
 		return false;
 
@@ -329,9 +333,9 @@ bool VehicleControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame,const
 #endif
 
 #if MRPT_VERSION >= 0x199
-	m_serial.Write(full_frame, full_frame_len);
+	serial.Write(full_frame, full_frame_len);
 #else
-	m_serial.WriteBuffer(full_frame, full_frame_len);
+	serial.WriteBuffer(full_frame, full_frame_len);
 #endif
 	return true;
 	} catch (std::exception &) {
@@ -368,7 +372,7 @@ bool VehicleControllerLowLevel::SendFrameAndWaitAnswer(const uint8_t *full_frame
 	return false; // No answer!
 }
 
-bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> &rxFrame) {
+bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> &rxFrame, CSerialPort &serial) {
 	rxFrame.clear();
 	size_t nFrameBytes = 0;
 	std::vector<uint8_t> buf;
@@ -400,7 +404,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> 
 
 	size_t nRead;
 	try {
-		nRead = m_serial.Read(&buf[0] + nFrameBytes, nBytesToRead);
+		nRead = serial.Read(&buf[0] + nFrameBytes, nBytesToRead);
 	} catch (std::exception &e) {
 		// Disconnected?
 		MRPT_LOG_ERROR_FMT("ReceiveFrameFromController(): Comms error: %s", e.what());
@@ -489,7 +493,7 @@ bool VehicleControllerLowLevel::CMD_DAC(int dac_index, double dac_value_volts) {
 }
 
 bool VehicleControllerLowLevel::IsConnected() const {
-	return m_serial.isOpen();
+	return m_serial1.isOpen() && m_serial2.isOpen();
 }
 
 bool VehicleControllerLowLevel::CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t &Decimation_config)

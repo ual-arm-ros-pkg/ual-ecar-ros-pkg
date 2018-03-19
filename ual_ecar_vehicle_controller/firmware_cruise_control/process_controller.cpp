@@ -66,10 +66,12 @@ const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (
 // Control vars:
 float	T				=	0.01f;			// Sample time
 float	U_throttle_controller[6] = {0,0,0,0,0,0};
+int16_t U_brake_controller[6] = {0,0,0,0,0,0};
 TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
 // Auxiliary vars:
 uint32_t  CONTROL_last_millis_THROTTLE = 0;
+uint32_t  CONTROL_last_millis_BRAKE = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool	  THROTTLECONTROL_active	= false; //true: controller; false: open loop
 bool	  BRAKECONTROL_active		= false; //true: controller; false: open loop
@@ -83,29 +85,29 @@ int16_t	U_BRAKE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/
 int16_t U_BRAKE_DECOUPLING		= 0; /*battery-charge*/
 
 /** Desired setpoint for throttle in Open Loop.
-  * [-1,0]V:max reverse, [0,+1]V: max forward
+  * [-1,0]:max reverse, [0,+1]: max forward
   * Time of when the setpoint was last changed (1/10 of ms)
   */
 float		SETPOINT_OPENLOOP_THROTTLE = .0f;
 uint32_t	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
 
-/** 
-  *
-  *
+/** Desired setpoint for brake in Open Loop
+  *-254:max right, +254: max left
+  * Time of when the setpoint was last changed (1/10 of ms)
   */
 float		SETPOINT_OPENLOOP_BRAKE = .0f;
 uint32_t	SETPOINT_OPENLOOP_BRAKE_TIMESTAMP = 0;
 
-/** Desired setpoint for throttle in Open Loop.
+/** Desired setpoint for throttle in Close Loop.
   * 0:min speed, 12.5 m/s: max forward
   * Time of when the setpoint was last changed (1/10 of ms)
   */
 float SETPOINT_CONTROL_THROTTLE_SPEED = .0f;
 uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
 
-/**
+/** Desired setpoint for Close in Close Loop.
   *
-  *
+  * Time of when the setpoint was last changed (1/10 of ms)
   */
 float SETPOINT_CONTROL_BRAKE_FORCE = .0f;
 uint32_t SETPOINT_CONTROL_BRAKE_FORCE_TIMESTAMP = 0;
@@ -172,6 +174,8 @@ void enableBrakeController(bool enabled)
 	BRAKECONTROL_active = enabled;
 }
 
+#warning Add Phidgets Encoders Value or Odometry value
+
 void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t &p)
 {
 	for (int i=0;i<3;i++)
@@ -227,42 +231,41 @@ void processThrottleController()
 		return;
 
 	CONTROL_last_millis_THROTTLE = tnow;
-	cli();
-	const int32_t enc_diff = enc_last_reading.encoders[0];
-	sei();
 	
-	/*	+-----------------------+
-		|	THROTTLE-BY-WIRE	|
-		+-----------------------+
-	*/
-	float pedal = .0f; /* [-1,1] */
+	
 	if (!THROTTLECONTROL_active)
 	{
 		if (tnow>(SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
 			SETPOINT_OPENLOOP_THROTTLE = 0;
 
-		pedal = SETPOINT_OPENLOOP_THROTTLE;
+		U_throttle_controller[0] = SETPOINT_OPENLOOP_THROTTLE * 5;
 	}
 	else
 	{
+		/*	+-----------------------+
+			|	THROTTLE-BY-WIRE	|
+			+-----------------------+
+		*/
 		if (tnow>(SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
 			SETPOINT_CONTROL_THROTTLE_SPEED = 0;
-
+		#warning TODO Throttle-by-wire controller
 		// TODO: Throttle-by-wire controller here!!
-		pedal = SETPOINT_CONTROL_THROTTLE_SPEED / 12.5;
+		U_throttle_controller[0] = (SETPOINT_CONTROL_THROTTLE_SPEED / 12.5)*5;
 	}
 
-	// Ensure normalized speed is in range [-1,1]
-	if (pedal>1) pedal=1;
-	else if (pedal<-1) pedal=-1;
+	// Ensure normalized speed is in range [-5,5]
+	if (U_throttle_controller[0]>5) 
+		U_throttle_controller[0]=5;
+	else
+		if (U_throttle_controller[0]<-5) 
+			U_throttle_controller[0]=-5;
 
 	// Output direction:
 	// Relay output = HIGH if going BACKWARDS.
-	U_throttle_controller[0] = pedal * 5;
-	gpio_pin_write(RELAY_FRWD_REV,(pedal<0));
+	gpio_pin_write(RELAY_FRWD_REV, U_throttle_controller[0]<0);
 
 	// Pedal enable relay (to Curtis controller J1-8 pin)
-	gpio_pin_write(RELAY_PEDAL_INTERLOCK,(abs(pedal)>0.1f));
+	gpio_pin_write(RELAY_PEDAL_INTERLOCK,abs(U_throttle_controller[0])>0.1f);
 
 	// Output value:
 	uint16_t veh_speed_dac = abs(U_throttle_controller[0]* 4095/5.0); // 12bit DAC constant
@@ -280,7 +283,7 @@ void processThrottleController()
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
 		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
-		tx.payload.Brake_Encoder_incremental = enc_diff;
+//		tx.payload.Brake_Encoder_incremental = enc_diff;
 		tx.payload.Brake_ADC_current_sense = ADC_last_reading.adc_data[0];
 
 		tx.calc_and_update_checksum();
@@ -291,9 +294,44 @@ void processThrottleController()
 
 void processBrakeController()
 {
-	/*	+-------------------+
-		|	BRAKE-BY-WIRE	|
-		+-------------------+
-	*/
-	#warning Hacer completo
+		const uint32_t tnow = millis();
+		if (tnow-CONTROL_last_millis_BRAKE < CONTROL_sampling_period_ms_tenths)
+		return;
+
+		CONTROL_last_millis_BRAKE = tnow;
+		
+		cli();
+		const int32_t enc_diff = enc_last_reading.encoders[0];
+		sei();
+		
+		if (!BRAKECONTROL_active)
+		{
+			if (tnow>(SETPOINT_OPENLOOP_BRAKE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
+			SETPOINT_OPENLOOP_BRAKE = 0;
+
+			U_brake_controller[0] = SETPOINT_OPENLOOP_BRAKE;
+		}
+		else
+		{
+			if (tnow>(SETPOINT_CONTROL_BRAKE_FORCE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
+			SETPOINT_CONTROL_BRAKE_FORCE = 0;
+		/*	+-------------------+
+			|	BRAKE-BY-WIRE	|
+			+-------------------+
+		*/
+			#warning TODO Brake-by-wire controller
+			// TODO: Brake-by-wire controller here!!
+			U_brake_controller[0] = SETPOINT_CONTROL_BRAKE_FORCE;
+		}
+	
+		/* Values actualization*/
+		do_shift(U_brake_controller);
+		// Output PWM:
+		pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,abs(U_brake_controller[0]));
+
+		// PWM direction:
+		gpio_pin_write(PWM_DIR, U_brake_controller[0] >= 0);
+
+		// Decimate the number of msgs sent to the PC:
+		#warning TODO decimate
 }
