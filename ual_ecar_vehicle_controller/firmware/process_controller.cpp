@@ -58,46 +58,46 @@ const int8_t CURRENT_SENSE_ADC_CH   = 0;    // ADC #0
 const int8_t PWM_DIR                = 0x44; // CW/CCW
 #define PWM_OUT_TIMER               PWM_TIMER2   // PD6=OC2B
 #define PWM_OUT_PIN                 PWM_PIN_OCnB
-const int8_t PWM_PIN_NO             = 0x46;
+const int8_t PWM_PIN_NO             = 0x46; // PD6
 // ===========================================================
 
-const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (both, openloop & controller, vehvel & steer)
+const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (both, openloop & controller)
 
 // Control vars:
-float	Ys[4]			=	{0,0,0,0};		// Smith predictor output
-float	T				=	0.01f;			// Sample time
-float	Encoder_dir[2]	=	{0,0};			// Direction value
-float	U_steer_controller[6]	=	{0,0,0,0,0,0};	// Steer controller signal
-float	Ref_pos[2]		=	{0,0};			// Position reference
-float	Ref_speed[2]	=	{0,0};			// Speed reference
-float	Error_pos[3]	=	{0,0,0};		// Position error
-float	Error_speed[3]	=	{0,0,0};		// Speed error
-float	Antiwindup[2]	=	{0,0};			//
+float	Ys[4]					=	{0,0,0,0};		// Smith predictor output
+float	T						=	0.01f;			// Sample time
+int16_t	Encoder_dir[2]			=	{0,0};			// Direction value
+int16_t	U_steer_controller[6]	=	{0,0,0,0,0,0};	// Steer controller signal
+float	Ref_pos[2]				=	{0,0};			// Position reference
+float	Ref_speed[2]			=	{0,0};			// Speed reference
+float	Error_pos[3]			=	{0,0,0};		// Position error
+float	Error_speed[3]			=	{0,0,0};		// Speed error
+float	Antiwindup[2]			=	{0,0};			// Antiwindup variable
 TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
 // Auxiliary vars:
-bool	steer_mech_limit_reached = false;
+bool	steer_mech_limit_reached= false;			// Enable security limit of the mechanism
 #warning Cambiar limite
-float	steer_mech_limit_pos     = 1400; // In units of incr encoder
-uint16_t abs_enc_pos	= 0;
-const	float	sat_ref	=	250/T;
-float	enc_offset_correction		=	.0f;
-uint8_t adjust	=	0;
-const float ANTIWINDUP_CTE = sqrt(0.0283);
+uint16_t Steer_offset			= 0;				// Steer offset regulated by software
+int16_t	steer_mech_limit_pos	= Steer_offset + (1024*1.33-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
+																	// 100 = Safety margin
+uint16_t abs_enc_pos			= 0;				// Init variable
+const	float	sat_ref			= 250/T;			// Slope position reference limit to over current protection
+int16_t	enc_offset_correction	= .0f;				// Incremental encoder calibration offset
+float ANTIWINDUP_CTE = sqrt(0.0283);				// Antiwindup "constant" regulated by software
 
-uint32_t  CONTROL_last_millis_STEER = 0;
-uint32_t  CONTROL_last_millis_THROTTLE = 0;
+uint32_t  CONTROL_last_millis_STEER = 0;			// Timer to check the sample time
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
-bool      STEERCONTROL_active = false;// true: controller; false: open loop
+bool      STEERCONTROL_active = false;				// true: controller; false: open loop
 
-float	Q_STEER_INT[3]				= { - 0.2838f, 0.1986f, .0f };
-float	Q_STEER_EXT[3]				= { 2.8673f, -2.8469f, .0f };
-float	P_SMITH_SPEED[5]			= {0.2977f,.0f,1,-0.7023f,.0f}; /*{b0,b1,a0,a1,a2}*/
-int16_t	U_STEER_FEEDFORWARD[2]		= {0,0}; /*Weight,other*/
-int16_t	U_STEER_DECOUPLING[2]		= {0,0}; /*battery-charge,speed*/
+float	Q_STEER_INT[3]				= { - 0.2838f, 0.1986f, .0f };	/* Steer speed controller */
+float	Q_STEER_EXT[3]				= { 2.8673f, -2.8469f, .0f };	/* Steer position controller */
+float	P_SMITH_SPEED[5]			= {0.2977f,.0f,1,-0.7023f,.0f};	/* {b0,b1,a0,a1,a2} */
+int16_t	U_STEER_FEEDFORWARD[2]		= {0,0};						/* Feedforward signal: Weight,other */
+int16_t	U_STEER_DECOUPLING[2]		= {0,0};						/* Decoupling signal: battery-charge,speed */
 
 /** Desired setpoint for steering angle.
-  * -512:max right, +511: max left
+  * -630:max right, +630: max left
   */
 int16_t  SETPOINT_STEER_POS = 0;
 
@@ -117,7 +117,6 @@ void do_shift(T (&v)[N])
 		v[i] = v[i-1];
 }
 
-
 /** Start reading all required sensors at the desired rate */
 void initSensorsForController()
 {
@@ -129,7 +128,6 @@ void initSensorsForController()
 		cmd.sampling_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		init_encoders(cmd);
 	}
-
 	// ADC: current sense of steering motor, to ADC0 pin
 	{
 		TFrameCMD_ADC_start_payload_t cmd;
@@ -138,28 +136,24 @@ void initSensorsForController()
 		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
 		adc_process_start_cmd(cmd);
 	}
-
 	// ABS ENC:
 	// TODO: Refactor sampling period vs. send USB period
 	{
 		init_EMS22A(ENCODER_ABS_CS,ENCODER_ABS_CLK,ENCODER_ABS_DO,SAMPLING_PERIOD_MSth);
 		EMS22A_active = true;
 	}
-
-	// PWM:
+	// Steer signal: PWM:
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
 	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );  // freq_PWM = F_CPU / (prescaler*510)
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,0x00);
-	// PWM direction:
+	// Steer direction:
 	gpio_pin_mode(PWM_DIR, OUTPUT);
 	gpio_pin_write(PWM_DIR, false);
-
 }
 
 void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control)
 {
 	global_decimate = verbosity_control;
-
 }
 
 void enableSteerController(bool enabled)
@@ -176,7 +170,9 @@ void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_paylo
 	}
 	for (int i=0;i<5;i++)
 		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
-
+		
+	Steer_offset = p.STEER_OFFSET;
+	ANTIWINDUP_CTE = p.Antiwindup;
 	for (int i=0;i<2;i++)
 	{
 		U_STEER_DECOUPLING[i]	= p.U_STEER_DECOUPLING[i];
@@ -209,42 +205,38 @@ void processSteerController()
 	cli();
 	const int32_t enc_diff = enc_last_reading.encoders[0];
 	sei();
-
 	// Read abs encoder:
 	{
 		cli();
-		const uint16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - 130; // Abs encoder (10 bit resolution) Offset= 130 ticks
+		const uint16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset; // Abs encoder (10 bit resolution)
 		sei();
 
 		// Filter out clearly erroneous readings from the abs encoder: 
 		if (abs(abs_enc_pos_new - abs_enc_pos)<1060)
 			abs_enc_pos = abs_enc_pos_new;
 	}
-	
 	// Calibration with absolute encoder:
-	// TODO: Explain constant!!
-	const float K_enc_diff = 337.0f / (500.0f * 100.0f);
-
-	if (++adjust>200)
-	{
-		adjust = 0;
+	const float K_enc_diff = 337.0f / (500.0f * 100.0f);	/** 500: Pulses per revolution
+															  * 100: Reductor 100:1
+															  * 337: Experimental constant
+															  */
+	// Incremental encoder calibration if encoders differences are upper than ten pulses
+	if ((abs_enc_pos - enc_offset_correction)>10)
 		enc_offset_correction = abs_enc_pos - enc_diff * K_enc_diff;
-	}
+	// Define encoder value to controller
 	Encoder_dir[0] = enc_offset_correction + enc_diff * K_enc_diff;
 
 	// Control:
-	/*	Encoder reading and Smith Predictor implementation*/
+	/*	Speed encoder reading and Smith Predictor implementation*/
 	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
 	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_steer_controller[1+3] + P_SMITH_SPEED[1] * U_steer_controller[2+3])/P_SMITH_SPEED[2];
 
 	if (!STEERCONTROL_active)
 	{
 		// open-loop mode:
-
 		// Watchdog timer:
 		if (tnow>(SETPOINT_OPENLOOP_STEER_TIMESTAMP+ WATCHDOG_TIMEOUT_msth))
 			SETPOINT_OPENLOOP_STEER_SPEED = 0;
-
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
 	}
 	else
@@ -257,7 +249,7 @@ void processSteerController()
 			SETPOINT_STEER_POS = 0;
 	/*	Position reference reading */
 		Ref_pos[0]	= SETPOINT_STEER_POS;
-		/*	Correction of the wheels' direction */
+	/*	Correction of the wheels' direction */
 		Ref_pos[0] = - Ref_pos[0];
 	/*	Slope reference limit to over current protection*/
 		float pendiente = (Ref_pos[0] - Ref_pos[1]) / T;
@@ -292,10 +284,8 @@ void processSteerController()
 			Antiwindup[0] = (U_steer_controller[0] - m_v) / ANTIWINDUP_CTE;
 		else
 			Antiwindup[0] = 0;
-
 		U_steer_controller[0] = round(0.5 * (2 * U_steer_controller[0] + T * (Antiwindup[0] + Antiwindup[1])));
 	}
-
 	/* for both, open & closed loop: protection against steering mechanical limits: */
 	if (abs(Encoder_dir[0]) >= steer_mech_limit_pos)
 		steer_mech_limit_reached = true;
@@ -322,8 +312,8 @@ void processSteerController()
 	do_shift(U_steer_controller);
 
 	/*	Direction*/
-	const bool u_steer_is_positive = (U_steer_controller[0] >= 0);
-	const uint8_t u_steer = abs(U_steer_controller[0]);
+	bool u_steer_is_positive = (U_steer_controller[0] >= 0);
+	uint8_t u_steer = abs(U_steer_controller[0]);
 
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);

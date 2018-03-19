@@ -374,6 +374,8 @@ struct TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t
 {
 	float Q_STEER_INT[3] = {0,0,0}, Q_STEER_EXT[3]={0,0,0}, P_SMITH_SPEED[5] = {0,0,0,0,0};
 	int16_t U_STEER_FEEDFORWARD[2]={0,0}/*Weight,other*/, U_STEER_DECOUPLING[2]={0,0}; /*battery-charge,speed*/
+	uint16_t STEER_OFFSET = 0;
+	float Antiwindup = 0.1682;
 };
 struct TFrameCMD_CONTROL_STEERING_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t>
 {
