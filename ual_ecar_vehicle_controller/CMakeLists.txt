@@ -63,7 +63,8 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/  # for vehicle_controller2pc-structs
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware/  # for vehicle_controller_steer2pc-structs
+  ${${PROJECT_NAME}_SOURCE_DIR}/firmware_cruise_control/  # for vehicle_controller_steer2pc-structs
   ${${PROJECT_NAME}_SOURCE_DIR}/include
 )
 

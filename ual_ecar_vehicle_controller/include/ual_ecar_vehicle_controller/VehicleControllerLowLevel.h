@@ -11,7 +11,8 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 //#include <std_msgs/UInt8.h>
-#include <vehicle_controller2pc-structs.h>
+#include <vehicle_controller_steer2pc-structs.h>
+#include <vehicle_cruise_control2pc-structs.h>
 
 #include <mrpt/version.h>
 #if MRPT_VERSION >= 0x199
