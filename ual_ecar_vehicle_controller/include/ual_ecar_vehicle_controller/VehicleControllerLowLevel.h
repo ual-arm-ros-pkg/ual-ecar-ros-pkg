@@ -11,8 +11,6 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 //#include <std_msgs/UInt8.h>
-#include <vehicle_controller_steer2pc-structs.h>
-#include <vehicle_cruise_control2pc-structs.h>
 
 #include <mrpt/version.h>
 #if MRPT_VERSION >= 0x199
@@ -26,6 +24,14 @@ using mrpt::system::COutputLogger;
 using mrpt::hwdrivers::CSerialPort;
 using mrpt::utils::COutputLogger;
 #endif
+
+// Fwrd:
+struct TFrame_ADC_readings_payload_t;
+struct TFrame_ENCODERS_readings_payload_t;
+struct TFrame_ENCODER_ABS_reading_payload_t;
+struct TFrame_CONTROL_SIGNAL_payload_t;
+struct TFrameCMD_VERBOSITY_CONTROL_payload_t;
+
 
 class VehicleControllerLowLevel : public COutputLogger {
 public:
@@ -50,6 +56,7 @@ bool initialize();
 
 /** called when work is to be done */
 bool iterate();
+
 
 protected:
 void modeSteeringCallback(const std_msgs::Bool::ConstPtr &msg);

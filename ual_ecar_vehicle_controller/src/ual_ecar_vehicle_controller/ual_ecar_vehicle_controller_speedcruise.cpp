@@ -17,6 +17,8 @@
 #include <ual_ecar_vehicle_controller/SteerControllerStatus.h>
 #include <ual_ecar_vehicle_controller/VehicleControllerLowLevel.h>
 
+#include <vehicle_cruise_control2pc-structs.h>
+
 #include <mrpt/version.h>
 #if MRPT_VERSION >= 0x199
 #include <mrpt/core/bits_math.h>
@@ -87,13 +89,12 @@ bool VehicleControllerLowLevel::initialize() {
 		if (decimate_ADC>0 && decimate_ENCABS>0 && decimate_CPU>0 && decimate_CONTROLSIGNAL>0 && decimate_ENCINC>0)
 		{
 			Decimation_config.decimate_ADC = decimate_ADC;
-			Decimation_config.decimate_ENCABS = decimate_ENCABS;
 			Decimation_config.decimate_ENCINC = decimate_ENCINC;
 			Decimation_config.decimate_CPU = decimate_CPU;
 			Decimation_config.decimate_CONTROLSIGNAL = decimate_CONTROLSIGNAL;
 
 			MRPT_LOG_INFO_FMT(" Decimation: ADC=%i  ENCABS=%i  ENCINC=%i  CPU=%i  Control Signal=%i",decimate_ADC, decimate_ENCABS, decimate_ENCINC, decimate_CPU, decimate_CONTROLSIGNAL);
-			
+
 			this->CMD_Decimation_configuration(Decimation_config);
 		}
 	}
@@ -118,12 +119,6 @@ void VehicleControllerLowLevel::processIncommingFrame1(const std::vector<uint8_t
 				daqOnNewENCCallback(rx.payload);
 			} break;
 
-			case RESP_EMS22A_READINGS: {
-				TFrame_ENCODER_ABS_reading rx;
-				::memcpy((uint8_t *)&rx, &rxFrame[0], sizeof(rx));
-				daqOnNewENCAbsCallback(rx.payload);
-			} break;
-
 			case RESP_CONTROL_SIGNAL: {
 				TFrame_CONTROL_SIGNAL rx;
 				::memcpy((uint8_t *)&rx, &rxFrame[0], sizeof(rx));
@@ -139,7 +134,6 @@ bool VehicleControllerLowLevel::iterate() {
 	if (m_modes_changed) {
 		m_modes_changed = false;
 		TFrameCMD_CONTROL_MODE cmd;
-		cmd.payload.steer_enable = !m_mode_openloop_steer;
 		cmd.payload.throttle_enable = !m_mode_openloop_throttle;
 		cmd.calc_and_update_checksum();
 		WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
@@ -148,26 +142,6 @@ bool VehicleControllerLowLevel::iterate() {
 
 	// New joystick
 	if (!m_autonomous_driving_mode && m_joy_changed) {
-		// X: Steering
-		if (m_mode_openloop_steer) {
-			TFrameCMD_OPENLOOP_STEERING_SETPOINT cmd;
-			cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_joy_x * 255.0;
-			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
-
-			ROS_INFO_THROTTLE(1, "Sending openloop STEER: %f", m_joy_x);
-		} else {
-			MRPT_TODO("Recalibrate steer pos range");
-			int16_t steer_pos = 512 * m_joy_x;
-
-			TFrameCMD_CONTROL_STEERING_SETPOINT cmd;
-			cmd.payload.SETPOINT_STEER_POS = steer_pos;
-			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
-
-			ROS_INFO_THROTTLE(1, "Sending closedloop STEER: %d", steer_pos);
-		}
-
 		// Y: throttle
 		if (m_mode_openloop_throttle) {
 			TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
@@ -269,26 +243,14 @@ void VehicleControllerLowLevel::daqOnNewENCCallback(const TFrame_ENCODERS_readin
 	m_pub_ENC.publish(msg);
 }
 
-void VehicleControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_reading_payload_t &data) {
-	ual_ecar_vehicle_controller::EncoderAbsReading msg;
-
-	msg.timestamp_ms = data.timestamp_ms_tenths;
-	msg.encoder_status = data.enc_status;
-	msg.encoder_value = data.enc_pos;
-
-	m_pub_ENC_ABS.publish(msg);
-}
-
 void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTROL_SIGNAL_payload_t &data) {
 	ual_ecar_vehicle_controller::ControlSignal msg;
 
 	msg.timestamp_ms = data.timestamp_ms_tenth;
-	msg.Steer_controller_signal = data.Steer_control_signal;
+	msg.Brake_controller_signal = data.Brake_control_signal;
 	msg.Throttle_controller_signal = data.Throttle_control_signal;
-	msg.Encoder_Absoluto = data.Encoder_absoluto;
-	msg.Encoder_Incremental = data.Encoder_incremental;
-	msg.Steer_ADC_current_sense = data.Steer_ADC_current_sense* 5.0/1023.0;
-	msg.Encoder_controller_signal = data.Encoder_signal;
+	msg.Encoder_Incremental = data.Brake_Encoder_incremental;
+	msg.Brake_ADC_current_sense = data.Brake_ADC_current_sense* 5.0/1023.0;
 	msg.Throttle_analog_feedback = data.Throttle_analog_feedback* 5.0/1023.0;
 
 	m_pub_Control_signal.publish(msg);
