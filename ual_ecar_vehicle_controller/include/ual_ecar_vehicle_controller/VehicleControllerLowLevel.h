@@ -75,28 +75,25 @@ bool CMD_PWM(int pin_index, uint8_t pwm_value);
 bool CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t &Decimation_config);
 
 
-std::string m_serial_port_name;
-int m_serial_port_baudrate;
-CSerialPort m_serial; //!< The serial COMMS object
+std::string m_serial_Steer_port_name, m_serial_SpeedCruise_port_name;
+int m_serial_Steer_port_baudrate, m_serial_SpeedCruise_port_baudrate;
+CSerialPort m_serial_Steer, m_serial_SpeedCruise; //!< The serial COMMS object
 int m_NOP_sent_counter{0};
 
 bool m_mode_openloop_steer{true}; /*Variable para la comprobacion del modo de control*/
 bool m_mode_openloop_throttle{true}; /*Variable para la comprobacion del modo de control*/
 bool m_modes_changed{true};
-
 bool m_autonomous_driving_mode{false};
-
-double m_joy_x{.0}, m_joy_y{.0};
 bool m_joy_changed{false};
+double m_joy_x{.0}, m_joy_y{.0};
 
 // Local methods:
-bool AttemptConnection(); //!< Returns true if connected OK, false on error.
+bool AttemptConnection(CSerialPort &m_serial,std::string &m_serial_port_name, int &m_serial_port_baudrate); //!< Returns true if connected OK, false on error.
 bool IsConnected() const; //!< Returns true if the serial comms are working
-bool ReceiveFrameFromController(std::vector<uint8_t> &rx_data); //!< Tries to get a framed chunk of data from the controller.
-void processIncommingFrame(const std::vector<uint8_t> &rxFrame);
-bool WriteBinaryFrame(const uint8_t *full_frame,const size_t full_frame_len); //!< Sends a binary packet, in the expected format  (returns false on COMMS error)
-bool SendFrameAndWaitAnswer(
-	const uint8_t *full_frame, const size_t full_frame_len,
+bool ReceiveFrameFromController(std::vector<uint8_t> &rx_data, CSerialPort &m_serial); //!< Tries to get a framed chunk of data from the controller.
+void processIncommingFrame(const std::vector<uint8_t> &rxFrame, CSerialPort &m_serial, std::string &m_serial_port_name);
+bool WriteBinaryFrame(const uint8_t *full_frame,const size_t full_frame_len, CSerialPort &m_serial); //!< Sends a binary packet, in the expected format  (returns false on COMMS error)
+bool SendFrameAndWaitAnswer(const uint8_t *full_frame, const size_t full_frame_len,
 	const int num_retries = 10, const int retries_interval_ms = 40,
 	uint8_t expected_ans_opcode = 0 //<! 0 means the default convention: full_frame[1]+0x70,
 	); //!< Sends a binary packet, in the expected format  (returns false on COMMS

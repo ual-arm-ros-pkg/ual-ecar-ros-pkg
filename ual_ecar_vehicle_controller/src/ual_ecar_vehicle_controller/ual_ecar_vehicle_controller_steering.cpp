@@ -38,13 +38,13 @@ using mrpt::utils::saturate;
 bool VehicleControllerLowLevel::initialize() {
 	ROS_INFO("VehicleControllerLowLevel::inicialize() ok.");
 
-	m_serial_port_name = "/dev/serial/by-id/usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0";
-	m_serial_port_baudrate = 500000;
-	m_nh_params.getParam("SERIAL_PORT", m_serial_port_name);
-	m_nh_params.getParam("SERIAL_PORT_BAUDRATE", m_serial_port_baudrate);
+	m_serial_Steer_port_name = "/dev/serial/by-id/usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0";
+	m_serial_Steer_port_baudrate = 500000;
+	m_nh_params.getParam("SERIAL_PORT", m_serial_Steer_port_name);
+	m_nh_params.getParam("SERIAL_PORT_BAUDRATE", m_serial_Steer_port_baudrate);
 
 	// Try to connect...
-	if (this->AttemptConnection()) {
+	if (this->AttemptConnection(m_serial_SpeedCruise, m_serial_Steer_port_name, m_serial_Steer_port_baudrate)) {
 		ROS_INFO("Connection OK to VehicleLowLevelController [Claraquino].");
 	} else {
 		ROS_ERROR("Error in VehicleControllerLowLevel::AttemptConnection()!");
@@ -104,8 +104,10 @@ bool VehicleControllerLowLevel::initialize() {
 }
 
 // Cruise:
-void VehicleControllerLowLevel::processIncommingFrame1(const std::vector<uint8_t> &rxFrame) {
+void VehicleControllerLowLevel::processIncommingFrame(const std::vector<uint8_t> &rxFrame, CSerialPort &m_serial, std::string &m_serial_port_name) {
 	// MRPT_LOG_INFO_STREAM  << "Rx frame, len=" << rxFrame.size();
+	if (m_serial_port_name == m_serial_Steer_port_name)
+	{
 	if (rxFrame.size() >= 5) {
 		switch (rxFrame[1]) {
 			case RESP_ADC_READINGS: {
@@ -127,6 +129,7 @@ void VehicleControllerLowLevel::processIncommingFrame1(const std::vector<uint8_t
 			} break;
 		};
 	}
+}
 }
 
 bool VehicleControllerLowLevel::iterate() {
@@ -168,15 +171,15 @@ bool VehicleControllerLowLevel::iterate() {
 	const size_t MAX_FRAMES_PER_ITERATE = 20;
 	size_t nFrames = 0;
 // ---
-	if (!m_serial.isOpen()) {
+	if (!m_serial_Steer.isOpen()) {
 		if (!this->initialize())
 			return false;
 	}
 
 	std::vector<uint8_t> rxFrame;
-	while (ReceiveFrameFromController(rxFrame, m_serial1) && ++nFrames < MAX_FRAMES_PER_ITERATE) {
+	while (ReceiveFrameFromController(rxFrame, m_serial_Steer) && ++nFrames < MAX_FRAMES_PER_ITERATE) {
 		// Process them:
-		processIncommingFrame1(rxFrame); // dupl.
+		processIncommingFrame(rxFrame, m_serial_Steer, m_serial_Steer_port_name); // dupl.
 	}
 
 	// if no frame was received, ping the uC to keep comms alive:
@@ -186,7 +189,7 @@ bool VehicleControllerLowLevel::iterate() {
 		// Send a dummy NOP command
 		TFrameCMD_NOP cmd;
 		cmd.calc_and_update_checksum();
-		return WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
+		return WriteBinaryFrame(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd)); //Add m_serial_Steer
 	}
 // ---
 
@@ -244,7 +247,7 @@ void VehicleControllerLowLevel::daqOnNewControlSignalCallback(const TFrame_CONTR
 }
 
 // DUP:
-bool VehicleControllerLowLevel::AttemptConnection() {
+bool VehicleControllerLowLevel::AttemptConnection(CSerialPort &m_serial, std::string &m_serial_port_name, int &m_serial_port_baudrate) {
 	if (m_serial.isOpen())
 	return true; // Already open.
 
@@ -264,8 +267,8 @@ bool VehicleControllerLowLevel::AttemptConnection() {
 }
 
 /** Sends a binary packet (returns false on COMMS error) */
-bool VehicleControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame,const size_t full_frame_len, CSerialPort &serial) {
-	if (!AttemptConnection())
+bool VehicleControllerLowLevel::WriteBinaryFrame(const uint8_t *full_frame,const size_t full_frame_len, CSerialPort &m_serial, std::string &m_serial_port_name, int &m_serial_port_baudrate) {
+	if (!AttemptConnection(m_serial, m_serial_port_name, m_serial_port_baudrate))
 		return false;
 
 	ASSERT_(full_frame != NULL);
@@ -300,12 +303,12 @@ bool VehicleControllerLowLevel::SendFrameAndWaitAnswer(const uint8_t *full_frame
 		if (iter > 0)
 			std::this_thread::sleep_for(std::chrono::milliseconds(retries_interval_ms));
 		// Send:
-		if (!WriteBinaryFrame(full_frame, full_frame_len))
+		if (!WriteBinaryFrame(full_frame, full_frame_len, m_serial_Steer))
 			continue;
 
 		// Wait for answer:
 		std::vector<uint8_t> rxFrame;
-		if (this->ReceiveFrameFromController(rxFrame) && rxFrame.size() > 4) {
+		if (this->ReceiveFrameFromController(rxFrame, m_serial_Steer) && rxFrame.size() > 4) {
 			const auto RX_OPCODE = rxFrame[1];
 			if (RX_OPCODE == expected_ans_opcode) {
 				// We received the ACK from the uC, yay!
@@ -313,7 +316,7 @@ bool VehicleControllerLowLevel::SendFrameAndWaitAnswer(const uint8_t *full_frame
 				return true;
 			} else {
 				// Ensure the frame gets processed:
-				processIncommingFrame(rxFrame);
+				processIncommingFrame(rxFrame, m_serial_Steer,m_serial_Steer_port_name);
 			}
 		}
 	}
@@ -386,7 +389,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(std::vector<uint8_t> 
 		}
 	}
 
-	MRPT_TODO("Checksum");
+	//MRPT_TODO("Checksum");
 
 	if (is_ok) {
 		nFrameBytes += nRead;
@@ -425,24 +428,8 @@ bool VehicleControllerLowLevel::CMD_GPIO_output(int pin, bool pinState) {
 	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
 }
 
-//!< Sets the clutch
-bool VehicleControllerLowLevel::CMD_DAC(int dac_index, double dac_value_volts) {
-	uint16_t dac_counts = 4096 * dac_value_volts / 5.0;
-	saturate(dac_counts, uint16_t(0), uint16_t(4095));
-
-	TFrameCMD_SetDAC cmd;
-	cmd.payload.dac_index = dac_index;
-	cmd.payload.dac_value_HI = dac_counts >> 8;
-	cmd.payload.dac_value_LO = dac_counts & 0x00ff;
-	cmd.payload.flag_enable_timeout = true;
-
-	cmd.calc_and_update_checksum();
-
-	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t *>(&cmd), sizeof(cmd));
-}
-
 bool VehicleControllerLowLevel::IsConnected() const {
-	return m_serial1.isOpen() && m_serial2.isOpen();
+	return m_serial_Steer.isOpen() && m_serial_SpeedCruise.isOpen();
 }
 
 bool VehicleControllerLowLevel::CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t &Decimation_config)
