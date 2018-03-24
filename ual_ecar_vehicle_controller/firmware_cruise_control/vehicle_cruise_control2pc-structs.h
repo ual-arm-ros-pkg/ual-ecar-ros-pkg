@@ -64,14 +64,14 @@ enum opcode_t {
 	OP_START_ENCODERS  = 0x30,
 	OP_STOP_ENCODERS   = 0x31,
 	// Control:
-	OP_CONTROL_MODE					= 0x50,
+	OP_CONTROL_MODE								= 0x50,
 	OP_CONTROL_BRAKE_SET_PARAMS		= 0x51,
-	OP_CONTROL_THROTTLE_SET_PARAMS	= 0x52,
-	OP_OPENLOOP_BRAKE_SETPOINT		= 0x53,
-	OP_OPENLOOP_THROTTLE_SETPOINT	= 0x54,
-	OP_CONTROL_BRAKE_SETPOINT		= 0x55,
-	OP_CONTROL_THROTTLE_SETPOINT	= 0x56,
-	OP_VERBOSITY_CONTROL			= 0X57,
+	OP_CONTROL_THROTTLE_SET_PARAMS= 0x53,
+	OP_OPENLOOP_BRAKE_SETPOINT		= 0x54,
+	OP_OPENLOOP_THROTTLE_SETPOINT	= 0x56,
+	OP_CONTROL_BRAKE_SETPOINT			= 0x57,
+	OP_CONTROL_THROTTLE_SETPOINT	= 0x59,
+	OP_VERBOSITY_CONTROL					= 0X60,
 
 	// -----------------------------
 	// Responses uC -> PC
@@ -243,7 +243,7 @@ struct TFrameCMD_ENCODERS_start_payload_t
 {
 	static const uint8_t NUM_ENCODERS = 2;
 
-	/** Fill pin numbers ("0xAB numbering") that want to get used as quadrature encoder A,B & Z channels. 
+	/** Fill pin numbers ("0xAB numbering") that want to get used as quadrature encoder A,B & Z channels.
 	  * Leave to "0" if don't need Z channels or one of the A/B encoder channels.
 	  */
 	int8_t encA_pin[NUM_ENCODERS], encB_pin[NUM_ENCODERS], encZ_pin[NUM_ENCODERS];
@@ -371,7 +371,7 @@ struct TFrameCMD_CONTROL_BRAKE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_
 
 struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t
 {
-/** Desired setpoint for throttle in Open Loop. 
+/** Desired setpoint for throttle in Open Loop.
   * [-1,0]:max reverse, [0,1]: max forward
   */
 	float  SETPOINT_OPENLOOP_THROTTLE { .0f };
@@ -386,7 +386,7 @@ struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLO
 
 struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t
 {
-/** Desired setpoint for brake in Open Loop. 
+/** Desired setpoint for brake in Open Loop.
   * [-255,0]:max reverse, [0,255]: max forward
   */
 	float  SETPOINT_OPENLOOP_BRAKE { .0f };
@@ -401,7 +401,7 @@ struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLOOP_
 
 struct TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t
 {
-	/** Desired setpoint for throttle in Open Loop. 
+	/** Desired setpoint for throttle in Open Loop.
 	  * 0:min speed, 12.5 m/s: max forward
 	  */
 	float  SETPOINT_CONTROL_THROTTLE_SPEED { .0f };
@@ -416,7 +416,7 @@ struct TFrameCMD_CONTROL_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL
 
 struct TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t
 {
-	/** Desired setpoint for brake in Open Loop. 
+	/** Desired setpoint for brake in Open Loop.
 	  */
 	float  SETPOINT_CONTROL_BRAKE_FORCE { .0f };
 };
@@ -430,7 +430,7 @@ struct TFrameCMD_CONTROL_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_BR
 
 struct TFrameCMD_VERBOSITY_CONTROL_payload_t
 {
-	/** 
+	/**
 	  */
 	uint8_t decimate_ADC { 10 };
 	uint16_t decimate_CPU {10000};

@@ -56,20 +56,27 @@ enum opcode_t {
 	// COMMANDS PC -> uC
 	// -----------------------------
 	OP_NOP             = 0x00,
+	OP_SET_DAC         = 0x10,
 	OP_SET_GPIO        = 0x11,
 	OP_GET_GPIO        = 0x12,
 	OP_START_CONT_ADC  = 0x20,
 	OP_STOP_CONT_ADC   = 0x21,
 	OP_START_ENCODERS  = 0x30,
 	OP_STOP_ENCODERS   = 0x31,
-	OP_START_EMS22A	   = 0x40, //
-	OP_STOP_EMS22A     = 0x41, //
+  OP_START_EMS22A	   = 0x40,
+	OP_STOP_EMS22A     = 0x41,
 	// Control:
-	OP_CONTROL_MODE									= 0x50,
-	OP_CONTROL_STEERING_SET_PARAMS	= 0x52,
-	OP_CONTROL_STEERING_SETPOINT		= 0x58,
-	OP_OPENLOOP_STEERING_SETPOINT		= 0x55,
-	OP_VERBOSITY_CONTROL						= 0X60,
+	OP_CONTROL_MODE					        = 0x50,
+	OP_CONTROL_BRAKE_SET_PARAMS		  = 0x51,
+  OP_CONTROL_STEERING_SET_PARAMS	= 0x52,
+	OP_CONTROL_THROTTLE_SET_PARAMS	= 0x53,
+	OP_OPENLOOP_BRAKE_SETPOINT		  = 0x54,
+  OP_OPENLOOP_STEERING_SETPOINT		= 0x55,
+	OP_OPENLOOP_THROTTLE_SETPOINT	  = 0x56,
+	OP_CONTROL_BRAKE_SETPOINT		    = 0x57,
+  OP_CONTROL_STEERING_SETPOINT		= 0x58,
+	OP_CONTROL_THROTTLE_SETPOINT	  = 0x59,
+	OP_VERBOSITY_CONTROL			      = 0X60,
 
 	// -----------------------------
 	// Responses uC -> PC
@@ -77,17 +84,18 @@ enum opcode_t {
 	RESP_OFFSET = 0x70,
 	// -----------------------------
 	RESP_NOP              = OP_NOP + RESP_OFFSET,
+	RESP_SET_DAC          = OP_SET_DAC + RESP_OFFSET,
 	RESP_SET_GPIO         = OP_SET_GPIO + RESP_OFFSET,
 	RESP_GET_GPIO         = OP_GET_GPIO + RESP_OFFSET,
 	RESP_START_CONT_ADC   = OP_START_CONT_ADC + RESP_OFFSET,
 	RESP_STOP_CONT_ADC    = OP_STOP_CONT_ADC + RESP_OFFSET,
 	RESP_START_ENCODERS   = OP_START_ENCODERS + RESP_OFFSET,
 	RESP_STOP_ENCODERS    = OP_STOP_ENCODERS + RESP_OFFSET,
-	RESP_START_EMS22A     = OP_START_EMS22A + RESP_OFFSET, //
+  RESP_START_EMS22A     = OP_START_EMS22A + RESP_OFFSET, //
 	RESP_STOP_EMS22A      = OP_STOP_EMS22A + RESP_OFFSET,  //
 	RESP_ADC_READINGS     = 0x92,
 	RESP_ENCODER_READINGS = 0x93,
-	RESP_EMS22A_READINGS  = 0x94,
+  RESP_EMS22A_READINGS  = 0x94,
 	RESP_CONTROL_SIGNAL   = 0x95,
 	RESP_CPU_USAGE_STATS  = 0xA0,
 
@@ -144,6 +152,24 @@ struct TFrameCMD_NOP : public TBaseFrame<TFrameCMD_NOP_payload_t>
 	TFrameCMD_NOP() : TBaseFrame(OP_NOP)
 	{
 	}
+};
+
+struct TFrameCMD_SetDAC_payload_t
+{
+    uint8_t  dac_index;
+    uint8_t  dac_value_HI, dac_value_LO;
+    uint8_t  flag_enable_timeout : 1;   // bitfield: 1 bit flag
+    TFrameCMD_SetDAC_payload_t() :
+        dac_index(0), dac_value_HI(0), dac_value_LO(0),flag_enable_timeout(0)
+    {
+    }
+};
+struct TFrameCMD_SetDAC : public TBaseFrame<TFrameCMD_SetDAC_payload_t>
+{
+    // Defaults:
+    TFrameCMD_SetDAC() : TBaseFrame(OP_SET_DAC)
+    {
+    }
 };
 
 struct TFrameCMD_GPIO_output_payload_t
@@ -221,7 +247,6 @@ struct TFrame_ADC_readings : public TBaseFrame<TFrame_ADC_readings_payload_t>
 	}
 };
 
-
 struct TFrameCMD_ENCODERS_start_payload_t
 {
 	static const uint8_t NUM_ENCODERS = 2;
@@ -273,7 +298,6 @@ struct TFrame_ENCODERS_readings : public TBaseFrame<TFrame_ENCODERS_readings_pay
 	{
 	}
 };
-
 struct TFrame_ENCODER_ABS_reading_payload_t
 {
 	uint32_t timestamp_ms_tenths;
@@ -284,44 +308,6 @@ struct TFrame_ENCODER_ABS_reading : public TBaseFrame<TFrame_ENCODER_ABS_reading
 {
 	// Defaults:
 	TFrame_ENCODER_ABS_reading() : TBaseFrame(RESP_EMS22A_READINGS)
-	{
-	}
-};
-
-struct TFrame_CONTROL_SIGNAL_payload_t
-{
-	uint32_t timestamp_ms_tenth;
-	int16_t Steer_control_signal;
-	int32_t Encoder_incremental;
-	uint32_t Encoder_absoluto;
-	int32_t Encoder_signal;
-	uint16_t Steer_ADC_current_sense;
-};
-struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
-{
-	// Default:
-	TFrame_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL)
-	{
-	}
-};
-
-struct TFrame_CPU_USAGE_STATS_payload_t
-{
-	uint32_t timestamp_ms_tenths;
-	/** min/max/average execution time of the uC main loop (in tenths of milliseconds) */
-	uint32_t loop_min_time, loop_max_time, loop_average_time;
-	uint16_t loop_iterations;
-	void clear()
-	{
-		loop_min_time = 0xffffffff;
-		loop_max_time = loop_average_time = 0;
-		loop_iterations = 0;
-	}
-};
-struct TFrame_CPU_USAGE_STATS : public TBaseFrame<TFrame_CPU_USAGE_STATS_payload_t>
-{
-	// Defaults:
-	TFrame_CPU_USAGE_STATS() : TBaseFrame(RESP_CPU_USAGE_STATS)
 	{
 	}
 };
@@ -357,18 +343,172 @@ struct TFrameCMD_EMS22A_stop : public TBaseFrame<TFrameCMD_EMS22A_stop_payload_t
 	}
 };
 
-struct TFrameCMD_CONTROL_MODE_payload_t
+struct TFrame_STEER_CONTROL_SIGNAL_payload_t
 {
-	bool steer_enable; //!< false: open loop (no control algorithm)
+	uint32_t timestamp_ms_tenth;
+	int16_t Steer_control_signal;
+	int32_t Encoder_incremental;
+	uint32_t Encoder_absoluto;
+	int32_t Encoder_signal;
+	uint16_t Steer_ADC_current_sense;
 };
-struct TFrameCMD_CONTROL_MODE : public TBaseFrame<TFrameCMD_CONTROL_MODE_payload_t>
+struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
 {
-	// Defaults:
-	TFrameCMD_CONTROL_MODE() : TBaseFrame(OP_CONTROL_MODE)
+	// Default:
+	TFrame_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL)
 	{
 	}
 };
 
+struct TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t
+{
+	uint32_t timestamp_ms_tenth;
+	uint16_t Throttle_control_signal;
+	int16_t Brake_control_signal;
+	uint16_t Throttle_analog_feedback; //!< The analog output of the DAC, converted back to ADC in the uC
+	int16_t VehSpeed_feedback;			// Phidget Signal
+	int32_t Brake_Encoder_incremental;
+	uint16_t Brake_ADC_current_sense;
+};
+struct TFrame_SPEEDCRUISE_CONTROL_SIGNAL : public TBaseFrame<TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t>
+{
+	// Default:
+	TFrame_SPEEDCRUISE_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL)
+	{
+	}
+};
+
+struct TFrameCMD_STEER_CONTROL_MODE_payload_t
+{
+  bool steer_enable; //!< false: open loop (no control algorithm)
+};
+struct TFrameCMD_STEER_CONTROL_MODE : public TBaseFrame<TFrameCMD_STEER_CONTROL_MODE_payload_t>
+{
+	// Defaults:
+	TFrameCMD_STEER_CONTROL_MODE() : TBaseFrame(OP_CONTROL_MODE)
+	{
+	}
+};
+
+struct TFrameCMD_SPEEDCRUISE_CONTROL_MODE_payload_t
+{
+	bool brake_enable; //!< false: open loop (no control algorithm)
+	bool throttle_enable; //!< false: open loop (no control algorithm)
+};
+struct TFrameCMD_SPEEDCRUISE_CONTROL_MODE : public TBaseFrame<TFrameCMD_SPEEDCRUISE_CONTROL_MODE_payload_t>
+{
+	// Defaults:
+	TFrameCMD_SPEEDCRUISE_CONTROL_MODE() : TBaseFrame(OP_CONTROL_MODE)
+	{
+	}
+};
+
+struct TFrame_CPU_USAGE_STATS_payload_t
+{
+	uint32_t timestamp_ms_tenths;
+	/** min/max/average execution time of the uC main loop (in tenths of milliseconds) */
+	uint32_t loop_min_time, loop_max_time, loop_average_time;
+	uint16_t loop_iterations;
+	void clear()
+	{
+		loop_min_time = 0xffffffff;
+		loop_max_time = loop_average_time = 0;
+		loop_iterations = 0;
+	}
+};
+struct TFrame_CPU_USAGE_STATS : public TBaseFrame<TFrame_CPU_USAGE_STATS_payload_t>
+{
+	// Defaults:
+	TFrame_CPU_USAGE_STATS() : TBaseFrame(RESP_CPU_USAGE_STATS)
+	{
+	}
+};
+
+
+struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t
+{
+	float Q_THROTTLE_CONTROLLER[3] = {0,0,0};
+	int16_t U_THROTTLE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_THROTTLE_DECOUPLING = 0; /*battery-charge*/
+};
+struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t>
+{
+	// Defaults:
+	TFrameCMD_CONTROL_THROTTLE_SET_PARAMS() : TBaseFrame(OP_CONTROL_THROTTLE_SET_PARAMS)
+	{
+	}
+};
+
+struct TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t
+{
+	float Q_BRAKE_CONTROLLER[3] = {0,0,0};
+	int16_t U_BRAKE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_BRAKE_DECOUPLING = 0; /*battery-charge*/
+};
+struct TFrameCMD_CONTROL_BRAKE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t>
+{
+	// Defaults:
+	TFrameCMD_CONTROL_BRAKE_SET_PARAMS() : TBaseFrame(OP_CONTROL_BRAKE_SET_PARAMS)
+	{
+	}
+};
+
+struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t
+{
+/** Desired setpoint for throttle in Open Loop.
+  * [-1,0]:max reverse, [0,1]: max forward
+  */
+	float  SETPOINT_OPENLOOP_THROTTLE { .0f };
+};
+struct TFrameCMD_OPENLOOP_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLOOP_THROTTLE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_OPENLOOP_THROTTLE_SETPOINT() : TBaseFrame(OP_OPENLOOP_THROTTLE_SETPOINT)
+	{
+	}
+};
+
+struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t
+{
+/** Desired setpoint for brake in Open Loop.
+  * [-255,0]:max reverse, [0,255]: max forward
+  */
+	float  SETPOINT_OPENLOOP_BRAKE { .0f };
+};
+struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_OPENLOOP_BRAKE_SETPOINT() : TBaseFrame(OP_OPENLOOP_BRAKE_SETPOINT)
+	{
+	}
+};
+
+struct TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t
+{
+	/** Desired setpoint for throttle in Open Loop.
+	  * 0:min speed, 12.5 m/s: max forward
+	  */
+	float  SETPOINT_CONTROL_THROTTLE_SPEED { .0f };
+};
+struct TFrameCMD_CONTROL_THROTTLE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_THROTTLE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_CONTROL_THROTTLE_SETPOINT() : TBaseFrame(OP_CONTROL_THROTTLE_SETPOINT)
+	{
+	}
+};
+
+struct TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t
+{
+	/** Desired setpoint for brake in Open Loop.
+	  */
+	float  SETPOINT_CONTROL_BRAKE_FORCE { .0f };
+};
+struct TFrameCMD_CONTROL_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t>
+{
+	// Defaults:
+	TFrameCMD_CONTROL_BRAKE_SETPOINT() : TBaseFrame(OP_CONTROL_BRAKE_SETPOINT)
+	{
+	}
+};
 
 struct TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t
 {
@@ -420,8 +560,8 @@ struct TFrameCMD_VERBOSITY_CONTROL_payload_t
 	/**
 	  */
 	uint8_t decimate_ADC { 10 };
-	uint8_t decimate_ENCABS {10};
 	uint16_t decimate_CPU {10000};
+	uint8_t decimate_ENCABS {10};
 	uint8_t decimate_CONTROLSIGNAL {10};
 	uint8_t decimate_ENCINC {10};
 };
