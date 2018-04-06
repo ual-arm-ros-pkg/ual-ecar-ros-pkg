@@ -268,7 +268,7 @@ void VehicleControllerLowLevel::processIncommingFrame(
 
 				case RESP_CONTROL_SIGNAL:
 				{
-					TFrame_CONTROL_SIGNAL rx;
+					TFrame_SPEEDCRUISE_CONTROL_SIGNAL rx;
 					::memcpy((uint8_t*)&rx, &rxFrame[0], sizeof(rx));
 					daqOnNewSpeedCruiseControlSignalCallback(rx.payload);
 				}
