@@ -138,9 +138,9 @@ void SystemIdentification::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
 	m_eje_y = msg->data;
 }
 
-void SystemIdentification::ControlCallback(const ual_ecar_vehicle_controller::ControlSignal::ConstPtr& msg)
+void SystemIdentification::ControlCallback(const ual_ecar_vehicle_controller::ControlSignalSteer::ConstPtr& msg)
 {
-	m_dac_pedal		= msg->Throttle_controller_signal;
+//	m_dac_pedal		= msg->Throttle_controller_signal;
 	m_pwm_steering	= msg->Steer_controller_signal;
 }
 

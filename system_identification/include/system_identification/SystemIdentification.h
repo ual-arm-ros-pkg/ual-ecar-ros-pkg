@@ -12,7 +12,7 @@
 #include <std_msgs/UInt8.h>
 #include <mrpt/utils/COutputLogger.h>
 #include <ual_ecar_vehicle_controller/AnalogReading.h>
-#include <ual_ecar_vehicle_controller/ControlSignal.h>
+#include <ual_ecar_vehicle_controller/ControlSignalSteer.h>
 #include <ual_ecar_vehicle_controller/EncoderAbsReading.h>
 #include <ual_ecar_vehicle_controller/EncodersReading.h>
 #include <functional>
@@ -52,7 +52,7 @@ public:
 
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
-	void ControlCallback(const ual_ecar_vehicle_controller::ControlSignal::ConstPtr& msg);
+	void ControlCallback(const ual_ecar_vehicle_controller::ControlSignalSteer::ConstPtr& msg);
 	void ENCCallback(const ual_ecar_vehicle_controller::EncodersReading::ConstPtr& msg);
 	void ENCAbsCallback(const ual_ecar_vehicle_controller::EncoderAbsReading::ConstPtr& msg);
 	void ADCCallback(const ual_ecar_vehicle_controller::AnalogReading::ConstPtr& msg);
