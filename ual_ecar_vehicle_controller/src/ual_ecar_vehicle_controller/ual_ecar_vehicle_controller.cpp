@@ -29,7 +29,7 @@ using mrpt::utils::saturate;
 #endif
 
 // Define to see serial communication traces
-//#define DEBUG_TRACES
+#define DEBUG_TRACES
 
 bool VehicleControllerLowLevel::initialize()
 {
@@ -37,7 +37,7 @@ bool VehicleControllerLowLevel::initialize()
 
 	m_serial_Steer_port_name =
 		"/dev/serial/by-id/"
-		"usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0";
+		"usb-Ual-ARM-eCARM_Claraquino_eCARM_2018_03_06_FT3ALM93-if00-port0";
 	m_serial_Steer_port_baudrate = 500000;
 	m_nh_params.getParam("STEER_SERIAL_PORT", m_serial_Steer_port_name);
 	m_nh_params.getParam(
@@ -45,7 +45,7 @@ bool VehicleControllerLowLevel::initialize()
 
 	m_serial_SpeedCruise_port_name =
 		"/dev/serial/by-id/"
-		"usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0";  // CHANGE
+		"usb-Ual-ARM-eCARM_Claraquino_eCARM_FT37TV91-if00-port0";  // CHANGE
 	m_serial_SpeedCruise_port_baudrate = 500000;
 	m_nh_params.getParam(
 		"SPEEDCRUISE_SERIAL_PORT", m_serial_SpeedCruise_port_name);
@@ -581,7 +581,13 @@ bool VehicleControllerLowLevel::WriteBinaryFrame(
 				"TX frame (%u bytes): ", (unsigned int)full_frame_len);
 			for (size_t i = 0; i < full_frame_len; i++)
 				s += mrpt::format("%02X ", full_frame[i]);
-			MRPT_LOG_INFO_FMT("Tx frame: %s", s.c_str());
+				if (&m_serial == &m_serial_Steer)
+				{
+					MRPT_LOG_INFO_FMT("Tx frame: %s. STEER_SERIAL_PORT", s.c_str());
+				}
+				else{
+					MRPT_LOG_INFO_FMT("Tx frame: %s. SPEEDCRUISE_SERIAL_PORT", s.c_str());
+				}
 		}
 #endif
 
@@ -689,7 +695,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(
 				"ReceiveFrameFromController(): Comms error: %s", e.what());
 			return false;
 		}
-
+MRPT_LOG_ERROR_FMT("nFrameBytes = %lu, lengthField = %lu, nBytesToRead = %lu, nRead = %lu",(unsigned long) nFrameBytes,(unsigned long) lengthField,(unsigned long) nBytesToRead,(unsigned long) nRead); //Quitar
 		if (!nRead && !nFrameBytes)
 		{
 			// cout << "[rx] No frame (buffer empty)\n";
@@ -709,7 +715,13 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(
 		if (!nFrameBytes && buf[0] != FRAME_START_FLAG)
 		{
 			is_ok = false;
-			MRPT_LOG_INFO("[rx] Reset frame (start flag)");
+			if (&m_serial == &m_serial_Steer)
+			{
+				MRPT_LOG_INFO("[rx] Reset frame (start flag). STEER_SERIAL_PORT");
+			}
+			else{
+				MRPT_LOG_INFO("[rx] Reset frame (start flag). SPEEDCRUISE_SERIAL_PORT");
+			}
 		}
 
 		if (nFrameBytes > 2 && nFrameBytes + nRead == lengthField)
