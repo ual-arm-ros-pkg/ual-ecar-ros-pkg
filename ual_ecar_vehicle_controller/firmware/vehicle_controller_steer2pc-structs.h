@@ -65,11 +65,11 @@ enum opcode_t {
 	OP_START_EMS22A	   = 0x40, //
 	OP_STOP_EMS22A     = 0x41, //
 	// Control:
-	OP_CONTROL_MODE									= 0x50,
-	OP_CONTROL_STEERING_SET_PARAMS	= 0x52,
+	OP_CONTROL_MODE						= 0x50,
+	OP_CONTROL_STEERING_SET_PARAMS		= 0x52,
 	OP_CONTROL_STEERING_SETPOINT		= 0x58,
 	OP_OPENLOOP_STEERING_SETPOINT		= 0x55,
-	OP_VERBOSITY_CONTROL						= 0X60,
+	OP_VERBOSITY_CONTROL				= 0X60,
 
 	// -----------------------------
 	// Responses uC -> PC

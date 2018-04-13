@@ -12,6 +12,7 @@ Universidad de Almeria
 #include "libclaraquino/millis_timer.h"
 #include "vehicle_controller_steer_declarations.h"
 
+#include <stdio.h>
 #include <avr/interrupt.h> // sei()
 
 void processCPUStats(const uint32_t dt);
@@ -25,7 +26,7 @@ int main(void)
 	// Enable interrupts:
 	sei();
 
-	flash_led(3,10);
+	flash_led(3,100);
 
 	// Make sure all outputs are in a safe state:
 	enableSteerController(false);
@@ -36,6 +37,9 @@ int main(void)
 	// ============== Infinite loop ====================
 	while(1)
 	{
+// 		char str[100];
+// 		sprintf(str,"Prueba\r\n");
+// 		UART::WriteString(str);
 		// ---- Run scheduled tasks ----------
 		processIncommingPkts();
 		processADCs();
