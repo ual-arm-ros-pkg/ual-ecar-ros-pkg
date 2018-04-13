@@ -29,7 +29,7 @@ using mrpt::utils::saturate;
 #endif
 
 // Define to see serial communication traces
-#define DEBUG_TRACES
+//#define DEBUG_TRACES
 
 bool VehicleControllerLowLevel::initialize()
 {
@@ -189,7 +189,7 @@ bool VehicleControllerLowLevel::initialize()
 				decimate_CONTROLSIGNAL_SpeedCruise;
 
 			MRPT_LOG_INFO_FMT(
-				" Speed Cruise Decimation: ADC=%i  ENCABS=%i  ENCINC=%i  "
+				" Speed Cruise Decimation: ADC=%i  ENCINC=%i  "
 				"CPU=%i  Control Signal=%i",
 				decimate_ADC_SpeedCruise, decimate_ENCINC_SpeedCruise,
 				decimate_CPU_SpeedCruise, decimate_CONTROLSIGNAL_SpeedCruise);
@@ -674,7 +674,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(
 		{
 			nFrameBytes = 0;  // No es cabecera de trama correcta
 			buf[1] = buf[2] = 0;
-			MRPT_LOG_INFO("[rx] Reset frame (invalid len)");
+			MRPT_LOG_INFO("[rx]  (invalid len)");
 		}
 
 		size_t nBytesToRead;
@@ -695,7 +695,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(
 				"ReceiveFrameFromController(): Comms error: %s", e.what());
 			return false;
 		}
-MRPT_LOG_ERROR_FMT("nFrameBytes = %lu, lengthField = %lu, nBytesToRead = %lu, nRead = %lu",(unsigned long) nFrameBytes,(unsigned long) lengthField,(unsigned long) nBytesToRead,(unsigned long) nRead); //Quitar
+
 		if (!nRead && !nFrameBytes)
 		{
 			// cout << "[rx] No frame (buffer empty)\n";
