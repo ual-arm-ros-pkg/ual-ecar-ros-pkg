@@ -143,7 +143,13 @@ void initSensorsForController()
 
 	// Init DAC:
 	mod_dac_max5500_init(DAC_OUT_PIN_NO);
-
+	// Direction:
+	gpio_pin_mode(RELAY_FRWD_REV, OUTPUT);
+	gpio_pin_write(RELAY_FRWD_REV, false);
+	// Relay:
+	gpio_pin_mode(RELAY_PEDAL_INTERLOCK, OUTPUT);
+	gpio_pin_write(RELAY_PEDAL_INTERLOCK, false);
+	
 	// PWM:
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
 	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );  // freq_PWM = F_CPU / (prescaler*510)
@@ -151,17 +157,11 @@ void initSensorsForController()
 	// PWM direction:
 	gpio_pin_mode(PWM_DIR, OUTPUT);
 	gpio_pin_write(PWM_DIR, false);
-
-	// Relay:
-	gpio_pin_mode(RELAY_PEDAL_INTERLOCK, OUTPUT);
-	gpio_pin_write(RELAY_PEDAL_INTERLOCK, false);
-
 }
 
 void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control)
 {
 	global_decimate = verbosity_control;
-
 }
 
 void enableThrottleController(bool enabled)
@@ -274,7 +274,7 @@ void processThrottleController()
 	/* Values actualization*/
 	do_shift(U_throttle_controller);
 	
-	TFrame_CONTROL_SIGNAL tx;
+	TFrame_SPEEDCRUISE_CONTROL_SIGNAL tx;
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim0 = 0;
 	if (++decim0>global_decimate.decimate_CONTROLSIGNAL)
@@ -282,6 +282,7 @@ void processThrottleController()
 		decim0=0;
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
+		tx.payload.Brake_control_signal = U_brake_controller[0];
 		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
 //		tx.payload.Brake_Encoder_incremental = enc_diff;
 		tx.payload.Brake_ADC_current_sense = ADC_last_reading.adc_data[0];

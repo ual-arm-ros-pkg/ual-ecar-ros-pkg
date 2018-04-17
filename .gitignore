@@ -31,3 +31,10 @@ ual_ecar_vehicle_controller/firmware/Debug/Makefile
 build
 CMakeLists.txt.user
 
+*.hex
+ual_ecar_vehicle_controller/firmware/Release/vehicle_controller_firmware.hex
+*.hex
+battery_charge/firmware/battery-firmware/.vs/battery-firmware/v14/.atsuo
+battery_charge/firmware/battery-firmware/firmware/firmware/Release/firmware.hex
+ual_ecar_vehicle_controller/firmware/Release/vehicle_controller_firmware.hex
+ual_ecar_vehicle_controller/firmware_cruise_control/Release/vehicle_cruise_control.hex

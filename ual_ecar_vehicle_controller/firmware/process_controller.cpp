@@ -207,9 +207,7 @@ void processSteerController()
 	sei();
 	// Read abs encoder:
 	{
-		cli();
 		const uint16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset; // Abs encoder (10 bit resolution)
-		sei();
 
 		// Filter out clearly erroneous readings from the abs encoder: 
 		if (abs(abs_enc_pos_new - abs_enc_pos)<1060)
@@ -321,7 +319,7 @@ void processSteerController()
 	// PWM direction:
 	gpio_pin_write(PWM_DIR, u_steer_is_positive);
 
-	TFrame_CONTROL_SIGNAL tx;
+	TFrame_STEER_CONTROL_SIGNAL tx;
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim0 = 0;
 	if (++decim0>global_decimate.decimate_CONTROLSIGNAL)

@@ -288,7 +288,7 @@ struct TFrame_ENCODER_ABS_reading : public TBaseFrame<TFrame_ENCODER_ABS_reading
 	}
 };
 
-struct TFrame_CONTROL_SIGNAL_payload_t
+struct TFrame_STEER_CONTROL_SIGNAL_payload_t
 {
 	uint32_t timestamp_ms_tenth;
 	int16_t Steer_control_signal;
@@ -297,12 +297,11 @@ struct TFrame_CONTROL_SIGNAL_payload_t
 	int32_t Encoder_signal;
 	uint16_t Steer_ADC_current_sense;
 };
-struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
+struct TFrame_STEER_CONTROL_SIGNAL
+: public TBaseFrame<TFrame_STEER_CONTROL_SIGNAL_payload_t>
 {
 	// Default:
-	TFrame_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL)
-	{
-	}
+	TFrame_STEER_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL) {}
 };
 
 struct TFrame_CPU_USAGE_STATS_payload_t

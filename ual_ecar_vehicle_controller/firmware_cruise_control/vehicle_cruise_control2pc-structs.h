@@ -291,7 +291,7 @@ struct TFrame_ENCODERS_readings : public TBaseFrame<TFrame_ENCODERS_readings_pay
 	}
 };
 
-struct TFrame_CONTROL_SIGNAL_payload_t
+struct TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t
 {
 	uint32_t timestamp_ms_tenth;
 	uint16_t Throttle_control_signal;
@@ -301,10 +301,10 @@ struct TFrame_CONTROL_SIGNAL_payload_t
 	int32_t Brake_Encoder_incremental;
 	uint16_t Brake_ADC_current_sense;
 };
-struct TFrame_CONTROL_SIGNAL : public TBaseFrame<TFrame_CONTROL_SIGNAL_payload_t>
+struct TFrame_SPEEDCRUISE_CONTROL_SIGNAL : public TBaseFrame<TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t>
 {
 	// Default:
-	TFrame_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL)
+	TFrame_SPEEDCRUISE_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL)
 	{
 	}
 };

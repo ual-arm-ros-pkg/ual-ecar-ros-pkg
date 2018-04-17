@@ -332,11 +332,11 @@ struct TFrame_STEER_CONTROL_SIGNAL_payload_t
 	int32_t Encoder_signal;
 	uint16_t Steer_ADC_current_sense;
 };
-struct TFrame_CONTROL_SIGNAL
+struct TFrame_STEER_CONTROL_SIGNAL
 	: public TBaseFrame<TFrame_STEER_CONTROL_SIGNAL_payload_t>
 {
 	// Default:
-	TFrame_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL) {}
+	TFrame_STEER_CONTROL_SIGNAL() : TBaseFrame(RESP_CONTROL_SIGNAL) {}
 };
 
 struct TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t

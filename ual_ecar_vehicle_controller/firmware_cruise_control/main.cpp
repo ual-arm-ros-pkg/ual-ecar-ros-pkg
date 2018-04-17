@@ -41,8 +41,8 @@ int main(void)
 		processIncommingPkts();
 		processADCs();
 		processEncoders();
-		processThrottleController();
 		processBrakeController();
+		processThrottleController();
 		process_timeouts(); // Handle possible timeouts of previous commands:
 
 		const uint32_t t_end = millis();

@@ -236,7 +236,7 @@ void VehicleControllerLowLevel::processIncommingFrame(
 
 				case RESP_CONTROL_SIGNAL:
 				{
-					TFrame_CONTROL_SIGNAL rx;
+					TFrame_STEER_CONTROL_SIGNAL rx;
 					::memcpy((uint8_t*)&rx, &rxFrame[0], sizeof(rx));
 					daqOnNewSteerControlSignalCallback(rx.payload);
 				}
@@ -357,7 +357,7 @@ bool VehicleControllerLowLevel::iterate()
 		{
 			const float MAX_VEL_MPS = 2.0;
 			float vel_mps = m_joy_y * MAX_VEL_MPS;
-			// TO-DO: SETPOINT_OPENLOOP_BRAKE
+			// TO-DO: CONTROL_BRAKE_SETPOINT
 			TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
 			cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
 			cmd.calc_and_update_checksum();
