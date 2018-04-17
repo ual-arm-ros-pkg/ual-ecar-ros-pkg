@@ -455,7 +455,7 @@ struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t
 	/** Desired setpoint for brake in Open Loop.
 	 * [-255,0]:max reverse, [0,255]: max forward
 	 */
-	float SETPOINT_OPENLOOP_BRAKE{.0f};
+	int16_t SETPOINT_OPENLOOP_BRAKE{0};
 };
 struct TFrameCMD_OPENLOOP_BRAKE_SETPOINT
 	: public TBaseFrame<TFrameCMD_OPENLOOP_BRAKE_SETPOINT_payload_t>
@@ -486,8 +486,9 @@ struct TFrameCMD_CONTROL_THROTTLE_SETPOINT
 struct TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t
 {
 	/** Desired setpoint for brake in Open Loop.
-	 */
-	float SETPOINT_CONTROL_BRAKE_FORCE{.0f};
+	  * [-255,0]:max reverse, [0,255]: max forward
+	  */
+	int16_t SETPOINT_CONTROL_BRAKE_FORCE{0};
 };
 struct TFrameCMD_CONTROL_BRAKE_SETPOINT
 	: public TBaseFrame<TFrameCMD_CONTROL_BRAKE_SETPOINT_payload_t>

@@ -324,7 +324,7 @@ bool VehicleControllerLowLevel::iterate()
 			WriteBinaryFrame(
 				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
 			ROS_INFO_THROTTLE(
-				1, "Sending openloop STEER: %f",
+				1, "Sending openloop STEER: %d",
 				cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED);
 		}
 		else
@@ -336,22 +336,36 @@ bool VehicleControllerLowLevel::iterate()
 			WriteBinaryFrame(
 				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
 			ROS_INFO_THROTTLE(
-				1, "Sending closedloop STEER: %f",
+				1, "Sending closedloop STEER: %d",
 				cmd.payload.SETPOINT_STEER_POS);
 		}
 		// Y: throttle
 		if (m_mode_openloop_throttle)
 		{
-			// TO-DO: SETPOINT_OPENLOOP_BRAKE
-			TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
-			cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
-			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(
-				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
-				m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(
-				1, "Sending openloop THROTTLE: %f",
-				cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
+			if (m_joy_y < 0)
+			{
+				TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd;
+				cmd.payload.SETPOINT_OPENLOOP_BRAKE = abs(m_joy_y*255);
+				cmd.calc_and_update_checksum();
+				WriteBinaryFrame(
+					reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
+					m_serial_SpeedCruise);
+					ROS_INFO_THROTTLE(
+						1, "Sending openloop Brake: %d",
+						cmd.payload.SETPOINT_OPENLOOP_BRAKE);
+			}
+			else
+			{
+				TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
+				cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
+				cmd.calc_and_update_checksum();
+				WriteBinaryFrame(
+					reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
+					m_serial_SpeedCruise);
+				ROS_INFO_THROTTLE(
+					1, "Sending openloop THROTTLE: %f",
+					cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
+			}
 		}
 		else
 		{

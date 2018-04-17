@@ -95,7 +95,7 @@ uint32_t	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = 0;
   *-254:max right, +254: max left
   * Time of when the setpoint was last changed (1/10 of ms)
   */
-float		SETPOINT_OPENLOOP_BRAKE = .0f;
+int16_t		SETPOINT_OPENLOOP_BRAKE = 0;
 uint32_t	SETPOINT_OPENLOOP_BRAKE_TIMESTAMP = 0;
 
 /** Desired setpoint for throttle in Close Loop.
@@ -149,7 +149,7 @@ void initSensorsForController()
 	// Relay:
 	gpio_pin_mode(RELAY_PEDAL_INTERLOCK, OUTPUT);
 	gpio_pin_write(RELAY_PEDAL_INTERLOCK, false);
-	
+
 	// PWM:
 	gpio_pin_mode(PWM_PIN_NO, OUTPUT);
 	pwm_init(PWM_OUT_TIMER, PWM_PRESCALER_1 );  // freq_PWM = F_CPU / (prescaler*510)
@@ -204,7 +204,7 @@ void setOpenLoopSetpoint_VehVel(float ol_vel_mps)
 	SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP = millis();
 }
 
-void setOpenLoopSetpoint_Brake(float ol_brakeforce)
+void setOpenLoopSetpoint_Brake(int16_t ol_brakeforce)
 {
 	SETPOINT_OPENLOOP_BRAKE = ol_brakeforce;
 	SETPOINT_OPENLOOP_BRAKE_TIMESTAMP = millis();
@@ -231,8 +231,8 @@ void processThrottleController()
 		return;
 
 	CONTROL_last_millis_THROTTLE = tnow;
-	
-	
+
+
 	if (!THROTTLECONTROL_active)
 	{
 		if (tnow>(SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
@@ -254,10 +254,10 @@ void processThrottleController()
 	}
 
 	// Ensure normalized speed is in range [-5,5]
-	if (U_throttle_controller[0]>5) 
+	if (U_throttle_controller[0]>5)
 		U_throttle_controller[0]=5;
 	else
-		if (U_throttle_controller[0]<-5) 
+		if (U_throttle_controller[0]<-5)
 			U_throttle_controller[0]=-5;
 
 	// Output direction:
@@ -273,7 +273,7 @@ void processThrottleController()
 
 	/* Values actualization*/
 	do_shift(U_throttle_controller);
-	
+
 	TFrame_SPEEDCRUISE_CONTROL_SIGNAL tx;
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim0 = 0;
@@ -300,15 +300,15 @@ void processBrakeController()
 		return;
 
 		CONTROL_last_millis_BRAKE = tnow;
-		
+
 		cli();
 		const int32_t enc_diff = enc_last_reading.encoders[0];
 		sei();
-		
+
 		if (!BRAKECONTROL_active)
 		{
 			if (tnow>(SETPOINT_OPENLOOP_BRAKE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
-			SETPOINT_OPENLOOP_BRAKE = 0;
+				SETPOINT_OPENLOOP_BRAKE = 0;
 
 			U_brake_controller[0] = SETPOINT_OPENLOOP_BRAKE;
 		}
@@ -324,7 +324,7 @@ void processBrakeController()
 			// TODO: Brake-by-wire controller here!!
 			U_brake_controller[0] = SETPOINT_CONTROL_BRAKE_FORCE;
 		}
-	
+
 		/* Values actualization*/
 		do_shift(U_brake_controller);
 		// Output PWM:

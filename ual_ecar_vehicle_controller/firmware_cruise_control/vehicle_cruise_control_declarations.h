@@ -62,7 +62,7 @@ void setControllerSetpoint_VehVel(float vel_mps);
 void processBrakeController();
 void enableBrakeController(bool enable);
 void setBrake_ControllerParams(const TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t &brake_controller_params);
-void setOpenLoopSetpoint_Brake(float ol_brakeforce);
+void setOpenLoopSetpoint_Brake(int16_t ol_brakeforce);
 void setControllerSetpoint_Brake(float brakeforce);
 
 // Verbosity Control:
