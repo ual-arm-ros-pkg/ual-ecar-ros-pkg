@@ -243,6 +243,7 @@ void processSteerController()
 	/*	+-------------------+
 		|	STEER-BY-WIRE	|
 		+-------------------+ */
+	#warning Si pasa un tiempo sin mandar una referencia, se lleva el mecanismo al centro??
 		if (tnow>(SETPOINT_STEER_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
 			SETPOINT_STEER_POS = 0;
 	/*	Position reference reading */

@@ -688,7 +688,7 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(
 		{
 			nFrameBytes = 0;  // No es cabecera de trama correcta
 			buf[1] = buf[2] = 0;
-			MRPT_LOG_INFO("[rx]  (invalid len)");
+			MRPT_LOG_INFO("[rx] Reset frame (invalid len)");
 		}
 
 		size_t nBytesToRead;

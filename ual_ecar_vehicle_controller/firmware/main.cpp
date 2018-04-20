@@ -37,9 +37,6 @@ int main(void)
 	// ============== Infinite loop ====================
 	while(1)
 	{
-// 		char str[100];
-// 		sprintf(str,"Prueba\r\n");
-// 		UART::WriteString(str);
 		// ---- Run scheduled tasks ----------
 		processIncommingPkts();
 		processADCs();
