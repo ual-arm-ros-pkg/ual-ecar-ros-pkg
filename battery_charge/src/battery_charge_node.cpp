@@ -43,14 +43,14 @@ int main(int argc, char **argv)
 	{
 		ros::init(argc, argv, "battery_charge");
 
-		BatteryCharge_LowLevel  bat;
-		bat.initialize();
+		BatteryCharge_LowLevel  battery_charge;
+		battery_charge.initialize();
 
 		ros::Rate loop_rate(100); // f : 100Hz => T = 10 ms
 		while (ros::ok())
 		{
 			ros::spinOnce();
-			bat.iterate();
+			battery_charge.iterate();
 			loop_rate.sleep();
 		}
 

@@ -53,11 +53,13 @@ using mrpt::hwdrivers::CSerialPort;
 using mrpt::utils::COutputLogger;
 #endif
 
+struct TFrame_BATTERY_readings_payload_t;
+struct TFrameCMD_VERBOSITY_CONTROL_payload_t;
 
 class BatteryCharge_LowLevel : public COutputLogger
 {
 public:
-	BatteryCharge_LowLevel();
+	BatteryCharge_LowLevel() {}
 
 
 	/**
@@ -66,7 +68,7 @@ public:
 	* NodeHandle destructed will close down the node.
 	*/
 	ros::NodeHandle m_nh;
-	ros::NodeHandle m_nh_params;
+	ros::NodeHandle m_nh_params{"~"};
 
 	std::vector<ros::Subscriber> m_sub_OPTO_outputs;
 	ros::Publisher  m_pub_battery_charge;
@@ -83,17 +85,19 @@ protected:
 	std::string m_serial_port_name;
 	int         m_serial_port_baudrate;
 	CSerialPort m_serial;  //!< The serial COMMS object
+	int m_NOP_sent_counter{0};
 
 	std::function<void(TFrame_BATTERY_readings_payload_t)> m_bat_callback;
 	void daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data);
 
 	bool CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t& Decimation_config);
 	// Local methods:
+	void processIncommingFrame(const std::vector<uint8_t>& rxFrame);
 	bool AttemptConnection();   //!< Returns true if connected OK, false on error.
 	bool IsConnected() const; 	//!< Returns true if the serial comms are working
 	bool ReceiveFrameFromController(std::vector<uint8_t> &rx_data); //!< Tries to get a framed chunk of data from the controller.
 	bool WriteBinaryFrame( const uint8_t *full_frame, const size_t full_frame_len); //!< Sends a binary packet, in the expected format  (returns false on COMMS error)
-	bool SendFrameAndWaitAnswer(const uint8_t* full_frame, const size_t full_frame_len, 
+	bool SendFrameAndWaitAnswer(const uint8_t* full_frame, const size_t full_frame_len,
 		const int num_retries = 10,
 		const int retries_interval_ms = 40,
 		uint8_t expected_ans_opcode = 0  //<! 0 means the default convention: full_frame[1]+0x70,
