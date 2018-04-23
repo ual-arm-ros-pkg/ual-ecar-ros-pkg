@@ -3,7 +3,7 @@
  *
  * Created: 05/10/2017 9:25:36
  *  Author: Francisco Jose Manas
- */ 
+ */
 #include "libclaraquino/gpio.h"
 #include "libclaraquino/modules/adc_ad7606/ad7606.h"
 #include "libclaraquino/uart.h"
@@ -34,7 +34,7 @@ void process_batery_init()
 	cfg.PIN_DATA[7]	= 0x14;
 	cfg.PIN_nRD		= 0x25;
 	cfg.PIN_RESET	= 0x26;
-	
+
 	mod_ad7606_init(cfg);
 }
 
@@ -49,9 +49,9 @@ void processBattery()
 	if (tnow-PC_last_millis < PC_sampling_period_ms_tenths)
 	return;
 	PC_last_millis = tnow;
-	
+
 	TFrame_BATTERY_readings tx;
-	
+
 	// Atomic read: used to avoid race condition while reading if an interrupt modified the mid-read data.
 	uint8_t oldSREG = SREG;
 	cli();
@@ -68,7 +68,7 @@ void processBattery()
 	SREG=oldSREG;
 
 	sei();
-	
+
 // 	char str[100];
 // 	sprintf(str,"V0=%i V1=%i V2=%i V3=%i V4=%i V5=%i V6=%i V7=%i \r\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
 // 	UART::WriteString(str);
@@ -76,7 +76,7 @@ void processBattery()
 	// send answer back:
 	tx.payload.timestamp_ms_tenths = millis();
 	tx.payload.period_ms_tenths = PC_sampling_period_ms_tenths;
-	
+
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim = 0;
 	if (++decim>global_decimate.decimate_BAT)

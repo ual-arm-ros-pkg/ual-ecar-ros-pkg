@@ -59,7 +59,7 @@ using mrpt::utils::saturate;
 bool BatteryCharge_LowLevel::initialize()
 {
 	ROS_INFO("BatteryCharge_LowLevel::inicialize() ok.");
-	m_serial_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCAMR_Monitor_de_bater�as_AL1L20Ez-if00-port0";
+	m_serial_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCARM_Monitor_de_baterías_AL1L20EZ-if00-port0";
 	m_serial_port_baudrate = 500000;
 	m_nh_params.getParam("SERIAL_PORT",m_serial_port_name);
 	m_nh_params.getParam("SERIAL_PORT_BAUDRATE",m_serial_port_baudrate);
@@ -165,10 +165,14 @@ void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_p
 	msg.timestamp_ms = data.timestamp_ms_tenths;
 	const int N = sizeof(data.bat_volts) / sizeof(data.bat_volts[0]);
 
+
+	const double K_adc = 5.0/(1<<16);
+	const double K_r = 1.0/64.4;
+
 	msg.bat_volts.resize(N);
 	for (int i=0;i<N;i++)
 	{
-		msg.bat_volts[i] = data.bat_volts[i];
+		msg.bat_volts[i] = data.bat_volts[i]*K_adc*K_r;
 	}
 	msg.bat_current = data.bat_current;
 

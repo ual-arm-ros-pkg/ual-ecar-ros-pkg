@@ -3,7 +3,7 @@
  *
  * Created: 04/10/2017 12:11:13
  *  Author: Francisco Jose Manas
- */ 
+ */
 
 #pragma once
 
@@ -175,8 +175,8 @@ struct TFrameCMD_BATTERY_stop : public TBaseFrame<TFrameCMD_BATTERY_stop_payload
 struct TFrame_BATTERY_readings_payload_t
 {
 	uint32_t timestamp_ms_tenths;
-	double  bat_volts[8]; /*Float64[]*/
-	double  bat_current;  /*Float64*/
+	int16_t  bat_volts[8]; /*Float64[]*/
+	int16_t  bat_current;  /*Float64*/
 	uint32_t period_ms_tenths;
 };
 struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_payload_t>
@@ -225,5 +225,3 @@ struct TFrameCMD_VERBOSITY_CONTROL : public TBaseFrame<TFrameCMD_VERBOSITY_CONTR
 #if !defined(__AVR_MEGA__)
 #	pragma pack(pop)
 #endif
-
-
