@@ -11,11 +11,9 @@
 #include "libclaraquino/millis_timer.h"
 #include <stdio.h>
 #include <avr/interrupt.h>  // cli()/sei()
-#include <libclaraquino/delays.h> // delay
 
 uint32_t	PC_last_millis = 0;
-uint16_t	PC_sampling_period_ms_tenths = 2000;
-TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
+uint16_t	PC_sampling_period_ms_tenths = 5000;
 
  // TODO: Define an xxxx_init();
 void process_batery_init()
@@ -38,16 +36,12 @@ void process_batery_init()
 	mod_ad7606_init(cfg);
 }
 
-void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control)
-{
-	global_decimate = verbosity_control;
-}
-
 void processBattery()
 {
 	const uint32_t tnow = millis();
 	if (tnow-PC_last_millis < PC_sampling_period_ms_tenths)
 	return;
+
 	PC_last_millis = tnow;
 
 	TFrame_BATTERY_readings tx;
@@ -59,7 +53,8 @@ void processBattery()
 	mod_ad7606_wait_busy();
 	int16_t buf[8];
 	mod_ad7606_read_all(buf);
-	for (uint8_t i=0;i<8;i++)
+	
+	for (uint8_t i=0;i<TFrameCMD_BATTERY_start_payload_t::NUM_BATTERIES;i++)
 	{
 		tx.payload.bat_volts[i] = buf[i];
 	}
@@ -70,7 +65,7 @@ void processBattery()
 	sei();
 
 // 	char str[100];
-// 	sprintf(str,"V0=%i V1=%i V2=%i V3=%i V4=%i V5=%i V6=%i V7=%i \r\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
+// 	sprintf(str,"V0=%i V1=%i\r\n", buf[0],buf[1]);
 // 	UART::WriteString(str);
 
 	// send answer back:
@@ -79,7 +74,7 @@ void processBattery()
 
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim = 0;
-	if (++decim>global_decimate.decimate_BAT)
+	if (++decim>10)
 	{
 		decim=0;
 		tx.calc_and_update_checksum();

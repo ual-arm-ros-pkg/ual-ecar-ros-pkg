@@ -35,32 +35,40 @@
 
 #pragma once
 
-#include <ros/ros.h>
-#include <std_msgs/Bool.h>
-#include <std_msgs/Float64.h>
-//#include <std_msgs/UInt8.h>
-
 #include <mrpt/version.h>
-#if MRPT_VERSION >= 0x199
-#include <mrpt/comms/CSerialPort.h>
-#include <mrpt/system/COutputLogger.h>
+#if MRPT_VERSION>=0x199
+# include <mrpt/comms/CSerialPort.h>
 using mrpt::comms::CSerialPort;
-using mrpt::system::COutputLogger;
 #else
-#include <mrpt/hwdrivers/CSerialPort.h>
-#include <mrpt/utils/COutputLogger.h>
+# include <mrpt/hwdrivers/CSerialPort.h>
 using mrpt::hwdrivers::CSerialPort;
-using mrpt::utils::COutputLogger;
 #endif
 
+<<<<<<< HEAD
 struct TFrame_BATTERY_readings_payload_t;
 struct TFrameCMD_VERBOSITY_CONTROL_payload_t;
+=======
+#include <ros/ros.h>
+#include <std_msgs/UInt8.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Float64.h>
 
-class BatteryCharge_LowLevel : public COutputLogger
+#include <mrpt/utils/COutputLogger.h>
+#include <batterycharge2pc-structs.h>
+#include <functional>
+
+>>>>>>> parent of 151beae... Nodo ROS, prueba
+
+class BatteryCharge_LowLevel : public mrpt::utils::COutputLogger
 {
 public:
+<<<<<<< HEAD
 	BatteryCharge_LowLevel() {}
 
+=======
+	BatteryCharge_LowLevel();
+	virtual ~BatteryCharge_LowLevel();
+>>>>>>> parent of 151beae... Nodo ROS, prueba
 
 	/**
 	* NodeHandle is the main access point to communications with the ROS system.
@@ -73,12 +81,28 @@ public:
 	std::vector<ros::Subscriber> m_sub_OPTO_outputs;
 	ros::Publisher  m_pub_battery_charge;
 
+
+	void setSerialPort(const std::string &sSerialName) {
+		m_serial_port_name = sSerialName;
+	}
+	std::string getSerialPort() const {
+		return m_serial_port_name;
+	}
+
 	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
 	  * \return false on error */
 	bool initialize();
 
 	/** called when work is to be done */
 	bool iterate();
+
+	bool CMD_OPTO_output(int opto, bool optoState);
+	bool CMD_BAT_START(const TFrameCMD_BATTERY_start_payload_t &enc_config);
+	bool CMD_BAT_STOP();
+
+	void set_BAT_readings_callback(const std::function<void(TFrame_BATTERY_readings_payload_t)> &f) {
+		m_bat_callback = f;
+	}
 
 protected:
 	// Local class members:
@@ -87,21 +111,25 @@ protected:
 	CSerialPort m_serial;  //!< The serial COMMS object
 	int m_NOP_sent_counter{0};
 
-	std::function<void(TFrame_BATTERY_readings_payload_t)> m_bat_callback;
-	void daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data);
-
-	bool CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t& Decimation_config);
 	// Local methods:
 	void processIncommingFrame(const std::vector<uint8_t>& rxFrame);
 	bool AttemptConnection();   //!< Returns true if connected OK, false on error.
 	bool IsConnected() const; 	//!< Returns true if the serial comms are working
 	bool ReceiveFrameFromController(std::vector<uint8_t> &rx_data); //!< Tries to get a framed chunk of data from the controller.
 	bool WriteBinaryFrame( const uint8_t *full_frame, const size_t full_frame_len); //!< Sends a binary packet, in the expected format  (returns false on COMMS error)
+<<<<<<< HEAD
 	bool SendFrameAndWaitAnswer(const uint8_t* full_frame, const size_t full_frame_len,
 		const int num_retries = 10,
 		const int retries_interval_ms = 40,
 		uint8_t expected_ans_opcode = 0  //<! 0 means the default convention: full_frame[1]+0x70,
 	);  //!< Sends a binary packet, in the expected format  (returns false on
 	//!< COMMS error)
+=======
+
+	std::function<void(TFrame_BATTERY_readings_payload_t)> m_bat_callback;
+	void daqSetDigitalPinCallback(int index, const std_msgs::Bool::ConstPtr& msg);
+
+	void daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data);
+>>>>>>> parent of 151beae... Nodo ROS, prueba
 
 };
