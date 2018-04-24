@@ -70,7 +70,7 @@ void processBattery()
 	sei();
 	
 	char str[100];
-	sprintf(str,"V0=%i V1=%i V2=%i V3=%i V4=%i V5=%i V6=%i V7=%i \r\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
+	sprintf(str,"V0=%i \tV1=%i \tV2=%i \tV3=%i \tV4=%i \tV5=%i \tV6=%i \tV7=%i \r\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
 	UART::WriteString(str);
 
 	// send answer back:

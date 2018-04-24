@@ -175,8 +175,8 @@ struct TFrameCMD_BATTERY_stop : public TBaseFrame<TFrameCMD_BATTERY_stop_payload
 struct TFrame_BATTERY_readings_payload_t
 {
 	uint32_t timestamp_ms_tenths;
-	double  bat_volts[8]; /*Float64[]*/
-	double  bat_current;  /*Float64*/
+	int16_t  bat_volts[8]; /*Float64[]*/
+	int16_t  bat_current;  /*Float64*/
 	uint32_t period_ms_tenths;
 };
 struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_payload_t>
@@ -207,20 +207,20 @@ struct TFrame_CPU_USAGE_STATS : public TBaseFrame<TFrame_CPU_USAGE_STATS_payload
 	}
 };
 
-// struct TFrameCMD_VERBOSITY_CONTROL_payload_t
-// {
-// 	/*
-// 	*/
-// 	uint8_t decimate_BAT{10};
-// 	uint16_t decimate_CPU{10000};
-// };
-// struct TFrameCMD_VERBOSITY_CONTROL : public TBaseFrame<TFrameCMD_VERBOSITY_CONTROL_payload_t>
-// {
-// 	// Defaults:
-// 	TFrameCMD_VERBOSITY_CONTROL() : TBaseFrame(OP_VERBOSITY_CONTROL)
-// 	{
-// 	}
-//};
+struct TFrameCMD_VERBOSITY_CONTROL_payload_t
+{
+	/*
+	*/
+	uint8_t decimate_BAT{10};
+	uint16_t decimate_CPU{10000};
+};
+struct TFrameCMD_VERBOSITY_CONTROL : public TBaseFrame<TFrameCMD_VERBOSITY_CONTROL_payload_t>
+{
+	// Defaults:
+	TFrameCMD_VERBOSITY_CONTROL() : TBaseFrame(OP_VERBOSITY_CONTROL)
+	{
+	}
+};
 
 #if !defined(__AVR_MEGA__)
 #	pragma pack(pop)
