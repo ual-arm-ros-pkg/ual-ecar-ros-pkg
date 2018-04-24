@@ -38,14 +38,14 @@ enum opcode_t {
 	// -----------------------------
 	// COMMANDS PC -> Arduino
 	// -----------------------------
-	OP_NOP             = 0x00,
-	OP_SET_OPTO        = 0x10,
-	OP_GET_OPTO        = 0x11,
-	OP_START_BAT       = 0x20,
-	OP_STOP_BAT        = 0x21,
-
+	OP_NOP					= 0x00,
+	OP_SET_OPTO				= 0x10,
+	OP_GET_OPTO				= 0x11,
+	OP_START_BAT			= 0x20,
+	OP_STOP_BAT				= 0x21,
+	OP_VERBOSITY_CONTROL	= 0X60,
 	// -----------------------------
-	// Responses Arduino -> PC
+	// Responses uC -> PC
 	// -----------------------------
 	RESP_OFFSET = 0x70,
 	// -----------------------------
@@ -55,6 +55,7 @@ enum opcode_t {
 	RESP_START_BAT        = OP_START_BAT + RESP_OFFSET,
 	RESP_STOP_BAT         = OP_STOP_BAT + RESP_OFFSET,
 	RESP_BAT_READINGS     = 0x92,
+	RESP_CPU_USAGE_STATS  = 0xA0,
 
 	// error codes:
 	RESP_CHECKSUM_ERROR    = 0xfa,
@@ -138,12 +139,16 @@ struct TFrameCMD_OPTO_read : public TBaseFrame<TFrameCMD_OPTO_read_payload_t>
 struct TFrameCMD_BATTERY_start_payload_t
 {
 	static const uint8_t NUM_BATTERIES = 8;
+	int8_t   active_bateries[NUM_BATTERIES];
+	uint16_t measure_period_ms_tenths; //!<  in tenths of milliseconds Default = 2000
 
-	uint16_t sampling_period_ms;
 
 	TFrameCMD_BATTERY_start_payload_t() :
-		sampling_period_ms(250)
+		measure_period_ms_tenths(2000)
 		{
+			for (int i=0;i<NUM_BATTERIES;i++) {
+				active_bateries[i]=-1;
+			}
 		}
 
 };
@@ -181,7 +186,6 @@ struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_paylo
 	{
 	}
 };
-<<<<<<< HEAD
 struct TFrame_CPU_USAGE_STATS_payload_t
 {
 	uint32_t timestamp_ms_tenths;
@@ -221,5 +225,3 @@ struct TFrameCMD_VERBOSITY_CONTROL : public TBaseFrame<TFrameCMD_VERBOSITY_CONTR
 #if !defined(__AVR_MEGA__)
 #	pragma pack(pop)
 #endif
-=======
->>>>>>> parent of 151beae... Nodo ROS, prueba

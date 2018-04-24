@@ -79,10 +79,6 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		{
 			if (datalen!=sizeof(TFrameCMD_BATTERY_start_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
-			//TFrameCMD_ENCODERS_start_payload_t bat_req;
-			//memcpy(&bat_req,data, sizeof(bat_req));
-			//init_encoders(bat_req);
-
 			// send answer back:
 			send_simple_opcode_frame(RESP_START_BAT);
 		}
@@ -90,15 +86,21 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 
 		case OP_STOP_BAT:
 		{
-			TFrameCMD_BATTERY_start_payload_t cmd_empty;
-			//init_bettery(cmd_empty);
-			//BATTERY_active=false;
+			if (datalen!=sizeof(TFrameCMD_BATTERY_stop_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
 			// send answer back:
 			send_simple_opcode_frame(RESP_STOP_BAT);
 		}
 		break;
-
+	case OP_VERBOSITY_CONTROL:
+		{
+			if (datalen!=sizeof(TFrameCMD_VERBOSITY_CONTROL_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+			TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control;
+			memcpy(&verbosity_control,data, sizeof(verbosity_control));
+			setVerbosityControl(verbosity_control);
+		}
+		break;
 		default:
 		{
 			// Error:

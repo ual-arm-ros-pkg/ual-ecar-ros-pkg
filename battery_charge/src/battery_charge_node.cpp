@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 		BatteryCharge_LowLevel  battery_charge;
 		battery_charge.initialize();
 
-		ros::Rate loop_rate(500);
+		ros::Rate loop_rate(100); // f : 100Hz => T = 10 ms
 		while (ros::ok())
 		{
 			ros::spinOnce();
