@@ -40,7 +40,7 @@
 #include <ros/console.h>
 #include <thread>
 #include <battery_charge/BatReading.h>
-#include <batterycharge2pc-structs.h>
+#include <battery_charge/firmware/battery-firmware/firmware/firmware/batterycharge2pc-structs.h>
 
 
 #include <mrpt/version.h>
@@ -59,7 +59,7 @@ using mrpt::utils::saturate;
 bool BatteryCharge_LowLevel::initialize()
 {
 	ROS_INFO("BatteryCharge_LowLevel::inicialize() ok.");
-	m_serial_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCARM_Monitor_de_baterÃ­as_AL1L20EZ-if00-port0";
+	m_serial_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCAMR_Monitor_de_baterías_AL1L20Ez-if00-port0";
 	m_serial_port_baudrate = 500000;
 	m_nh_params.getParam("SERIAL_PORT",m_serial_port_name);
 	m_nh_params.getParam("SERIAL_PORT_BAUDRATE",m_serial_port_baudrate);
@@ -67,7 +67,7 @@ bool BatteryCharge_LowLevel::initialize()
 	// Try to connect...
 	if (this->AttemptConnection())
 	{
-		ROS_INFO("Connection OK to BatteryCharge Monitor.");
+		ROS_INFO("Connection OK to BatteryCharge Monitor.")
 	}
 	else
 	{
@@ -86,27 +86,26 @@ bool BatteryCharge_LowLevel::initialize()
 	m_pub_battery_charge = m_nh.advertise<battery_charge::BatReading>("m_pub_battery_charge", 10);
 
 // Decimation params
+{
+	TFrameCMD_VERBOSITY_CONTROL_payload_t Decimation_config;
+	int decimate_BAT = 10,	decimate_CPU = 10000;
+
+	m_nh_params.getParam("DECIM_BAT", decimate_BAT);
+	m_nh_params.getParam("DECIM_CPU", decimate_CPU);
+
+	if (decimate_BAT > 0 && decimate_CPU > 0)
 	{
-		TFrameCMD_VERBOSITY_CONTROL_payload_t Decimation_config;
-		int decimate_BAT = 10,	decimate_CPU = 10000;
+		Decimation_config.decimate_BAT = decimate_BAT;
+		Decimation_config.decimate_CPU = decimate_CPU;
 
-		m_nh_params.getParam("DECIM_BAT", decimate_BAT);
-		m_nh_params.getParam("DECIM_CPU", decimate_CPU);
-
-		if (decimate_BAT > 0 && decimate_CPU > 0)
-		{
-			Decimation_config.decimate_BAT = decimate_BAT;
-			Decimation_config.decimate_CPU = decimate_CPU;
-
-			MRPT_LOG_INFO_FMT(" Firmware Decimation: BAT=%i CPU=%i",decimate_BAT, decimate_CPU);
-			this->CMD_Decimation_configuration(Decimation_config);
-		}
+		MRPT_LOG_INFO_FMT(" Firmware Decimation: BAT=%i CPU=%i",decimate_BAT, decimate_CPU);
+		this->CMD_Decimation_configuration(Decimation_config);
 	}
-
-	return true;
+return true;
 }
 
-void BatteryCharge_LowLevel::processIncommingFrame(const std::vector<uint8_t>& rxFrame)
+void BatteryCharge_LowLevel::processIncommingFrame(
+const std::vector<uint8_t>& rxFrame)
 {
 	if (rxFrame.size() >= 5)
 	{
@@ -165,17 +164,13 @@ void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_p
 	msg.timestamp_ms = data.timestamp_ms_tenths;
 	const int N = sizeof(data.bat_volts) / sizeof(data.bat_volts[0]);
 
-
-	const double K_adc = 5.0/(1<<16);
-	const double K_r = 1.0/64.4;
-
 	msg.bat_volts.resize(N);
 	for (int i=0;i<N;i++)
 	{
-		msg.bat_volts[i] = data.bat_volts[i]*K_adc*K_r;
+		msg.bat_volts[i] = data.bat_volts[i];
 	}
-	msg.bat_current = data.bat_current;
-
+	msg.bat_current = bat_current;
+	
 
 	m_pub_battery_charge.publish(msg);
 }
@@ -394,5 +389,6 @@ bool BatteryCharge_LowLevel::CMD_Decimation_configuration(const TFrameCMD_VERBOS
 	cmd.payload = Decimation_config;
 	cmd.calc_and_update_checksum();
 
-	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
+	return SendFrameAndWaitAnswer(
+	reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial);
 }

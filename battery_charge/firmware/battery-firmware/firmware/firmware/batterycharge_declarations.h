@@ -19,8 +19,8 @@ void send_simple_opcode_frame(const uint8_t op);
 void flash_led(int ntimes, int nms);
 void process_batery_init();
 void processBattery();
-void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control);
+//void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control);
 
 // Global variables:
-extern TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
+//extern TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 

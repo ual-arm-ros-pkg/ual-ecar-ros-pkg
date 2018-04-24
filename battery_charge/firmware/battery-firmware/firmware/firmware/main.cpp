@@ -42,33 +42,33 @@ int main(void)
 		t_ini = millis();
 
 		// ---- CPU busy time stats ----------
-		processCPUStats(dt);
+		//processCPUStats(dt);
 	}
 }
 
-TFrame_CPU_USAGE_STATS  s;
-void processCPUStats(const uint32_t dt)
-{
-	// Accumulate stats:
-	s.payload.loop_average_time+=dt;
-	if (dt>s.payload.loop_max_time) s.payload.loop_max_time=dt;
-	if (dt<s.payload.loop_min_time) s.payload.loop_min_time=dt;
-
-	// Decimate the number of msgs sent to the PC:
-	static uint32_t decim0 = 0;
-	if (++decim0>global_decimate.decimate_CPU)
-	{
-		decim0=0;
-
-		// Send to main PC?
-		s.payload.loop_average_time /= global_decimate.decimate_CPU;
-		s.payload.timestamp_ms_tenths = millis();
-		s.calc_and_update_checksum();
-		s.payload.clear();
-
-		UART::Write((uint8_t*)&s,sizeof(s));
-		// reset
-		s.payload.clear();
-	}
-}
+// TFrame_CPU_USAGE_STATS  s;
+// void processCPUStats(const uint32_t dt)
+// {
+// 	// Accumulate stats:
+// 	s.payload.loop_average_time+=dt;
+// 	if (dt>s.payload.loop_max_time) s.payload.loop_max_time=dt;
+// 	if (dt<s.payload.loop_min_time) s.payload.loop_min_time=dt;
+// 
+// 	// Decimate the number of msgs sent to the PC:
+// 	static uint32_t decim0 = 0;
+// 	if (++decim0>global_decimate.decimate_CPU)
+// 	{
+// 		decim0=0;
+// 
+// 		// Send to main PC?
+// 		s.payload.loop_average_time /= global_decimate.decimate_CPU;
+// 		s.payload.timestamp_ms_tenths = millis();
+// 		s.calc_and_update_checksum();
+// 		s.payload.clear();
+// 
+// 		UART::Write((uint8_t*)&s,sizeof(s));
+// 		// reset
+// 		s.payload.clear();
+// 	}
+// }
 
