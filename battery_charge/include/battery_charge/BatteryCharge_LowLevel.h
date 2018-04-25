@@ -70,7 +70,7 @@ public:
 	ros::NodeHandle m_nh;
 	ros::NodeHandle m_nh_params{"~"};
 
-	std::vector<ros::Subscriber> m_sub_OPTO_outputs;
+	//std::vector<ros::Subscriber> m_sub_OPTO_outputs;
 	ros::Publisher  m_pub_battery_charge;
 
 	/** called at startup, load params from ROS launch file and attempts to connect to the USB device

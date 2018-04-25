@@ -15,7 +15,7 @@
 
 uint32_t	PC_last_millis = 0;
 uint16_t	PC_sampling_period_ms_tenths = 2000;
-//TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
+TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
  // TODO: Define an xxxx_init();
 void process_batery_init()
@@ -38,10 +38,10 @@ void process_batery_init()
 	mod_ad7606_init(cfg);
 }
 
-// void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control)
-// {
-// 	global_decimate = verbosity_control;
-// }
+void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control)
+{
+	global_decimate = verbosity_control;
+}
 
 void processBattery()
 {
@@ -68,22 +68,20 @@ void processBattery()
 	SREG=oldSREG;
 
 	sei();
-	
-	char str[100];
-	sprintf(str,"V0=%i \tV1=%i \tV2=%i \tV3=%i \tV4=%i \tV5=%i \tV6=%i \tV7=%i \r\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
-	UART::WriteString(str);
 
 	// send answer back:
 	tx.payload.timestamp_ms_tenths = millis();
 	tx.payload.period_ms_tenths = PC_sampling_period_ms_tenths;
-/*
+
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim = 0;
-	if (++decim>10)
+	if (++decim>global_decimate.decimate_BAT)
 	{
 		decim=0;
 		tx.calc_and_update_checksum();
 		UART::Write((uint8_t*)&tx,sizeof(tx));
+// 		char str[100];
+// 		sprintf(str,"V0=%i \tV1=%i \tV2=%i \tV3=%i \tV4=%i \tV5=%i \tV6=%i \tV7=%i \r\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
+// 		UART::WriteString(str);
 	}
-	*/
 }

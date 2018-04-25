@@ -14,7 +14,7 @@
 void reset_rx_buf();
 void processIncommingPkts();
 void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*data);
-void process_timeouts();
+//void process_timeouts();
 void send_simple_opcode_frame(const uint8_t op);
 void flash_led(int ntimes, int nms);
 void process_batery_init();

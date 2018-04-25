@@ -67,7 +67,7 @@ bool BatteryCharge_LowLevel::initialize()
 	// Try to connect...
 	if (this->AttemptConnection())
 	{
-		ROS_INFO("Connection OK to BatteryCharge Monitor.")
+		ROS_INFO("Connection OK to BatteryCharge Monitor.");
 	}
 	else
 	{

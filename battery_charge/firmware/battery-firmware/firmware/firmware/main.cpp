@@ -42,7 +42,7 @@ int main(void)
 		t_ini = millis();
 
 		// ---- CPU busy time stats ----------
-		//processCPUStats(dt);
+		processCPUStats(dt);
 	}
 }
 
