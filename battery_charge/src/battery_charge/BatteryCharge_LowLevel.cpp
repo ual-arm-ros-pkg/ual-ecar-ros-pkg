@@ -53,7 +53,7 @@ using mrpt::utils::saturate;
 #endif
 
 // Define to see serial communication traces
-#define DEBUG_TRACES
+//#define DEBUG_TRACES
 
 
 bool BatteryCharge_LowLevel::initialize()
@@ -164,11 +164,13 @@ void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_p
 
 	msg.timestamp_ms = data.timestamp_ms_tenths;
 	const int N = sizeof(data.bat_volts) / sizeof(data.bat_volts[0]);
-
+ 	const float K_adc = 5.0;
+	const float K_div = 64.4;
+	const float K_uC = 65536/2;
 	msg.bat_volts.resize(N);
 	for (int i=0;i<N;i++)
 	{
-		msg.bat_volts[i] = data.bat_volts[i];
+		msg.bat_volts[i] = data.bat_volts[i]*K_adc*K_div/K_uC;
 	}
 	msg.bat_current = data.bat_current;
 
