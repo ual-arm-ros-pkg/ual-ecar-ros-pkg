@@ -40,7 +40,7 @@
 #include <ros/console.h>
 #include <thread>
 #include <battery_charge/BatReading.h>
-#include <battery_charge/firmware/battery-firmware/firmware/firmware/batterycharge2pc-structs.h>
+#include <batterycharge2pc-structs.h>
 
 
 #include <mrpt/version.h>
@@ -59,7 +59,7 @@ using mrpt::utils::saturate;
 bool BatteryCharge_LowLevel::initialize()
 {
 	ROS_INFO("BatteryCharge_LowLevel::inicialize() ok.");
-	m_serial_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCAMR_Monitor_de_baterías_AL1L20Ez-if00-port0";
+	m_serial_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCARM_Monitor_bateria_FT2UQ2L7-if00-port0";
 	m_serial_port_baudrate = 500000;
 	m_nh_params.getParam("SERIAL_PORT",m_serial_port_name);
 	m_nh_params.getParam("SERIAL_PORT_BAUDRATE",m_serial_port_baudrate);
@@ -101,6 +101,7 @@ bool BatteryCharge_LowLevel::initialize()
 		MRPT_LOG_INFO_FMT(" Firmware Decimation: BAT=%i CPU=%i",decimate_BAT, decimate_CPU);
 		this->CMD_Decimation_configuration(Decimation_config);
 	}
+}
 return true;
 }
 
@@ -169,8 +170,8 @@ void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_p
 	{
 		msg.bat_volts[i] = data.bat_volts[i];
 	}
-	msg.bat_current = bat_current;
-	
+	msg.bat_current = data.bat_current;
+
 
 	m_pub_battery_charge.publish(msg);
 }
@@ -389,6 +390,5 @@ bool BatteryCharge_LowLevel::CMD_Decimation_configuration(const TFrameCMD_VERBOS
 	cmd.payload = Decimation_config;
 	cmd.calc_and_update_checksum();
 
-	return SendFrameAndWaitAnswer(
-	reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial);
+	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd));
 }
