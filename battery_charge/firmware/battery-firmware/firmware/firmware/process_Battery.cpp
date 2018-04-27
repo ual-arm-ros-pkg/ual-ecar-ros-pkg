@@ -13,6 +13,10 @@
 #include <avr/interrupt.h>  // cli()/sei()
 #include <libclaraquino/delays.h> // delay
 
+// ============== HARDWARE CONFIGURATION =====================
+const uint16_t SAMPLING_PERIOD_MSth	= 10 /*ms*/ *10 /*th*/;
+const int8_t CURRENT_SENSE_ADC_CH	= 0;    // ADC #0
+
 uint32_t	PC_last_millis = 0;
 uint16_t	PC_sampling_period_ms_tenths = 2000;
 TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
@@ -36,6 +40,13 @@ void process_batery_init()
 	cfg.PIN_RESET	= 0x26;
 	
 	mod_ad7606_init(cfg);
+	{
+		TFrameCMD_ADC_start_payload_t cmd;
+		cmd.active_channels[0] = CURRENT_SENSE_ADC_CH;
+		cmd.use_internal_refvolt = false;
+		cmd.measure_period_ms_tenths = SAMPLING_PERIOD_MSth*10;
+		adc_process_start_cmd(cmd);
+	}
 }
 
 void setVerbosityControl(TFrameCMD_VERBOSITY_CONTROL_payload_t verbosity_control)

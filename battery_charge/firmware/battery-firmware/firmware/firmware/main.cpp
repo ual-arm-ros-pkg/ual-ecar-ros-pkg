@@ -35,6 +35,7 @@ int main(void)
 		// ---- Run scheduled tasks ----------
 		processIncommingPkts();
 		processBattery();
+		processADCs();
 		//process_timeouts(); // Handle possible timeouts of previous commands:
 
 		const uint32_t t_end = millis();

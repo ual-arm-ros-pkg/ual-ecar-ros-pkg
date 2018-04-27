@@ -40,6 +40,7 @@ C_SRCS +=  \
 ../main.cpp \
 ../process_Battery.cpp \
 ../process_command.cpp \
+../process_internal_adc.cpp \
 ../serial.cpp
 
 
@@ -53,24 +54,28 @@ OBJS +=  \
 main.o \
 process_Battery.o \
 process_command.o \
+process_internal_adc.o \
 serial.o
 
 OBJS_AS_ARGS +=  \
 main.o \
 process_Battery.o \
 process_command.o \
+process_internal_adc.o \
 serial.o
 
 C_DEPS +=  \
 main.d \
 process_Battery.d \
 process_command.d \
+process_internal_adc.d \
 serial.d
 
 C_DEPS_AS_ARGS +=  \
 main.d \
 process_Battery.d \
 process_command.d \
+process_internal_adc.d \
 serial.d
 
 OUTPUT_FILE_PATH +=firmware.elf
@@ -87,6 +92,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

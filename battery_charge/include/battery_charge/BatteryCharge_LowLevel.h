@@ -38,7 +38,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
-//#include <std_msgs/UInt8.h>
+#include <std_msgs/UInt8.h>
 
 #include <mrpt/version.h>
 #if MRPT_VERSION >= 0x199
@@ -53,6 +53,8 @@ using mrpt::hwdrivers::CSerialPort;
 using mrpt::utils::COutputLogger;
 #endif
 
+// Fwrd:
+struct TFrame_ADC_readings_payload_t;
 struct TFrame_BATTERY_readings_payload_t;
 struct TFrameCMD_VERBOSITY_CONTROL_payload_t;
 
@@ -71,7 +73,8 @@ public:
 	ros::NodeHandle m_nh_params{"~"};
 
 	//std::vector<ros::Subscriber> m_sub_OPTO_outputs;
-	ros::Publisher  m_pub_battery_charge;
+	ros::Publisher  m_pub_battery_voltaje, m_pub_ammeter_value;
+	std::vector<ros::Subscriber> m_sub_optocoupler[6];
 
 	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
 	  * \return false on error */
@@ -88,9 +91,13 @@ protected:
 	int m_NOP_sent_counter{0};
 
 	std::function<void(TFrame_BATTERY_readings_payload_t)> m_bat_callback;
-	void daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data);
-
+	void daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t& data);
+	void daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data);
 	bool CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t& Decimation_config);
+	void daqSetoptocouplerCallback(int pin, const std_msgs::Bool::ConstPtr& msg);
+
+	uint8_t m_optocoupler{0};
+
 	// Local methods:
 	void processIncommingFrame(const std::vector<uint8_t>& rxFrame);
 	bool AttemptConnection();   //!< Returns true if connected OK, false on error.

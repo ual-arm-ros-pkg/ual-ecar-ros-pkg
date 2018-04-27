@@ -19,14 +19,9 @@ START_FLAG   |  OPCODE  |  DATA_LEN   |   DATA      |    CHECKSUM    | END_FLAG 
   0x69          1 byte      1 byte       N bytes       =sum(data)       0x96
 
 ## Computer => controller
-* 0x10: Set DAC value. DATA_LEN = 3
-	* DATA[0]   = DAC index
-	* DATA[1:2] = DAC value (0x0000-0xffff)  (MSByte first!)
-* 0x11: Set GPIO pin. DATA_LEN = 2
+* 0x10: Set GPIO pin. DATA_LEN = 2
 	* DATA[0]   = Arduino-based pin number
 	* DATA[1]   = 0/1
-* 0x12: Read GPIO pin. DATA_LEN = 1
-	* DATA[0]   = Arduino-based pin number
 * 0x20: Start ADC continuous acquisition task
 * 0x21: Stop ADC task
 */
@@ -40,9 +35,8 @@ enum opcode_t {
 	// -----------------------------
 	OP_NOP					= 0x00,
 	OP_SET_OPTO				= 0x10,
-	OP_GET_OPTO				= 0x11,
-	OP_START_BAT			= 0x20,
-	OP_STOP_BAT				= 0x21,
+	OP_START_CONT_ADC		= 0x20,
+	OP_STOP_CONT_ADC		= 0x21,
 	OP_VERBOSITY_CONTROL	= 0X60,
 	// -----------------------------
 	// Responses uC -> PC
@@ -51,10 +45,10 @@ enum opcode_t {
 	// -----------------------------
 	RESP_NOP              = OP_NOP + RESP_OFFSET,
 	RESP_SET_OPTO         = OP_SET_OPTO + RESP_OFFSET,
-	RESP_GET_OPTO         = OP_GET_OPTO + RESP_OFFSET,
-	RESP_START_BAT        = OP_START_BAT + RESP_OFFSET,
-	RESP_STOP_BAT         = OP_STOP_BAT + RESP_OFFSET,
+	RESP_START_CONT_ADC   = OP_START_CONT_ADC + RESP_OFFSET,
+	RESP_STOP_CONT_ADC    = OP_STOP_CONT_ADC + RESP_OFFSET,
 	RESP_BAT_READINGS     = 0x92,
+	RESP_ADC_READINGS     = 0x93,
 	RESP_CPU_USAGE_STATS  = 0xA0,
 
 	// error codes:
@@ -113,8 +107,8 @@ struct TFrameCMD_NOP : public TBaseFrame<TFrameCMD_NOP_payload_t>
 
 struct TFrameCMD_OPTO_output_payload_t
 {
-    uint8_t  pin_index;
-    uint8_t  pin_value;
+	uint8_t  opto_mask; //!< from 0x01 to 0x10 enable each opto.
+
 };
 struct TFrameCMD_OPTO_output : public TBaseFrame<TFrameCMD_OPTO_output_payload_t>
 {
@@ -124,53 +118,54 @@ struct TFrameCMD_OPTO_output : public TBaseFrame<TFrameCMD_OPTO_output_payload_t
     }
 };
 
-struct TFrameCMD_OPTO_read_payload_t
+struct TFrameCMD_ADC_start_payload_t
 {
-	uint8_t  pin_index;
-};
-struct TFrameCMD_OPTO_read : public TBaseFrame<TFrameCMD_OPTO_read_payload_t>
-{
-	// Defaults:
-	TFrameCMD_OPTO_read() : TBaseFrame(OP_GET_OPTO)
-	{
-	}
-};
-
-struct TFrameCMD_BATTERY_start_payload_t
-{
-	static const uint8_t NUM_BATTERIES = 8;
-	int8_t   active_bateries[NUM_BATTERIES];
+	/** Fill all the pins (0=ADC0, 1=ADC1, ...) that want to get read with an ADC. Default values = -1, means ignore that channel.
+	  */
+	int8_t   active_channels[3];
 	uint16_t measure_period_ms_tenths; //!<  in tenths of milliseconds Default = 2000
+	uint8_t  use_internal_refvolt; //!< 0 or 1. Default=0
 
-
-	TFrameCMD_BATTERY_start_payload_t() :
-		measure_period_ms_tenths(2000)
-		{
-			for (int i=0;i<NUM_BATTERIES;i++) {
-				active_bateries[i]=-1;
-			}
+	TFrameCMD_ADC_start_payload_t() :
+		measure_period_ms_tenths(2000),
+		use_internal_refvolt(0)
+	{
+		for (int i=0;i<3;i++) {
+			active_channels[i]=-1;
 		}
-
+	}
 };
-struct TFrameCMD_BATTERY_start : public TBaseFrame<TFrameCMD_BATTERY_start_payload_t>
+struct TFrameCMD_ADC_start : public TBaseFrame<TFrameCMD_ADC_start_payload_t>
 {
 	// Defaults:
-	TFrameCMD_BATTERY_start() : TBaseFrame(OP_START_BAT)
+	TFrameCMD_ADC_start() : TBaseFrame(OP_START_CONT_ADC)
 	{
 	}
 };
 
-struct TFrameCMD_BATTERY_stop_payload_t
+struct TFrameCMD_ADC_stop_payload_t
 {
 };
-struct TFrameCMD_BATTERY_stop : public TBaseFrame<TFrameCMD_BATTERY_stop_payload_t>
+struct TFrameCMD_ADC_stop : public TBaseFrame<TFrameCMD_ADC_stop_payload_t>
 {
 	// Defaults:
-	TFrameCMD_BATTERY_stop() : TBaseFrame(OP_STOP_BAT)
+	TFrameCMD_ADC_stop() : TBaseFrame(OP_STOP_CONT_ADC)
 	{
 	}
 };
 
+struct TFrame_ADC_readings_payload_t
+{
+	uint32_t timestamp_ms_tenths; //!< timestamp, in tenths of milliseconds
+	uint16_t adc_data[3];
+};
+struct TFrame_ADC_readings : public TBaseFrame<TFrame_ADC_readings_payload_t>
+{
+	// Defaults:
+	TFrame_ADC_readings() : TBaseFrame(RESP_ADC_READINGS)
+	{
+	}
+};
 
 struct TFrame_BATTERY_readings_payload_t
 {
@@ -213,6 +208,7 @@ struct TFrameCMD_VERBOSITY_CONTROL_payload_t
 	*/
 	uint8_t decimate_BAT{10};
 	uint16_t decimate_CPU{10000};
+	uint8_t decimate_ADC{10};
 };
 struct TFrameCMD_VERBOSITY_CONTROL : public TBaseFrame<TFrameCMD_VERBOSITY_CONTROL_payload_t>
 {

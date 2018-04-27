@@ -52,47 +52,38 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		{
 			if (datalen!=sizeof(TFrameCMD_OPTO_output_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
-			const uint8_t pin_no = data[0];
-			const uint8_t pin_val = data[1];
-			gpio_pin_mode(pin_no, OUTPUT);
-			gpio_pin_write(pin_no, pin_val);
+			const uint8_t pin_vals = data[0];
+			DDRD |= 0xCF;
+			PORTD = (PORTD & 0x30) | (pin_vals << 2);
 
 			// send answer back:
 			send_simple_opcode_frame(RESP_SET_OPTO);
 		}
 		break;
-		case OP_GET_OPTO:
+		case OP_START_CONT_ADC:
 		{
-			if (datalen!=sizeof(TFrameCMD_OPTO_read_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+			if (datalen!=sizeof(TFrameCMD_ADC_start_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 
-			const uint8_t pin_no = data[0];
-			gpio_pin_mode(pin_no, INPUT);
-			const uint8_t val = gpio_pin_read(pin_no);
+			TFrameCMD_ADC_start_payload_t adc_req;
+			memcpy(&adc_req,data, sizeof(adc_req));
+
+			adc_process_start_cmd(adc_req);
+			// send answer back:
+			send_simple_opcode_frame(RESP_START_CONT_ADC);
+		}
+		break;
+		case OP_STOP_CONT_ADC:
+		{
+			if (datalen!=sizeof(TFrameCMD_ADC_stop_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+
+			adc_process_stop_cmd();
 
 			// send answer back:
-			const uint8_t rx[] = { FRAME_START_FLAG, RESP_GET_OPTO, 0x01, pin_no, val, uint8_t(0x00 +pin_no+ val)/*checksum*/, FRAME_END_FLAG };
-			UART::Write(rx,sizeof(rx));
+			send_simple_opcode_frame(RESP_STOP_CONT_ADC);
 		}
 		break;
 
-		case OP_START_BAT:
-		{
-			if (datalen!=sizeof(TFrameCMD_BATTERY_start_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
-
-			// send answer back:
-			send_simple_opcode_frame(RESP_START_BAT);
-		}
-		break;
-
-		case OP_STOP_BAT:
-		{
-			if (datalen!=sizeof(TFrameCMD_BATTERY_stop_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
-
-			// send answer back:
-			send_simple_opcode_frame(RESP_STOP_BAT);
-		}
-		break;
-	case OP_VERBOSITY_CONTROL:
+		case OP_VERBOSITY_CONTROL:
 		{
 			if (datalen!=sizeof(TFrameCMD_VERBOSITY_CONTROL_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
 		

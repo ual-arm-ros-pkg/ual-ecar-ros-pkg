@@ -40,6 +40,8 @@
 #include <ros/console.h>
 #include <thread>
 #include <battery_charge/BatReading.h>
+#include <battery_charge/OptocouplerSignal.h>
+#include <battery_charge/AnalogReading.h>
 #include <batterycharge2pc-structs.h>
 
 
@@ -75,34 +77,33 @@ bool BatteryCharge_LowLevel::initialize()
 		return false;
 	}
 
-// 	// Subscribers: OPTO outputs
-// 	m_sub_OPTO_outputs.resize(6);
-// 	for (int i=0;i<6;i++) {
-// 		auto fn = boost::bind(&BatteryCharge_LowLevel::daqSetDigitalPinCallback, this, i, _1);
-// 		m_sub_OPTO_outputs[i] = m_nh.subscribe<std_msgs::Bool>( mrpt::format("m_sub_OPTO_outputs%i",i), 10, fn);
-// 	}
+	// Publisher:
+	m_pub_battery_voltaje = m_nh.advertise<battery_charge::BatReading>("battery_voltaje", 10);
+	m_pub_ammeter_value = m_nh.advertise<battery_charge::AnalogReading>("ammeter_value", 10);
 
-	// Publisher: battery_charge data
-	m_pub_battery_charge = m_nh.advertise<battery_charge::BatReading>("m_pub_battery_charge", 10);
-
-// Decimation params
-{
-	TFrameCMD_VERBOSITY_CONTROL_payload_t Decimation_config;
-	int decimate_BAT = 10,	decimate_CPU = 10000;
-
-	m_nh_params.getParam("DECIM_BAT", decimate_BAT);
-	m_nh_params.getParam("DECIM_CPU", decimate_CPU);
-
-	if (decimate_BAT > 0 && decimate_CPU > 0)
-	{
-		Decimation_config.decimate_BAT = decimate_BAT;
-		Decimation_config.decimate_CPU = decimate_CPU;
-
-		MRPT_LOG_INFO_FMT(" Firmware Decimation: BAT=%i CPU=%i",decimate_BAT, decimate_CPU);
-		this->CMD_Decimation_configuration(Decimation_config);
+	//Subscriber:
+	m_sub_optocoupler.resize(6);
+	for (int i=0;i<6;i++) {
+		auto fn = boost::bind(&BatteryCharge_LowLevel::daqSetoptocouplerCallback, this, i, _1);
+		m_sub_optocoupler[i] = m_nh.subscribe<std_msgs::UInt8>( mrpt::format("optocoupler_%i",i), 10, fn);
 	}
-}
-return true;
+	// Decimation params
+	{
+		TFrameCMD_VERBOSITY_CONTROL_payload_t Decimation_config;
+		int decimate_BAT = 10,	decimate_CPU = 10000;
+
+		m_nh_params.getParam("DECIM_BAT", decimate_BAT);
+		m_nh_params.getParam("DECIM_CPU", decimate_CPU);
+
+		if (decimate_BAT > 0 && decimate_CPU > 0)
+		{
+			Decimation_config.decimate_BAT = decimate_BAT;
+			Decimation_config.decimate_CPU = decimate_CPU;
+			MRPT_LOG_INFO_FMT(" Firmware Decimation: BAT=%i CPU=%i",decimate_BAT, decimate_CPU);
+			this->CMD_Decimation_configuration(Decimation_config);
+		}
+	}
+	return true;
 }
 
 void BatteryCharge_LowLevel::processIncommingFrame(
@@ -119,19 +120,19 @@ const std::vector<uint8_t>& rxFrame)
 				daqOnNewBATCallback(rx.payload);
 			}
 			break;
+			case RESP_ADC_READINGS:
+			{
+				TFrame_ADC_readings rx;
+				::memcpy((uint8_t*)&rx, &rxFrame[0], sizeof(rx));
+				daqOnNewADCCallback(rx.payload, m_serial);
+			}
+			break;
 		};
 	}
 }
 
 bool BatteryCharge_LowLevel::iterate()
 {
-	/*
-	..
-	...
-	...
-	...
-	...
-	*/
 	// Main module loop code.
 	const size_t MAX_FRAMES_PER_ITERATE = 20;
 	size_t nFrames = 0;
@@ -172,10 +173,33 @@ void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_p
 	{
 		msg.bat_volts[i] = data.bat_volts[i]*K_adc*K_div/K_uC;
 	}
-	msg.bat_current = data.bat_current;
-
 
 	m_pub_battery_charge.publish(msg);
+}
+
+void BatteryCharge_LowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data)
+{
+	battery_charge::AnalogReading msg;
+
+	msg.timestamp_ms = data.timestamp_ms_tenths;
+	const int N = sizeof(data.adc_data) / sizeof(data.adc_data[0]);
+	msg.adc_data.resize(N);
+	for (int i = 0; i < N; i++) msg.adc_data[i] = data.adc_data[i];
+
+	m_pub_ammeter_value.publish(msg);
+}
+
+void BatteryCharge_LowLevel::daqSetoptocouplerCallback(int pin, const std_msgs::Bool::ConstPtr& msg)
+{
+	ROS_INFO("OPTO [%i]=%s", pin, msg->data ? "true":"false" );
+	
+	m_optocoupler &= ~(1<<pin);
+	if (msg->data) m_optocoupler |= (1<<pin);
+	
+	TFrameCMD_OPTO_output cmd;
+	cmd.payload.opto_mask = m_optocoupler; 
+	cmd.calc_and_update_checksum();
+	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t*>(&cmd),sizeof(cmd));
 }
 
 bool BatteryCharge_LowLevel::AttemptConnection()
