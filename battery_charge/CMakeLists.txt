@@ -29,7 +29,9 @@ endif()
 ################################################
 add_message_files(
   DIRECTORY msg
-  FILES BatReading.msg
+  FILES
+	BatReading.msg
+	AnalogReading.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)

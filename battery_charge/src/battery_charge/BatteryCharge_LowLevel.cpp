@@ -40,7 +40,6 @@
 #include <ros/console.h>
 #include <thread>
 #include <battery_charge/BatReading.h>
-#include <battery_charge/OptocouplerSignal.h>
 #include <battery_charge/AnalogReading.h>
 #include <batterycharge2pc-structs.h>
 
@@ -84,7 +83,7 @@ bool BatteryCharge_LowLevel::initialize()
 	//Subscriber:
 	m_sub_optocoupler.resize(6);
 	for (int i=0;i<6;i++) {
-		auto fn = boost::bind(&BatteryCharge_LowLevel::daqSetoptocouplerCallback, this, i, _1);
+		auto fn = boost::bind(&BatteryCharge_LowLevel::daqSetOptocouplerCallback, this, i, _1);
 		m_sub_optocoupler[i] = m_nh.subscribe<std_msgs::UInt8>( mrpt::format("optocoupler_%i",i), 10, fn);
 	}
 	// Decimation params
@@ -124,7 +123,7 @@ const std::vector<uint8_t>& rxFrame)
 			{
 				TFrame_ADC_readings rx;
 				::memcpy((uint8_t*)&rx, &rxFrame[0], sizeof(rx));
-				daqOnNewADCCallback(rx.payload, m_serial);
+				daqOnNewADCCallback(rx.payload);
 			}
 			break;
 		};
@@ -159,6 +158,17 @@ bool BatteryCharge_LowLevel::iterate()
 	return true;
 }
 
+void BatteryCharge_LowLevel::daqSetOptocouplerCallback(int pin, const std_msgs::Bool::ConstPtr& msg)
+{
+		m_optocoupler &= ~(1<<pin);
+		if (msg->data) m_optocoupler |= (1<<pin);
+    ROS_INFO("Optocoupler[%i]=%s", pin, msg->data ? "true":"false" );
+
+    if (!CMD_Optocoupler(pin,msg->data)) {
+        ROS_ERROR("*** Error sending CMD_Optocoupler!!! ***");
+    }
+}
+
 void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t &data)
 {
 	battery_charge::BatReading msg;
@@ -174,7 +184,7 @@ void BatteryCharge_LowLevel::daqOnNewBATCallback(const TFrame_BATTERY_readings_p
 		msg.bat_volts[i] = data.bat_volts[i]*K_adc*K_div/K_uC;
 	}
 
-	m_pub_battery_charge.publish(msg);
+	m_pub_battery_voltaje.publish(msg);
 }
 
 void BatteryCharge_LowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data)
@@ -189,15 +199,10 @@ void BatteryCharge_LowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_paylo
 	m_pub_ammeter_value.publish(msg);
 }
 
-void BatteryCharge_LowLevel::daqSetoptocouplerCallback(int pin, const std_msgs::Bool::ConstPtr& msg)
+bool BatteryCharge_LowLevel::CMD_Optocoupler(int pin, bool pinState)
 {
-	ROS_INFO("OPTO [%i]=%s", pin, msg->data ? "true":"false" );
-	
-	m_optocoupler &= ~(1<<pin);
-	if (msg->data) m_optocoupler |= (1<<pin);
-	
 	TFrameCMD_OPTO_output cmd;
-	cmd.payload.opto_mask = m_optocoupler; 
+	cmd.payload.opto_mask = m_optocoupler;
 	cmd.calc_and_update_checksum();
 	return SendFrameAndWaitAnswer(reinterpret_cast<uint8_t*>(&cmd),sizeof(cmd));
 }

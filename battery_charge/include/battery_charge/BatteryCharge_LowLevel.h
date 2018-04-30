@@ -74,7 +74,7 @@ public:
 
 	//std::vector<ros::Subscriber> m_sub_OPTO_outputs;
 	ros::Publisher  m_pub_battery_voltaje, m_pub_ammeter_value;
-	std::vector<ros::Subscriber> m_sub_optocoupler[6];
+	std::vector<ros::Subscriber> m_sub_optocoupler;
 
 	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
 	  * \return false on error */
@@ -93,8 +93,9 @@ protected:
 	std::function<void(TFrame_BATTERY_readings_payload_t)> m_bat_callback;
 	void daqOnNewBATCallback(const TFrame_BATTERY_readings_payload_t& data);
 	void daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data);
+	void daqSetOptocouplerCallback(int pin, const std_msgs::Bool::ConstPtr& msg);
 	bool CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t& Decimation_config);
-	void daqSetoptocouplerCallback(int pin, const std_msgs::Bool::ConstPtr& msg);
+	bool CMD_Optocoupler(int pin, bool pinState);
 
 	uint8_t m_optocoupler{0};
 
