@@ -40,9 +40,9 @@
 #include <avr/interrupt.h> // sei()
 
 // ADC reading subsystem:
-uint8_t		num_active_ADC_channels = 0;
+uint8_t		num_active_ADC_channels = 3;
 #define		MAX_ADC_CHANNELS 3
-uint8_t		ADC_active_channels[MAX_ADC_CHANNELS] = {0,0,0};
+uint8_t		ADC_active_channels[MAX_ADC_CHANNELS] = {7,6,5};
 uint32_t	ADC_last_millis = 0;
 uint16_t	ADC_sampling_period_ms_tenths = 2000;
 TFrame_ADC_readings_payload_t ADC_last_reading;
@@ -87,11 +87,14 @@ void processADCs()
 		tx.payload.adc_data[i] = 0;
 	}
 	
-	for (uint8_t i=0;i<num_active_ADC_channels;i++)
-	{
-		// Se emplean los canales 5, 6, 7
-		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]);
-	}
+// 	for (uint8_t i=0;i<num_active_ADC_channels;i++)
+// 	{
+// 		// Se emplean los canales 5, 6, 7
+// 		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]+7);
+// 	}
+	tx.payload.adc_data[0] = adc_read(7);
+	tx.payload.adc_data[1] = adc_read(6);
+	tx.payload.adc_data[2] = adc_read(5);
 	// Decimate the number of msgs sent to the PC:
 	static uint8_t decim1 = 0;
 	if (++decim1>global_decimate.decimate_ADC)
