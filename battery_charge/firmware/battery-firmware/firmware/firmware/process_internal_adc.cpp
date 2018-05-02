@@ -90,7 +90,7 @@ void processADCs()
 // 	for (uint8_t i=0;i<num_active_ADC_channels;i++)
 // 	{
 // 		// Se emplean los canales 5, 6, 7
-// 		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]+7);
+// 		tx.payload.adc_data[i] = adc_read(ADC_active_channels[i]);
 // 	}
 	tx.payload.adc_data[0] = adc_read(7);
 	tx.payload.adc_data[1] = adc_read(6);
