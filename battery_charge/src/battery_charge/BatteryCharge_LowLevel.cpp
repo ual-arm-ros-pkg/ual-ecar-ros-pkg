@@ -81,11 +81,12 @@ bool BatteryCharge_LowLevel::initialize()
 	m_pub_ammeter_value = m_nh.advertise<battery_charge::AnalogReading>("ammeter_value", 10);
 
 	//Subscriber:
-	m_sub_optocoupler.resize(6);
+/*	m_sub_optocoupler.resize(6);
 	for (int i=0;i<6;i++) {
 		auto fn = boost::bind(&BatteryCharge_LowLevel::daqSetOptocouplerCallback, this, i, _1);
 		m_sub_optocoupler[i] = m_nh.subscribe<std_msgs::UInt8>( mrpt::format("optocoupler_%i",i), 10, fn);
-	}
+	}*/
+
 	// Decimation params
 	{
 		TFrameCMD_VERBOSITY_CONTROL_payload_t Decimation_config;
@@ -191,10 +192,15 @@ void BatteryCharge_LowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_paylo
 {
 	battery_charge::AnalogReading msg;
 
+	//const float K_Vcc = 5.0;
+	const float K_div[3] = {10.0/1.8,5.7/4.7,5.7/4.7};
+	//const float K_uC = 1024;
+
 	msg.timestamp_ms = data.timestamp_ms_tenths;
 	const int N = sizeof(data.adc_data) / sizeof(data.adc_data[0]);
 	msg.adc_data.resize(N);
-	for (int i = 0; i < N; i++) msg.adc_data[i] = data.adc_data[i];
+	for (int i = 0; i < N; i++)
+		msg.adc_data[i] = data.adc_data[i] * K_div[i];
 
 	m_pub_ammeter_value.publish(msg);
 }
