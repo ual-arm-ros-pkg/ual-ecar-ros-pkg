@@ -170,8 +170,7 @@ struct TFrame_ADC_readings : public TBaseFrame<TFrame_ADC_readings_payload_t>
 struct TFrame_BATTERY_readings_payload_t
 {
 	uint32_t timestamp_ms_tenths;
-	int16_t  bat_volts[8]; /*Float64[]*/
-	int16_t  bat_current;  /*Float64*/
+	int16_t  bat_volts[8];
 	uint32_t period_ms_tenths;
 };
 struct TFrame_BATTERY_readings : public TBaseFrame<TFrame_BATTERY_readings_payload_t>

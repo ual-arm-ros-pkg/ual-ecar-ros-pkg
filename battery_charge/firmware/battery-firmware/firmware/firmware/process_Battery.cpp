@@ -74,8 +74,6 @@ void processBattery()
 	{
 		tx.payload.bat_volts[i] = buf[i];
 	}
-	#warning Cambiar
-	tx.payload.bat_current = 0;
 	SREG=oldSREG;
 
 	sei();

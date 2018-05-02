@@ -284,7 +284,7 @@ void processThrottleController()
 		tx.payload.Throttle_control_signal = U_throttle_controller[0];
 		tx.payload.Brake_control_signal = U_brake_controller[0];
 		tx.payload.Throttle_analog_feedback = ADC_last_reading.adc_data[1];
-//		tx.payload.Brake_Encoder_incremental = enc_diff;
+		tx.payload.Brake_Encoder_incremental = enc_last_reading.encoders[0];
 		tx.payload.Brake_ADC_current_sense = ADC_last_reading.adc_data[0];
 
 		tx.calc_and_update_checksum();

@@ -107,7 +107,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
       <AvrGccCpp>
-  <avrgcc.common.Device>-mmcu=atmega164pa -B "%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\gcc\dev\atmega164pa"</avrgcc.common.Device>
+  <avrgcc.common.Device>-mmcu=atmega164pa -B "%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa"</avrgcc.common.Device>
   <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
   <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
   <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
@@ -117,7 +117,7 @@
   <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
   <avrgcc.compiler.directories.IncludePaths>
     <ListValues>
-      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\include</Value>
     </ListValues>
   </avrgcc.compiler.directories.IncludePaths>
   <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
@@ -129,7 +129,7 @@
   <avrgcccpp.compiler.directories.IncludePaths>
     <ListValues>
       <Value>../claraquino</Value>
-      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\include</Value>
     </ListValues>
   </avrgcccpp.compiler.directories.IncludePaths>
   <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
@@ -150,7 +150,7 @@
   </avrgcccpp.linker.libraries.LibrarySearchPaths>
   <avrgcccpp.assembler.general.IncludePaths>
     <ListValues>
-      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\include</Value>
     </ListValues>
   </avrgcccpp.assembler.general.IncludePaths>
 </AvrGccCpp>
@@ -159,7 +159,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
       <AvrGccCpp>
-  <avrgcc.common.Device>-mmcu=atmega164pa -B "%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\gcc\dev\atmega164pa"</avrgcc.common.Device>
+  <avrgcc.common.Device>-mmcu=atmega164pa -B "%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\gcc\dev\atmega164pa"</avrgcc.common.Device>
   <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
   <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
   <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
@@ -169,7 +169,7 @@
   <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
   <avrgcc.compiler.directories.IncludePaths>
     <ListValues>
-      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\include</Value>
     </ListValues>
   </avrgcc.compiler.directories.IncludePaths>
   <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
@@ -182,7 +182,7 @@
   <avrgcccpp.compiler.directories.IncludePaths>
     <ListValues>
       <Value>../claraquino</Value>
-      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\include</Value>
     </ListValues>
   </avrgcccpp.compiler.directories.IncludePaths>
   <avrgcccpp.compiler.optimization.level>Optimize (-O1)</avrgcccpp.compiler.optimization.level>
@@ -204,7 +204,7 @@
   </avrgcccpp.linker.libraries.LibrarySearchPaths>
   <avrgcccpp.assembler.general.IncludePaths>
     <ListValues>
-      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.118\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\include</Value>
     </ListValues>
   </avrgcccpp.assembler.general.IncludePaths>
   <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
