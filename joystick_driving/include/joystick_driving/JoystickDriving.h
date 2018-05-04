@@ -24,7 +24,7 @@ public:
 	ros::NodeHandle m_nh_params = ros::NodeHandle("~");
 
 	ros::Subscriber m_sub_enable_joystick;
-        ros::Publisher  m_pub_eje_x, m_pub_eje_y, m_pub_contr_status[2],m_pub_autonomous_driving;
+	ros::Publisher  m_pub_eje_x, m_pub_eje_y, m_pub_eje_z, m_pub_contr_status[2],m_pub_autonomous_driving, m_pub_brake_enable;
 
 	/** called at startup, load params from ROS launch file and attempts to connect to the USB device
 	  * \return false on error */
