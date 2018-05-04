@@ -52,8 +52,7 @@ class VehicleControllerLowLevel : public COutputLogger
 		m_pub_ENC_ABS, m_pub_Steer_Control_signal,
 		m_pub_SpeedCruise_Control_signal;
 
-	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status[2],
-		m_sub_autonomous_driving;
+	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status[2],m_sub_autonomous_driving,m_sub_brake_enable;
 
 	/*Sub:	1. System_Identification[Controller & Smith predictor params,
 	 * Feedforwards...]
@@ -67,35 +66,28 @@ class VehicleControllerLowLevel : public COutputLogger
 	void modeSteeringCallback(const std_msgs::Bool::ConstPtr& msg);
 	void modeThrottleCallback(const std_msgs::Bool::ConstPtr& msg);
 	void autonomousModeCallback(const std_msgs::Bool::ConstPtr& msg);
+	void brakeenableCallback(const std_msgs::Bool::ConstPtr& msg);
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
-	void daqOnNewADCCallback(
-		const TFrame_ADC_readings_payload_t& data, CSerialPort& m_serial);
-	void daqOnNewENCCallback(
-		const TFrame_ENCODERS_readings_payload_t& data, CSerialPort& m_serial);
-	void daqOnNewENCAbsCallback(
-		const TFrame_ENCODER_ABS_reading_payload_t& data);
-	void daqOnNewSteerControlSignalCallback(
-		const TFrame_STEER_CONTROL_SIGNAL_payload_t& data);
-	void daqOnNewSpeedCruiseControlSignalCallback(
-		const TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t& data);
+	void daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data, CSerialPort& m_serial);
+	void daqOnNewENCCallback(const TFrame_ENCODERS_readings_payload_t& data, CSerialPort& m_serial);
+	void daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_reading_payload_t& data);
+	void daqOnNewSteerControlSignalCallback(const TFrame_STEER_CONTROL_SIGNAL_payload_t& data);
+	void daqOnNewSpeedCruiseControlSignalCallback(const TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t& data);
 
-	bool CMD_Decimation_configuration(
-		const TFrameCMD_VERBOSITY_CONTROL_payload_t& Decimation_config,
-		CSerialPort& m_serial);
+	bool CMD_Decimation_configuration(const TFrameCMD_VERBOSITY_CONTROL_payload_t& Decimation_config,CSerialPort& m_serial);
 
 	std::string m_serial_Steer_port_name, m_serial_SpeedCruise_port_name;
 	int m_serial_Steer_port_baudrate, m_serial_SpeedCruise_port_baudrate;
-	CSerialPort m_serial_Steer,
-		m_serial_SpeedCruise;  //!< The serial COMMS object
+	CSerialPort m_serial_Steer,m_serial_SpeedCruise;  //!< The serial COMMS object
 	int m_NOP_sent_counter{0};
 
-	bool m_mode_openloop_steer{
-		true}; /*Variable para la comprobacion del modo de control*/
-	bool m_mode_openloop_throttle{
-		true}; /*Variable para la comprobacion del modo de control*/
+	bool m_mode_openloop_steer{true}; /*Variable para la comprobacion del modo de control*/
+	bool m_mode_openloop_throttle{true}; /*Variable para la comprobacion del modo de control*/
+	bool m_mode_brake_enable{true};
 	bool m_mode_steer_changed{true};
 	bool m_mode_throttle_changed{true};
+	bool m_mode_brake_changed{true};
 	bool m_modes_changed{true};
 	bool m_autonomous_driving_mode{false};
 	bool m_joy_changed{false};
