@@ -267,7 +267,7 @@ bool VehicleControllerLowLevel::iterate()
 		m_mode_brake_changed = false;
 		TFrameCMD_SPEEDCRUISE_CONTROL_MODE cmd;
 		cmd.payload.throttle_enable = !m_mode_openloop_throttle;
-		cmd.payload.brake_enable = m_mode_brake_enable
+		cmd.payload.brake_enable = !m_mode_brake_enable;
 		cmd.calc_and_update_checksum();
 		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_SpeedCruise);
 		ROS_INFO_THROTTLE(1, "Sending new SPEED CRUISE controller mode: THROTTLE: %s BRAKE: %s", m_mode_openloop_throttle ? "MANUAL" : "AUTO", m_mode_brake_enable ? "MANUAL" : "AUTO");
@@ -281,11 +281,8 @@ bool VehicleControllerLowLevel::iterate()
 			TFrameCMD_OPENLOOP_STEERING_SETPOINT cmd;
 			cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_joy_x * 255.0;
 			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(
-				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
-			ROS_INFO_THROTTLE(
-				1, "Sending openloop STEER: %d",
-				cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED);
+			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
+			ROS_INFO_THROTTLE(1, "Sending openloop STEER: %d",cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED);
 		}
 		else
 		{
@@ -311,19 +308,6 @@ bool VehicleControllerLowLevel::iterate()
 			ROS_INFO_THROTTLE(
 			1, "Sending openloop THROTTLE: %f",
 			cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
-
-			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd_brake;
-			if (m_mode_brake_enable)
-			{
-				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = m_joy_y * 255.0;
-			}
-			else
-			{
-				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = 0;
-			}
-			cmd_brake.calc_and_update_checksum();
-			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),	m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(1, "Sending openloop Brake: %d",cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
 		}
 		else
 		{
@@ -338,6 +322,21 @@ bool VehicleControllerLowLevel::iterate()
 				m_serial_SpeedCruise);
 			ROS_INFO_THROTTLE(
 				1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
+		}
+		// Brake:
+		{
+			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd_brake;
+			if (m_mode_brake_enable)
+			{
+				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = m_joy_y * 255.0;
+			}
+			else
+			{
+				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = 0;
+			}
+			cmd_brake.calc_and_update_checksum();
+			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),	m_serial_SpeedCruise);
+			ROS_INFO_THROTTLE(1, "Sending openloop Brake: %d",cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
 		}
 	}
 
