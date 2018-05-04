@@ -85,7 +85,7 @@ bool JoystickDriving::iterate()
 		c.data = !autonomous_btn;
 		m_pub_autonomous_driving.publish(c);
 	}
-	const bool brake_btn = (buttons.size()>3 && !buttons[3]);
+	const bool brake_btn = !(buttons.size()>3 && !buttons[3]);
 	{
 		std_msgs::Bool c;
 		c.data = brake_btn;
@@ -113,9 +113,9 @@ bool JoystickDriving::iterate()
 	{
 		//  Resolution increase
 		if (buttons[4])
-		eje_z[0] =(float)(z * 0.4);
+		eje_z[0] =(float)(x * 0.25);
 		else
-		eje_z[0] =(float)(z * 0.8);
+		eje_z[0] =(float)(x * 0.5);
 		// Saturacion
 		if (eje_z[0] > 1)
 		eje_z[0] = 1;
@@ -142,13 +142,13 @@ bool JoystickDriving::iterate()
 		m_pub_eje_y.publish(msg_f);
 	}
 
-	if(eje_x[0] != eje_x[1] || eje_y[0] != eje_y[1] || steer_btn != button[0] || throttle_btn != button[1] || autonomous_btn != button[2] || brake_btn != button[3])
+	if(eje_x[0] != eje_x[1] || eje_y[0] != eje_y[1] || eje_z[0] != eje_z[1] || steer_btn != button[0] || throttle_btn != button[1] || autonomous_btn != button[2] || brake_btn != button[3])
 		ROS_INFO("Joy: x:%f y:%f z:%f Brake=%i Steer=%i Throttle=%i Autonomous=%i", eje_x[0],eje_y[0], eje_z[0], brake_btn ? 1:0, !steer_btn ? 1:0, !throttle_btn ? 1:0, !autonomous_btn);
 
 	button[0] = steer_btn;
 	button[1] = throttle_btn;
 	button[2] = autonomous_btn;
-	button[4] = brake_btn;
+	button[3] = brake_btn;
 	eje_x[1] = eje_x[0];
 	eje_y[1] = eje_y[0];
 	eje_z[1] = eje_z[0];
