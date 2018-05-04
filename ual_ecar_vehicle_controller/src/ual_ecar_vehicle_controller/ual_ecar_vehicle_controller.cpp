@@ -261,19 +261,16 @@ bool VehicleControllerLowLevel::iterate()
 			1, "Sending new STEER controller mode: %s",
 			m_mode_openloop_steer ? "MANUAL" : "AUTO");
 	}
-	if (m_mode_throttle_changed)
+	if (m_mode_throttle_changed || m_mode_brake_changed)
 	{
-		// TO-DO: brake_eneable
 		m_mode_throttle_changed = false;
+		m_mode_brake_changed = false;
 		TFrameCMD_SPEEDCRUISE_CONTROL_MODE cmd;
 		cmd.payload.throttle_enable = !m_mode_openloop_throttle;
+		cmd.payload.brake_enable = m_mode_brake_enable
 		cmd.calc_and_update_checksum();
-		WriteBinaryFrame(
-			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
-			m_serial_SpeedCruise);
-		ROS_INFO_THROTTLE(
-			1, "Sending new SPEED CRUISE controller mode: %s",
-			m_mode_openloop_throttle ? "MANUAL" : "AUTO");
+		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_SpeedCruise);
+		ROS_INFO_THROTTLE(1, "Sending new SPEED CRUISE controller mode: THROTTLE: %s BRAKE: %s", m_mode_openloop_throttle ? "MANUAL" : "AUTO", m_mode_brake_enable ? "MANUAL" : "AUTO");
 	}
 	// New joystick
 	if (!m_autonomous_driving_mode && m_joy_changed)
@@ -316,16 +313,14 @@ bool VehicleControllerLowLevel::iterate()
 			cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
 
 			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd_brake;
-			int16_t brake_value_signal;
 			if (m_mode_brake_enable)
 			{
-				brake_value_signal = abs(m_joy_y*255);
+				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = m_joy_y * 255.0;
 			}
 			else
 			{
-				brake_value_signal = 0;
+				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = 0;
 			}
-			cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = brake_value_signal;
 			cmd_brake.calc_and_update_checksum();
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),	m_serial_SpeedCruise);
 			ROS_INFO_THROTTLE(1, "Sending openloop Brake: %d",cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);

@@ -328,10 +328,12 @@ void processBrakeController()
 		/* Values actualization*/
 		do_shift(U_brake_controller);
 		// Output PWM:
-		pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,abs(U_brake_controller[0]));
+		bool u_brake_is_positive = (U_brake_controller[0] >= 0);
+		uint8_t u_brake = abs(U_brake_controller[0]);
+		pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_brake);
 
 		// PWM direction:
-		gpio_pin_write(PWM_DIR, U_brake_controller[0] >= 0);
+		gpio_pin_write(PWM_DIR, u_brake_is_positive);
 
 		// Decimate the number of msgs sent to the PC:
 		#warning TODO decimate
