@@ -314,8 +314,8 @@ bool VehicleControllerLowLevel::iterate()
 			ROS_INFO_THROTTLE(
 			1, "Sending openloop THROTTLE: %f",
 			cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
-			
-			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd;
+
+			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd_brake;
 			int16_t brake_value_signal;
 			if (m_mode_brake_enable)
 			{
@@ -325,10 +325,10 @@ bool VehicleControllerLowLevel::iterate()
 			{
 				brake_value_signal = 0;
 			}
-			cmd.payload.SETPOINT_OPENLOOP_BRAKE = brake_value_signal;
-			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),	m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(1, "Sending openloop Brake: %d",cmd.payload.SETPOINT_OPENLOOP_BRAKE);
+			cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = brake_value_signal;
+			cmd_brake.calc_and_update_checksum();
+			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),	m_serial_SpeedCruise);
+			ROS_INFO_THROTTLE(1, "Sending openloop Brake: %d",cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
 		}
 		else
 		{
