@@ -297,38 +297,34 @@ bool VehicleControllerLowLevel::iterate()
 				cmd.payload.SETPOINT_STEER_POS);
 		}
 		// Y: throttle
-		if (m_mode_openloop_throttle)
+		if (!m_mode_brake_enable)
 		{
-			TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
-			cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
-			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(
-			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
-			m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(
-			1, "Sending openloop THROTTLE: %f",
-			cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
-		}
-		else
-		{
-			const float MAX_VEL_MPS = 2.0;
-			float vel_mps = m_joy_y * MAX_VEL_MPS;
-			// TO-DO: CONTROL_BRAKE_SETPOINT
-			TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
-			cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
-			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(
-				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
-				m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(
-				1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
+			if (m_mode_openloop_throttle)
+			{
+				TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
+				cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
+				cmd.calc_and_update_checksum();
+				WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),m_serial_SpeedCruise);
+			ROS_INFO_THROTTLE(1, "Sending openloop THROTTLE: %f",cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
+			}
+			else
+			{
+				const float MAX_VEL_MPS = 2.0;
+				float vel_mps = m_joy_y * MAX_VEL_MPS;
+				// TO-DO: CONTROL_BRAKE_SETPOINT
+				TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
+				cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
+				cmd.calc_and_update_checksum();
+				WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),m_serial_SpeedCruise);
+			ROS_INFO_THROTTLE(1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
+			}
 		}
 		// Brake:
 		{
 			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd_brake;
 			if (m_mode_brake_enable)
 			{
-				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = m_joy_y * 255.0;
+				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = m_joy_y * 255.0 * 0.5;
 			}
 			else
 			{
