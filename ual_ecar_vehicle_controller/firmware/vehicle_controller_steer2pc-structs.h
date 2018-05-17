@@ -297,7 +297,7 @@ struct TFrame_STEER_CONTROL_SIGNAL_payload_t
 	float Encoder_signal{0};
 	uint16_t Steer_ADC_current_sense{0};
 	uint8_t  steer_mech_limit_reached{0};
-	float decim_sent_frame{0};
+	float enc_offset_correction{0};
 };
 struct TFrame_STEER_CONTROL_SIGNAL
 : public TBaseFrame<TFrame_STEER_CONTROL_SIGNAL_payload_t>

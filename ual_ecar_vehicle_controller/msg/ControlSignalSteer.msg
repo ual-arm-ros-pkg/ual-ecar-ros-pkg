@@ -13,3 +13,5 @@ float64   Encoder_Incremental
 float64   Steer_ADC_current_sense
 # Mechanical limit protection activated
 bool steer_mech_limit_reached
+#
+float64 enc_offset_correction

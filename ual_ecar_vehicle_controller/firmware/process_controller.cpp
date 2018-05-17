@@ -78,10 +78,10 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 // Auxiliary vars:
 bool	steer_mech_limit_reached= false;			// Enable security limit of the mechanism
 #warning Cambiar limite
-uint16_t Steer_offset			= 0;				// Steer offset regulated by software
+int16_t Steer_offset			= 0;				// Steer offset regulated by software
 float	steer_mech_limit_pos	= (1024*1.33f-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
 																	// 100 = Safety margin
-uint16_t abs_enc_pos			= 0;				// Init variable
+int16_t abs_enc_pos			= 0;				// Init variable
 const	float	sat_ref			= 250/T;			// Slope position reference limit to over current protection
 float	enc_offset_correction	= .0f;				// Incremental encoder calibration offset
 float ANTIWINDUP_CTE = sqrt(0.0283);				// Antiwindup "constant" regulated by software
@@ -211,7 +211,6 @@ void processSteerController()
 	// Read abs encoder:
 	{
 		const int16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset; // Abs encoder (10 bit resolution)
-
 		// Filter out clearly erroneous readings from the abs encoder:
 		if (abs(abs_enc_pos_new - abs_enc_pos)<1060)
 			abs_enc_pos = abs_enc_pos_new;
@@ -227,7 +226,6 @@ void processSteerController()
 	{
 		// Recalc offset:
 		enc_offset_correction = abs_enc_pos - Adiff;
-		decim_sent_frame = global_decimate.decimate_CONTROLSIGNAL+1;
 	}
 	// Define encoder value to controller
 	Encoder_dir[0] = enc_offset_correction + Adiff;
@@ -293,6 +291,7 @@ void processSteerController()
 			Antiwindup[0] = 0;
 		U_steer_controller[0] = round(0.5 * (2 * U_steer_controller[0] + T * (Antiwindup[0] + Antiwindup[1])));
 	}
+	
 	/* for both, open & closed loop: protection against steering mechanical limits: */
 	steer_mech_limit_reached =
 		steer_mech_limit_reached ?
@@ -341,7 +340,7 @@ void processSteerController()
 		tx.payload.Encoder_signal = Encoder_dir[0];
 		tx.payload.Steer_ADC_current_sense = ADC_last_reading.adc_data[0];
 		tx.payload.steer_mech_limit_reached = steer_mech_limit_reached;
-		tx.payload.decim_sent_frame = decim_sent_frame;
+		tx.payload.enc_offset_correction = enc_offset_correction;
 
 		tx.calc_and_update_checksum();
 

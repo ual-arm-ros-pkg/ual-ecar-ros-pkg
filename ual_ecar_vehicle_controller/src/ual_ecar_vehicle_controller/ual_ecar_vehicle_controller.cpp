@@ -476,6 +476,7 @@ void VehicleControllerLowLevel::daqOnNewSteerControlSignalCallback(const TFrame_
 	msg.Steer_ADC_current_sense = data.Steer_ADC_current_sense * 5.0 / 1023.0;
 	msg.Encoder_controller_signal = data.Encoder_signal;
 	msg.steer_mech_limit_reached = data.steer_mech_limit_reached;
+	msg.enc_offset_correction = data.enc_offset_correction;
 
 	m_pub_Steer_Control_signal.publish(msg);
 }
