@@ -11,3 +11,5 @@ int32     Encoder_Absoluto
 float64   Encoder_Incremental
 # ADC value for steer motor current sensor (Volts)
 float64   Steer_ADC_current_sense
+# Mechanical limit protection activated
+bool steer_mech_limit_reached

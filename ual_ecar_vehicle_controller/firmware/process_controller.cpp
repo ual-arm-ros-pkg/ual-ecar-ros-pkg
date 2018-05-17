@@ -79,7 +79,7 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 bool	steer_mech_limit_reached= false;			// Enable security limit of the mechanism
 #warning Cambiar limite
 uint16_t Steer_offset			= 0;				// Steer offset regulated by software
-int16_t	steer_mech_limit_pos	= Steer_offset + (1024*1.33-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
+int16_t	steer_mech_limit_pos	= (1024*1.33-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
 																	// 100 = Safety margin
 uint16_t abs_enc_pos			= 0;				// Init variable
 const	float	sat_ref			= 250/T;			// Slope position reference limit to over current protection
@@ -170,7 +170,7 @@ void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_paylo
 	}
 	for (int i=0;i<5;i++)
 		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
-		
+
 	Steer_offset = p.STEER_OFFSET;
 	ANTIWINDUP_CTE = p.Antiwindup;
 	for (int i=0;i<2;i++)
@@ -207,9 +207,9 @@ void processSteerController()
 	sei();
 	// Read abs encoder:
 	{
-		const uint16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset; // Abs encoder (10 bit resolution)
+		const int16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset; // Abs encoder (10 bit resolution)
 
-		// Filter out clearly erroneous readings from the abs encoder: 
+		// Filter out clearly erroneous readings from the abs encoder:
 		if (abs(abs_enc_pos_new - abs_enc_pos)<1060)
 			abs_enc_pos = abs_enc_pos_new;
 	}
@@ -276,9 +276,9 @@ void processSteerController()
 				U_steer_controller[0] = 254;
 			has_sat = true;
 		}
-		
+
 		#warning Check max current and stop?
-	/*	Anti-windup technique*/ 
+	/*	Anti-windup technique*/
 		if(has_sat)
 			Antiwindup[0] = (U_steer_controller[0] - m_v) / ANTIWINDUP_CTE;
 		else
@@ -286,10 +286,11 @@ void processSteerController()
 		U_steer_controller[0] = round(0.5 * (2 * U_steer_controller[0] + T * (Antiwindup[0] + Antiwindup[1])));
 	}
 	/* for both, open & closed loop: protection against steering mechanical limits: */
-	if (abs(Encoder_dir[0]) >= steer_mech_limit_pos)
-		steer_mech_limit_reached = true;
-	else if (abs(Encoder_dir[0]) <= (steer_mech_limit_pos - 50) && steer_mech_limit_reached)
-		steer_mech_limit_reached = false;
+	steer_mech_limit_reached =
+		steer_mech_limit_reached ?
+		(abs(Encoder_dir[0]) > (steer_mech_limit_pos - 50))
+		:
+		(abs(Encoder_dir[0]) >= steer_mech_limit_pos);
 
 	// Disallow going further outwards:
 	if (steer_mech_limit_reached)
@@ -332,6 +333,7 @@ void processSteerController()
 		tx.payload.Encoder_incremental = enc_diff;
 		tx.payload.Encoder_signal = Encoder_dir[0];
 		tx.payload.Steer_ADC_current_sense = ADC_last_reading.adc_data[0];
+		tx.payload.steer_mech_limit_reached = steer_mech_limit_reached;
 
 		tx.calc_and_update_checksum();
 

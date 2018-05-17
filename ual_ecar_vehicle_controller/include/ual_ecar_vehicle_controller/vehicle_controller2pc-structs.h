@@ -325,12 +325,13 @@ struct TFrameCMD_EMS22A_stop
 
 struct TFrame_STEER_CONTROL_SIGNAL_payload_t
 {
-	uint32_t timestamp_ms_tenth;
-	int16_t Steer_control_signal;
-	int32_t Encoder_incremental;
-	uint32_t Encoder_absoluto;
-	int32_t Encoder_signal;
-	uint16_t Steer_ADC_current_sense;
+	uint32_t timestamp_ms_tenth{0};
+	int16_t Steer_control_signal{0};
+	int32_t Encoder_incremental{0};
+	uint32_t Encoder_absoluto{0};
+	int32_t Encoder_signal{0};
+	uint16_t Steer_ADC_current_sense{0};
+	uint8_t  steer_mech_limit_reached{0};
 };
 struct TFrame_STEER_CONTROL_SIGNAL
 	: public TBaseFrame<TFrame_STEER_CONTROL_SIGNAL_payload_t>

@@ -35,7 +35,7 @@ bool VehicleControllerLowLevel::initialize()
 {
 	ROS_INFO("VehicleControllerLowLevel::inicialize() ok.");
 
-	m_serial_Steer_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCARM_Claraquino_eCARM_2018_03_06_FT3ALM93-if00-port0";
+	m_serial_Steer_port_name ="/dev/serial/by-id/usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0";
 	m_serial_Steer_port_baudrate = 500000;
 	m_nh_params.getParam("STEER_SERIAL_PORT", m_serial_Steer_port_name);
 	m_nh_params.getParam("STEER_SERIAL_PORT_BAUDRATE", m_serial_Steer_port_baudrate);
@@ -56,7 +56,7 @@ bool VehicleControllerLowLevel::initialize()
 		return false;
 	}
 	// Try to connect to SpeerCruise Claraquino
-	if (this->AttemptConnection(m_serial_SpeedCruise))
+/*	if (this->AttemptConnection(m_serial_SpeedCruise))
 	{
 		ROS_INFO("Connection OK to VehicleLowLevelController SpeedCruise[Claraquino].");
 	}
@@ -65,7 +65,7 @@ bool VehicleControllerLowLevel::initialize()
 		ROS_ERROR("Error in VehicleControllerLowLevel::AttemptConnection()! SpeedCruise");
 		return false;
 	}
-
+*/
 	// Publisher: Controller Status
 	m_pub_controller_status = m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>("vehicle_controller_status", 10);
 	// Publisher: ADC data.
@@ -125,7 +125,7 @@ bool VehicleControllerLowLevel::initialize()
 			this->CMD_Decimation_configuration(
 				Decimation_config_Steer, m_serial_Steer);
 		}
-
+/*
 		int decimate_ADC_SpeedCruise = 10, decimate_CPU_SpeedCruise = 10000,
 			decimate_CONTROLSIGNAL_SpeedCruise = 10,
 			decimate_ENCINC_SpeedCruise = 10;
@@ -159,6 +159,7 @@ bool VehicleControllerLowLevel::initialize()
 			this->CMD_Decimation_configuration(
 				Decimation_config_SpeedCruise, m_serial_SpeedCruise);
 		}
+		*/
 	}
 	return true;
 }
@@ -261,7 +262,7 @@ bool VehicleControllerLowLevel::iterate()
 			1, "Sending new STEER controller mode: %s",
 			m_mode_openloop_steer ? "MANUAL" : "AUTO");
 	}
-	if (m_mode_throttle_changed || m_mode_brake_changed)
+/*	if (m_mode_throttle_changed || m_mode_brake_changed)
 	{
 		m_mode_throttle_changed = false;
 		m_mode_brake_changed = false;
@@ -271,7 +272,7 @@ bool VehicleControllerLowLevel::iterate()
 		cmd.calc_and_update_checksum();
 		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_SpeedCruise);
 		ROS_INFO_THROTTLE(1, "Sending new SPEED CRUISE controller mode: THROTTLE: %s BRAKE: %s", m_mode_openloop_throttle ? "MANUAL" : "AUTO", m_mode_brake_enable ? "MANUAL" : "AUTO");
-	}
+	}*/
 	// New joystick
 	if (!m_autonomous_driving_mode && m_joy_changed)
 	{
@@ -296,7 +297,7 @@ bool VehicleControllerLowLevel::iterate()
 				1, "Sending closedloop STEER: %d",
 				cmd.payload.SETPOINT_STEER_POS);
 		}
-		// Y: throttle
+/*		// Y: throttle
 		if (!m_mode_brake_enable)
 		{
 			if (m_mode_openloop_throttle)
@@ -334,6 +335,7 @@ bool VehicleControllerLowLevel::iterate()
 			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),	m_serial_SpeedCruise);
 			ROS_INFO_THROTTLE(1, "Sending openloop Brake: %d",cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
 		}
+		*/
 	}
 
 	// Main module loop code.
@@ -361,7 +363,7 @@ bool VehicleControllerLowLevel::iterate()
 		return WriteBinaryFrame(
 			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
 	}
-	// SPEED CRUISE
+/*	// SPEED CRUISE
 	nFrames = 0;
 	if (!m_serial_SpeedCruise.isOpen())
 	{
@@ -384,7 +386,7 @@ bool VehicleControllerLowLevel::iterate()
 		cmd.calc_and_update_checksum();
 		return WriteBinaryFrame(
 			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
-	}
+	}*/
 	return true;
 }
 
@@ -473,6 +475,7 @@ void VehicleControllerLowLevel::daqOnNewSteerControlSignalCallback(const TFrame_
 	msg.Encoder_Incremental = data.Encoder_incremental;
 	msg.Steer_ADC_current_sense = data.Steer_ADC_current_sense * 5.0 / 1023.0;
 	msg.Encoder_controller_signal = data.Encoder_signal;
+	msg.steer_mech_limit_reached = data.steer_mech_limit_reached;
 
 	m_pub_Steer_Control_signal.publish(msg);
 }
