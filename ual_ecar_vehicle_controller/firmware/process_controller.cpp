@@ -66,7 +66,7 @@ const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (
 // Control vars:
 float	Ys[4]					=	{0,0,0,0};		// Smith predictor output
 float	T						=	0.01f;			// Sample time
-int16_t	Encoder_dir[2]			=	{0,0};			// Direction value
+float	Encoder_dir[2]			=	{0,0};			// Direction value
 int16_t	U_steer_controller[6]	=	{0,0,0,0,0,0};	// Steer controller signal
 float	Ref_pos[2]				=	{0,0};			// Position reference
 float	Ref_speed[2]			=	{0,0};			// Speed reference
@@ -79,11 +79,11 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 bool	steer_mech_limit_reached= false;			// Enable security limit of the mechanism
 #warning Cambiar limite
 uint16_t Steer_offset			= 0;				// Steer offset regulated by software
-int16_t	steer_mech_limit_pos	= (1024*1.33-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
+float	steer_mech_limit_pos	= (1024*1.33f-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
 																	// 100 = Safety margin
 uint16_t abs_enc_pos			= 0;				// Init variable
 const	float	sat_ref			= 250/T;			// Slope position reference limit to over current protection
-int16_t	enc_offset_correction	= .0f;				// Incremental encoder calibration offset
+float	enc_offset_correction	= .0f;				// Incremental encoder calibration offset
 float ANTIWINDUP_CTE = sqrt(0.0283);				// Antiwindup "constant" regulated by software
 
 uint32_t  CONTROL_last_millis_STEER = 0;			// Timer to check the sample time
@@ -195,6 +195,9 @@ void setControllerSetpoint_Steer(int16_t pos)
 // Stopwatch: 0.35 ms
 void processSteerController()
 {
+	static uint8_t decim_sent_frame = 0;
+
+
 	const uint32_t tnow = millis();
 	if (tnow-CONTROL_last_millis_STEER < CONTROL_sampling_period_ms_tenths)
 		return;
@@ -219,10 +222,15 @@ void processSteerController()
 															  * 337: Experimental constant
 															  */
 	// Incremental encoder calibration if encoders differences are upper than ten pulses
-	if ((abs_enc_pos - enc_offset_correction)>10)
-		enc_offset_correction = abs_enc_pos - enc_diff * K_enc_diff;
+	const float Adiff = enc_diff * K_enc_diff;
+	if (abs(abs_enc_pos - (enc_offset_correction+Adiff))>5)
+	{
+		// Recalc offset:
+		enc_offset_correction = abs_enc_pos - Adiff;
+		decim_sent_frame = global_decimate.decimate_CONTROLSIGNAL+1;
+	}
 	// Define encoder value to controller
-	Encoder_dir[0] = enc_offset_correction + enc_diff * K_enc_diff;
+	Encoder_dir[0] = enc_offset_correction + Adiff;
 
 	// Control:
 	/*	Speed encoder reading and Smith Predictor implementation*/
@@ -323,10 +331,9 @@ void processSteerController()
 
 	TFrame_STEER_CONTROL_SIGNAL tx;
 	// Decimate the number of msgs sent to the PC:
-	static uint8_t decim0 = 0;
-	if (++decim0>global_decimate.decimate_CONTROLSIGNAL)
+	if (++decim_sent_frame>global_decimate.decimate_CONTROLSIGNAL)
 	{
-		decim0=0;
+		decim_sent_frame=0;
 		tx.payload.timestamp_ms_tenth = tnow;
 		tx.payload.Steer_control_signal = U_steer_controller[0];
 		tx.payload.Encoder_absoluto = abs_enc_pos;
@@ -334,6 +341,7 @@ void processSteerController()
 		tx.payload.Encoder_signal = Encoder_dir[0];
 		tx.payload.Steer_ADC_current_sense = ADC_last_reading.adc_data[0];
 		tx.payload.steer_mech_limit_reached = steer_mech_limit_reached;
+		tx.payload.decim_sent_frame = decim_sent_frame;
 
 		tx.calc_and_update_checksum();
 
