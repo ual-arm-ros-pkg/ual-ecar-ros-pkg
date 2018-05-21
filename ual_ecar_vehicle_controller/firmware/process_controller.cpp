@@ -240,7 +240,7 @@ void processSteerController()
 		if (tnow>(SETPOINT_OPENLOOP_STEER_TIMESTAMP+ WATCHDOG_TIMEOUT_msth))
 			SETPOINT_OPENLOOP_STEER_SPEED = 0;
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
-/*		U_steer_controller[0] = -200;*/
+/*		U_steer_controller[0] = 200;*/
 	}
 	else
 	{
@@ -294,9 +294,9 @@ void processSteerController()
 	/* for both, open & closed loop: protection against steering mechanical limits: */
 	steer_mech_limit_reached =
 		steer_mech_limit_reached ?
-		(abs(Encoder_dir[0]) > (steer_mech_limit_pos - 50))
+		(abs(abs_enc_pos_new) > (steer_mech_limit_pos - 50))
 		:
-		(abs(Encoder_dir[0]) >= steer_mech_limit_pos);
+		(abs(abs_enc_pos_new) >= steer_mech_limit_pos);
 
 	// Disallow going further outwards:
 	if (steer_mech_limit_reached)

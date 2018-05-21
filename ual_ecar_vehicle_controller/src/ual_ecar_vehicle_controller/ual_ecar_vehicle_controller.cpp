@@ -35,7 +35,7 @@ bool VehicleControllerLowLevel::initialize()
 {
 	ROS_INFO("VehicleControllerLowLevel::inicialize() ok.");
 
-	m_serial_Steer_port_name ="/dev/serial/by-id/usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0";
+	m_serial_Steer_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCARM_Claraquino_eCARM_2018_03_06_FT3ALM93-if00-port0";
 	m_serial_Steer_port_baudrate = 500000;
 	m_nh_params.getParam("STEER_SERIAL_PORT", m_serial_Steer_port_name);
 	m_nh_params.getParam("STEER_SERIAL_PORT_BAUDRATE", m_serial_Steer_port_baudrate);
