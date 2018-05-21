@@ -30,7 +30,7 @@ ual_ecar_vehicle_controller/firmware/Release/Makefile
 ual_ecar_vehicle_controller/firmware/Debug/Makefile
 build
 CMakeLists.txt.user
-
+*.atsuo
 *.hex
 ual_ecar_vehicle_controller/firmware/Release/vehicle_controller_firmware.hex
 *.hex

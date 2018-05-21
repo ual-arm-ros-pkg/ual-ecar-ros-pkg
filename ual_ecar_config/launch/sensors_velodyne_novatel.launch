@@ -1,0 +1,6 @@
+<launch>
+  <node name="sensor_velodyne" pkg="mrpt_generic_sensor" type="mrpt_generic_sensor_node" output="screen">
+	  <param name="config_file" type="string" value="rawlog-grabber-velodyne.ini" />
+	  <param name="config_section" type="string" value="Velodyne" />
+  </node>
+</launch>

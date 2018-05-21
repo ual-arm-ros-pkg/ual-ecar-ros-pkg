@@ -78,7 +78,7 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 // Auxiliary vars:
 bool	steer_mech_limit_reached= false;			// Enable security limit of the mechanism
 #warning Cambiar limite
-int16_t Steer_offset			= 0;				// Steer offset regulated by software
+int16_t Steer_offset			= 200;				// Steer offset regulated by software
 float	steer_mech_limit_pos	= (1024*1.33f-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
 																	// 100 = Safety margin
 int16_t abs_enc_pos			= 0;				// Init variable
@@ -209,12 +209,10 @@ void processSteerController()
 	const int32_t enc_diff = enc_last_reading.encoders[0];
 	sei();
 	// Read abs encoder:
-	{
-		const int16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset; // Abs encoder (10 bit resolution)
-		// Filter out clearly erroneous readings from the abs encoder:
-		if (abs(abs_enc_pos_new - abs_enc_pos)<1060)
-			abs_enc_pos = abs_enc_pos_new;
-	}
+	const int16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset-512; // Abs encoder (10 bit resolution)
+	// Filter out clearly erroneous readings from the abs encoder:
+ 	if (abs(abs_enc_pos_new - abs_enc_pos)<512)
+		abs_enc_pos = abs_enc_pos_new;
 	// Calibration with absolute encoder:
 	const float K_enc_diff = 337.0f / (500.0f * 100.0f);	/** 500: Pulses per revolution
 															  * 100: Reductor 100:1
@@ -228,8 +226,8 @@ void processSteerController()
 		enc_offset_correction = abs_enc_pos - Adiff;
 	}
 	// Define encoder value to controller
-	Encoder_dir[0] = enc_offset_correction + Adiff;
-
+//	Encoder_dir[0] = enc_offset_correction + Adiff;
+	Encoder_dir[0] = abs_enc_pos_new;
 	// Control:
 	/*	Speed encoder reading and Smith Predictor implementation*/
 	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
@@ -242,6 +240,7 @@ void processSteerController()
 		if (tnow>(SETPOINT_OPENLOOP_STEER_TIMESTAMP+ WATCHDOG_TIMEOUT_msth))
 			SETPOINT_OPENLOOP_STEER_SPEED = 0;
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
+/*		U_steer_controller[0] = -200;*/
 	}
 	else
 	{
@@ -302,9 +301,9 @@ void processSteerController()
 	// Disallow going further outwards:
 	if (steer_mech_limit_reached)
 	{
-		if(Encoder_dir[0] > 0 && U_steer_controller[0] > 0)
+		if(abs_enc_pos_new > 0 && U_steer_controller[0] > 0)
 	 		U_steer_controller[0] = 0;
-		if(Encoder_dir[0] < 0 && U_steer_controller[0] < 0)
+		if(abs_enc_pos_new < 0 && U_steer_controller[0] < 0)
 	 		U_steer_controller[0] = 0;
 	}
 
