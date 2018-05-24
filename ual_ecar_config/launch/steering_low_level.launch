@@ -11,4 +11,5 @@
 
   <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find ual_ecar_config)/launch/vis_default.rviz" />
 
+
 </launch>
