@@ -1,6 +1,10 @@
 <launch>
   <!-- Medicion de baterias -->
-
+  <group ns="amm">
+    <node name="measure_current_sensors" pkg="battery_charge" type="battery_charge_node" output="screen">
+      <param name="SERIAL_PORT" value="/dev/serial/by-id/usb-Ual-ARM-eCARM_Ual_ARM_eCARM_DAQ_A52SUO24-if00-port0" />
+    </node>
+  </group>
   <!-- Nodo1: Voltage celdas -->
   <group ns="bat">
     <node name="measure_battery_cells" pkg="battery_charge" type="battery_charge_node" output="screen">
