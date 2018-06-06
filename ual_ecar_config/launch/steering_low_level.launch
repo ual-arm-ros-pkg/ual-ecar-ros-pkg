@@ -1,12 +1,22 @@
 <launch>
   <node name="ual_ecar_vehicle_controller" pkg="ual_ecar_vehicle_controller" type="ual_ecar_vehicle_controller_node" output="screen">
+    <param name="STEER_SERIAL_PORT" value="/dev/serial/by-id/usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0" />
+    <param name="SPEEDCRUISE_SERIAL_PORT" value="/dev/serial/by-id/usb-Ual-ARM-eCARM_Claraquino_eCARM_FT37TV91-if00-port0" />
   </node>
-  <node name="phidgets_high_speed_encoder" pkg="phidgets_high_speed_encoder" type="phidgets_high_speed_encoder" output="screen">
+  <node name="libredaq" pkg="libredaq" type="libredaq_node" output="screen">
+    <param name="joint0_name" value="wheel_RL" />
+    <param name="joint1_name" value="wheel_RR" />
+    <param name="joint0_tick2rad" value="1.0" />
+    <param name="joint1_tick2rad" value="1.0" />
+    <param name="serial_port" value="/dev/serial/by-id/usb-LibreDAQ_LDAQ-BASE_0001-if00" />
   </node>
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
   </node>
   <node name="ual_ecar_odometry" pkg="ual_ecar_odometry" type="ual_ecar_odometry_node" output="screen">
     <param name="rawlog_obs_prefix" value="/home/ecar/datasets/dataset_odom" />
+    <param name="left_K" value="3.1e-5"/>
+    <param name="right_K" value="-1.22e-4"/>
+    <param name="wheels_dist" value="1.26"/>
   </node>
 
   <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find ual_ecar_config)/launch/vis_default.rviz" />
