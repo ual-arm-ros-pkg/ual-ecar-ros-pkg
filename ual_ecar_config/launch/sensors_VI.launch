@@ -3,12 +3,16 @@
   <group ns="amm">
     <node name="measure_current_sensors" pkg="battery_charge" type="battery_charge_node" output="screen">
       <param name="SERIAL_PORT" value="/dev/serial/by-id/usb-Ual-ARM-eCARM_Ual_ARM_eCARM_DAQ_A52SUO24-if00-port0" />
+      <param name="DECIM_BAT" value="1" />
+      <param name="DECIM_CPU" value="1" />
     </node>
   </group>
   <!-- Nodo1: Voltage celdas -->
   <group ns="bat">
     <node name="measure_battery_cells" pkg="battery_charge" type="battery_charge_node" output="screen">
       <param name="SERIAL_PORT" value="/dev/serial/by-id/usb-Ual-ARM-eCARM_Monitor_bateria_FT2UQ2L7-if00-port0" />
+      <param name="DECIM_BAT" value="1" />
+      <param name="DECIM_CPU" value="1" />
     </node>
   </group>
 

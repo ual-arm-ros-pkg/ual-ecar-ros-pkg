@@ -2,7 +2,15 @@
   <node name="ual_ecar_vehicle_controller" pkg="ual_ecar_vehicle_controller" type="ual_ecar_vehicle_controller_node" output="screen">
     <param name="STEER_SERIAL_PORT" value="/dev/serial/by-id/usb-UAL_Claraquino_#1__FT232R_USB_UART__A71VGDJN-if00-port0" />
     <param name="SPEEDCRUISE_SERIAL_PORT" value="/dev/serial/by-id/usb-Ual-ARM-eCARM_Claraquino_eCARM_FT37TV91-if00-port0" />
+    <param name="DECIM_ADC_STEER" value="1" />
+    <param name="DECIM_ENCABS_STEER" value="1" />
+    <param name="DECIM_ENCINC_STEER" value="1" />
+    <param name="DECIM_CONTROLSIGNAL_STEER" value="1" />
+    <param name="DECIM_ADC_SPEEDCRUISE" value="1" />
+    <param name="DECIM_ENCINC_SPEEDCRUISE" value="1" />
+    <param name="DECIM_CONTROLSIGNAL_SPEEDCRUISE" value="1" />
   </node>
+
   <node name="libredaq" pkg="libredaq" type="libredaq_node" output="screen">
     <param name="joint0_name" value="wheel_RL" />
     <param name="joint1_name" value="wheel_RR" />
@@ -10,8 +18,10 @@
     <param name="joint1_tick2rad" value="1.0" />
     <param name="serial_port" value="/dev/serial/by-id/usb-LibreDAQ_LDAQ-BASE_0001-if00" />
   </node>
+
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
   </node>
+  
   <node name="ual_ecar_odometry" pkg="ual_ecar_odometry" type="ual_ecar_odometry_node" output="screen">
     <param name="rawlog_obs_prefix" value="/home/ecar/datasets/dataset_odom" />
     <param name="left_K" value="3.1e-5"/>

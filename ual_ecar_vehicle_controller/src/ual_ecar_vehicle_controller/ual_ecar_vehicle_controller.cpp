@@ -35,58 +35,94 @@ bool VehicleControllerLowLevel::initialize()
 {
 	ROS_INFO("VehicleControllerLowLevel::inicialize() ok.");
 
-	m_serial_Steer_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCARM_Claraquino_eCARM_2018_03_06_FT3ALM93-if00-port0";
+	m_serial_Steer_port_name =
+		"/dev/serial/by-id/"
+		"usb-Ual-ARM-eCARM_Claraquino_eCARM_2018_03_06_FT3ALM93-if00-port0";
 	m_serial_Steer_port_baudrate = 500000;
 	m_nh_params.getParam("STEER_SERIAL_PORT", m_serial_Steer_port_name);
-	m_nh_params.getParam("STEER_SERIAL_PORT_BAUDRATE", m_serial_Steer_port_baudrate);
+	m_nh_params.getParam(
+		"STEER_SERIAL_PORT_BAUDRATE", m_serial_Steer_port_baudrate);
 
-	m_serial_SpeedCruise_port_name ="/dev/serial/by-id/usb-Ual-ARM-eCARM_Claraquino_eCARM_FT37TV91-if00-port0";
+	m_serial_SpeedCruise_port_name =
+		"/dev/serial/by-id/"
+		"usb-Ual-ARM-eCARM_Claraquino_eCARM_FT37TV91-if00-port0";
 	m_serial_SpeedCruise_port_baudrate = 500000;
-	m_nh_params.getParam("SPEEDCRUISE_SERIAL_PORT", m_serial_SpeedCruise_port_name);
-	m_nh_params.getParam("SPEEDCRUISE_SERIAL_PORT_BAUDRATE", m_serial_SpeedCruise_port_baudrate);
+	m_nh_params.getParam(
+		"SPEEDCRUISE_SERIAL_PORT", m_serial_SpeedCruise_port_name);
+	m_nh_params.getParam(
+		"SPEEDCRUISE_SERIAL_PORT_BAUDRATE", m_serial_SpeedCruise_port_baudrate);
 
 	// Try to connect to Steer Claraquino
 	if (this->AttemptConnection(m_serial_Steer))
 	{
-		ROS_INFO("Connection OK to VehicleLowLevelController Steer [Claraquino].");
+		ROS_INFO(
+			"Connection OK to VehicleLowLevelController Steer [Claraquino].");
 	}
 	else
 	{
-		ROS_ERROR("Error in VehicleControllerLowLevel::AttemptConnection()! Steer");
+		ROS_ERROR(
+			"Error in VehicleControllerLowLevel::AttemptConnection()! Steer");
 		return false;
 	}
 	// Try to connect to SpeerCruise Claraquino
-/*	if (this->AttemptConnection(m_serial_SpeedCruise))
-	{
-		ROS_INFO("Connection OK to VehicleLowLevelController SpeedCruise[Claraquino].");
-	}
-	else
-	{
-		ROS_ERROR("Error in VehicleControllerLowLevel::AttemptConnection()! SpeedCruise");
-		return false;
-	}
-*/
+	/*	if (this->AttemptConnection(m_serial_SpeedCruise))
+		{
+			ROS_INFO("Connection OK to VehicleLowLevelController
+	   SpeedCruise[Claraquino].");
+		}
+		else
+		{
+			ROS_ERROR("Error in VehicleControllerLowLevel::AttemptConnection()!
+	   SpeedCruise"); return false;
+		}
+	*/
 	// Publisher: Controller Status
-	m_pub_controller_status = m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>("vehicle_controller_status", 10);
+	m_pub_controller_status =
+		m_nh.advertise<ual_ecar_vehicle_controller::SteerControllerStatus>(
+			"vehicle_controller_status", 10);
 	// Publisher: ADC data.
-	m_pub_Steer_ADC = m_nh.advertise<ual_ecar_vehicle_controller::AnalogReading>("claraquino_steer_adc", 10);
-	m_pub_SpeedCruise_ADC = m_nh.advertise<ual_ecar_vehicle_controller::AnalogReading>("claraquino_speedcruise_adc", 10);
+	m_pub_Steer_ADC =
+		m_nh.advertise<ual_ecar_vehicle_controller::AnalogReading>(
+			"claraquino_steer_adc", 10);
+	m_pub_SpeedCruise_ADC =
+		m_nh.advertise<ual_ecar_vehicle_controller::AnalogReading>(
+			"claraquino_speedcruise_adc", 10);
 	// Publisher: ENC data
-	m_pub_Steer_ENC = m_nh.advertise<ual_ecar_vehicle_controller::EncodersReading>("claraquino_steer_encoders", 10);
-	m_pub_SpeedCruise_ENC = m_nh.advertise<ual_ecar_vehicle_controller::EncodersReading>("claraquino_speedcruise_encoders", 10);
+	m_pub_Steer_ENC =
+		m_nh.advertise<ual_ecar_vehicle_controller::EncodersReading>(
+			"claraquino_steer_encoders", 10);
+	m_pub_SpeedCruise_ENC =
+		m_nh.advertise<ual_ecar_vehicle_controller::EncodersReading>(
+			"claraquino_speedcruise_encoders", 10);
 	// Publisher: ABS ENC data
-	m_pub_ENC_ABS = m_nh.advertise<ual_ecar_vehicle_controller::EncoderAbsReading>("claraquino_abs_encoder", 10);
+	m_pub_ENC_ABS =
+		m_nh.advertise<ual_ecar_vehicle_controller::EncoderAbsReading>(
+			"claraquino_abs_encoder", 10);
 	// Publisher: Control signal data
-	m_pub_Steer_Control_signal = m_nh.advertise<ual_ecar_vehicle_controller::ControlSignalSteer>("claraquino_steer_control_signal", 10);
-	m_pub_SpeedCruise_Control_signal = m_nh.advertise<ual_ecar_vehicle_controller::ControlSignalSpeedCruise>("claraquino_speedcruise_control_signal", 10);
+	m_pub_Steer_Control_signal =
+		m_nh.advertise<ual_ecar_vehicle_controller::ControlSignalSteer>(
+			"claraquino_steer_control_signal", 10);
+	m_pub_SpeedCruise_Control_signal =
+		m_nh.advertise<ual_ecar_vehicle_controller::ControlSignalSpeedCruise>(
+			"claraquino_speedcruise_control_signal", 10);
 
 	// Subscriber:
-	m_sub_contr_status[0] = m_nh.subscribe("vehicle_openloop_mode_steering", 10,&VehicleControllerLowLevel::modeSteeringCallback, this);
-	m_sub_contr_status[1] = m_nh.subscribe("vehicle_openloop_mode_throttle", 10,&VehicleControllerLowLevel::modeThrottleCallback, this);
-	m_sub_eje_x = m_nh.subscribe("joystick_eje_x", 10, &VehicleControllerLowLevel::ejexCallback, this);
-	m_sub_eje_y = m_nh.subscribe("joystick_eje_y", 10, &VehicleControllerLowLevel::ejeyCallback, this);
-	m_sub_autonomous_driving = m_nh.subscribe("vehicle_autonomous_mode", 10,&VehicleControllerLowLevel::autonomousModeCallback, this);
-	m_sub_brake_enable = m_nh.subscribe("vehicle_brake_enable", 10,&VehicleControllerLowLevel::brakeenableCallback, this);
+	m_sub_contr_status[0] = m_nh.subscribe(
+		"vehicle_openloop_mode_steering", 10,
+		&VehicleControllerLowLevel::modeSteeringCallback, this);
+	m_sub_contr_status[1] = m_nh.subscribe(
+		"vehicle_openloop_mode_throttle", 10,
+		&VehicleControllerLowLevel::modeThrottleCallback, this);
+	m_sub_eje_x = m_nh.subscribe(
+		"joystick_eje_x", 10, &VehicleControllerLowLevel::ejexCallback, this);
+	m_sub_eje_y = m_nh.subscribe(
+		"joystick_eje_y", 10, &VehicleControllerLowLevel::ejeyCallback, this);
+	m_sub_autonomous_driving = m_nh.subscribe(
+		"vehicle_autonomous_mode", 10,
+		&VehicleControllerLowLevel::autonomousModeCallback, this);
+	m_sub_brake_enable = m_nh.subscribe(
+		"vehicle_brake_enable", 10,
+		&VehicleControllerLowLevel::brakeenableCallback, this);
 	/*Sub:System_Identification[Controller & Smith predictor params,
 	   Feedforwards...]
 	*/
@@ -125,7 +161,7 @@ bool VehicleControllerLowLevel::initialize()
 			this->CMD_Decimation_configuration(
 				Decimation_config_Steer, m_serial_Steer);
 		}
-/*
+
 		int decimate_ADC_SpeedCruise = 10, decimate_CPU_SpeedCruise = 10000,
 			decimate_CONTROLSIGNAL_SpeedCruise = 10,
 			decimate_ENCINC_SpeedCruise = 10;
@@ -159,7 +195,6 @@ bool VehicleControllerLowLevel::initialize()
 			this->CMD_Decimation_configuration(
 				Decimation_config_SpeedCruise, m_serial_SpeedCruise);
 		}
-		*/
 	}
 	return true;
 }
@@ -262,7 +297,7 @@ bool VehicleControllerLowLevel::iterate()
 			1, "Sending new STEER controller mode: %s",
 			m_mode_openloop_steer ? "MANUAL" : "AUTO");
 	}
-/*	if (m_mode_throttle_changed || m_mode_brake_changed)
+	if (m_mode_throttle_changed || m_mode_brake_changed)
 	{
 		m_mode_throttle_changed = false;
 		m_mode_brake_changed = false;
@@ -270,9 +305,15 @@ bool VehicleControllerLowLevel::iterate()
 		cmd.payload.throttle_enable = !m_mode_openloop_throttle;
 		cmd.payload.brake_enable = !m_mode_brake_enable;
 		cmd.calc_and_update_checksum();
-		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_SpeedCruise);
-		ROS_INFO_THROTTLE(1, "Sending new SPEED CRUISE controller mode: THROTTLE: %s BRAKE: %s", m_mode_openloop_throttle ? "MANUAL" : "AUTO", m_mode_brake_enable ? "MANUAL" : "AUTO");
-	}*/
+		WriteBinaryFrame(
+			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
+			m_serial_SpeedCruise);
+		ROS_INFO_THROTTLE(
+			1,
+			"Sending new SPEED CRUISE controller mode: THROTTLE: %s BRAKE: %s",
+			m_mode_openloop_throttle ? "MANUAL" : "AUTO",
+			m_mode_brake_enable ? "MANUAL" : "AUTO");
+	}
 	// New joystick
 	if (!m_autonomous_driving_mode && m_joy_changed)
 	{
@@ -282,8 +323,11 @@ bool VehicleControllerLowLevel::iterate()
 			TFrameCMD_OPENLOOP_STEERING_SETPOINT cmd;
 			cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED = m_joy_x * 255.0;
 			cmd.calc_and_update_checksum();
-			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
-			ROS_INFO_THROTTLE(1, "Sending openloop STEER: %d",cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED);
+			WriteBinaryFrame(
+				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
+			ROS_INFO_THROTTLE(
+				1, "Sending openloop STEER: %d",
+				cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED);
 		}
 		else
 		{
@@ -297,7 +341,7 @@ bool VehicleControllerLowLevel::iterate()
 				1, "Sending closedloop STEER: %d",
 				cmd.payload.SETPOINT_STEER_POS);
 		}
-/*		// Y: throttle
+		// Y: throttle
 		if (!m_mode_brake_enable)
 		{
 			if (m_mode_openloop_throttle)
@@ -305,8 +349,12 @@ bool VehicleControllerLowLevel::iterate()
 				TFrameCMD_OPENLOOP_THROTTLE_SETPOINT cmd;
 				cmd.payload.SETPOINT_OPENLOOP_THROTTLE = m_joy_y;
 				cmd.calc_and_update_checksum();
-				WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(1, "Sending openloop THROTTLE: %f",cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
+				WriteBinaryFrame(
+					reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
+					m_serial_SpeedCruise);
+				ROS_INFO_THROTTLE(
+					1, "Sending openloop THROTTLE: %f",
+					cmd.payload.SETPOINT_OPENLOOP_THROTTLE);
 			}
 			else
 			{
@@ -316,8 +364,11 @@ bool VehicleControllerLowLevel::iterate()
 				TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
 				cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
 				cmd.calc_and_update_checksum();
-				WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
+				WriteBinaryFrame(
+					reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
+					m_serial_SpeedCruise);
+				ROS_INFO_THROTTLE(
+					1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
 			}
 		}
 		// Brake:
@@ -325,17 +376,21 @@ bool VehicleControllerLowLevel::iterate()
 			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd_brake;
 			if (m_mode_brake_enable)
 			{
-				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = m_joy_y * 255.0 * 0.5;
+				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE =
+					m_joy_y * 255.0 * 0.5;
 			}
 			else
 			{
 				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = 0;
 			}
 			cmd_brake.calc_and_update_checksum();
-			WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),	m_serial_SpeedCruise);
-			ROS_INFO_THROTTLE(1, "Sending openloop Brake: %d",cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
+			WriteBinaryFrame(
+				reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),
+				m_serial_SpeedCruise);
+			ROS_INFO_THROTTLE(
+				1, "Sending openloop Brake: %d",
+				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
 		}
-		*/
 	}
 
 	// Main module loop code.
@@ -363,7 +418,7 @@ bool VehicleControllerLowLevel::iterate()
 		return WriteBinaryFrame(
 			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
 	}
-/*	// SPEED CRUISE
+	// SPEED CRUISE
 	nFrames = 0;
 	if (!m_serial_SpeedCruise.isOpen())
 	{
@@ -386,47 +441,54 @@ bool VehicleControllerLowLevel::iterate()
 		cmd.calc_and_update_checksum();
 		return WriteBinaryFrame(
 			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
-	}*/
+	}
 	return true;
 }
 
-void VehicleControllerLowLevel::autonomousModeCallback(const std_msgs::Bool::ConstPtr& msg)
+void VehicleControllerLowLevel::autonomousModeCallback(
+	const std_msgs::Bool::ConstPtr& msg)
 {
 	m_autonomous_driving_mode = msg->data;
 	m_modes_changed = true;
 }
 
-void VehicleControllerLowLevel::modeSteeringCallback(const std_msgs::Bool::ConstPtr& msg)
+void VehicleControllerLowLevel::modeSteeringCallback(
+	const std_msgs::Bool::ConstPtr& msg)
 {
 	m_mode_openloop_steer = msg->data;
 	m_mode_steer_changed = true;
 }
 
-void VehicleControllerLowLevel::modeThrottleCallback(const std_msgs::Bool::ConstPtr& msg)
+void VehicleControllerLowLevel::modeThrottleCallback(
+	const std_msgs::Bool::ConstPtr& msg)
 {
 	m_mode_openloop_throttle = msg->data;
 	m_mode_throttle_changed = true;
 }
 
-void VehicleControllerLowLevel::brakeenableCallback(const std_msgs::Bool::ConstPtr& msg)
+void VehicleControllerLowLevel::brakeenableCallback(
+	const std_msgs::Bool::ConstPtr& msg)
 {
 	m_mode_brake_enable = msg->data;
 	m_mode_brake_changed = true;
 }
 
-void VehicleControllerLowLevel::ejexCallback(const std_msgs::Float64::ConstPtr& msg)
+void VehicleControllerLowLevel::ejexCallback(
+	const std_msgs::Float64::ConstPtr& msg)
 {
 	m_joy_x = msg->data;
 	m_joy_changed = true;
 }
 
-void VehicleControllerLowLevel::ejeyCallback(const std_msgs::Float64::ConstPtr& msg)
+void VehicleControllerLowLevel::ejeyCallback(
+	const std_msgs::Float64::ConstPtr& msg)
 {
 	m_joy_y = msg->data;
 	m_joy_changed = true;
 }
 
-void VehicleControllerLowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data, CSerialPort& m_serial)
+void VehicleControllerLowLevel::daqOnNewADCCallback(
+	const TFrame_ADC_readings_payload_t& data, CSerialPort& m_serial)
 {
 	ual_ecar_vehicle_controller::AnalogReading msg;
 
@@ -439,7 +501,8 @@ void VehicleControllerLowLevel::daqOnNewADCCallback(const TFrame_ADC_readings_pa
 		.publish(msg);
 }
 
-void VehicleControllerLowLevel::daqOnNewENCCallback(const TFrame_ENCODERS_readings_payload_t& data, CSerialPort& m_serial)
+void VehicleControllerLowLevel::daqOnNewENCCallback(
+	const TFrame_ENCODERS_readings_payload_t& data, CSerialPort& m_serial)
 {
 	ual_ecar_vehicle_controller::EncodersReading msg;
 
@@ -454,7 +517,8 @@ void VehicleControllerLowLevel::daqOnNewENCCallback(const TFrame_ENCODERS_readin
 		.publish(msg);
 }
 
-void VehicleControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_reading_payload_t& data)
+void VehicleControllerLowLevel::daqOnNewENCAbsCallback(
+	const TFrame_ENCODER_ABS_reading_payload_t& data)
 {
 	ual_ecar_vehicle_controller::EncoderAbsReading msg;
 
@@ -465,7 +529,8 @@ void VehicleControllerLowLevel::daqOnNewENCAbsCallback(const TFrame_ENCODER_ABS_
 	m_pub_ENC_ABS.publish(msg);
 }
 
-void VehicleControllerLowLevel::daqOnNewSteerControlSignalCallback(const TFrame_STEER_CONTROL_SIGNAL_payload_t& data)
+void VehicleControllerLowLevel::daqOnNewSteerControlSignalCallback(
+	const TFrame_STEER_CONTROL_SIGNAL_payload_t& data)
 {
 	ual_ecar_vehicle_controller::ControlSignalSteer msg;
 
@@ -481,7 +546,8 @@ void VehicleControllerLowLevel::daqOnNewSteerControlSignalCallback(const TFrame_
 	m_pub_Steer_Control_signal.publish(msg);
 }
 
-void VehicleControllerLowLevel::daqOnNewSpeedCruiseControlSignalCallback(const TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t& data)
+void VehicleControllerLowLevel::daqOnNewSpeedCruiseControlSignalCallback(
+	const TFrame_SPEEDCRUISE_CONTROL_SIGNAL_payload_t& data)
 {
 	ual_ecar_vehicle_controller::ControlSignalSpeedCruise msg;
 
@@ -548,13 +614,15 @@ bool VehicleControllerLowLevel::WriteBinaryFrame(
 				"TX frame (%u bytes): ", (unsigned int)full_frame_len);
 			for (size_t i = 0; i < full_frame_len; i++)
 				s += mrpt::format("%02X ", full_frame[i]);
-				if (&m_serial == &m_serial_Steer)
-				{
-					MRPT_LOG_INFO_FMT("Tx frame: %s. STEER_SERIAL_PORT", s.c_str());
-				}
-				else{
-					MRPT_LOG_INFO_FMT("Tx frame: %s. SPEEDCRUISE_SERIAL_PORT", s.c_str());
-				}
+			if (&m_serial == &m_serial_Steer)
+			{
+				MRPT_LOG_INFO_FMT("Tx frame: %s. STEER_SERIAL_PORT", s.c_str());
+			}
+			else
+			{
+				MRPT_LOG_INFO_FMT(
+					"Tx frame: %s. SPEEDCRUISE_SERIAL_PORT", s.c_str());
+			}
 		}
 #endif
 
@@ -684,10 +752,13 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(
 			is_ok = false;
 			if (&m_serial == &m_serial_Steer)
 			{
-				MRPT_LOG_INFO("[rx] Reset frame (start flag). STEER_SERIAL_PORT");
+				MRPT_LOG_INFO(
+					"[rx] Reset frame (start flag). STEER_SERIAL_PORT");
 			}
-			else{
-				MRPT_LOG_INFO("[rx] Reset frame (start flag). SPEEDCRUISE_SERIAL_PORT");
+			else
+			{
+				MRPT_LOG_INFO(
+					"[rx] Reset frame (start flag). SPEEDCRUISE_SERIAL_PORT");
 			}
 		}
 
