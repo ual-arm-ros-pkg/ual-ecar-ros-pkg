@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 )
 
-find_package(MRPT 1.9.9 COMPONENTS comms)
+find_package(MRPT 1.9.9 COMPONENTS comms QUIET)
 if (NOT MRPT_FOUND)
 	find_package(MRPT REQUIRED hwdrivers)
 endif()

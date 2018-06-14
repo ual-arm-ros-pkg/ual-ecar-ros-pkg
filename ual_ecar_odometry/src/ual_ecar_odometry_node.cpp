@@ -17,9 +17,17 @@
 #include <string>
 #include <mrpt/math/lightweight_geom_data.h>
 #include <mrpt/obs/CObservationOdometry.h>
+#include <mrpt/system/filesystem.h>
+
+#include <mrpt/version.h>
+#if MRPT_VERSION >= 0x199
 #include <mrpt/io/CFileGZOutputStream.h>
 #include <mrpt/serialization/CArchive.h>
-#include <mrpt/system/filesystem.h>
+using mrpt::io::CFileGZOutputStream;
+#else
+#include <mrpt/utils/CFileGZOutputStream.h>
+using mrpt::utils::CFileGZOutputStream;
+#endif
 
 class OdometryNode
 {
@@ -49,7 +57,7 @@ class OdometryNode
 	mrpt::math::TPose2D global_odometry_{0, 0, 0};
 	mrpt::math::TTwist2D cur_vel_{0, 0, 0};
 
-	mrpt::io::CFileGZOutputStream out_rawlog_obs_, out_rawlog_actsf_;
+	CFileGZOutputStream out_rawlog_obs_, out_rawlog_actsf_;
 
 	// callback for topic /joint_states
 	void onNewEncoderState(const sensor_msgs::JointState::Ptr& msg)
@@ -180,14 +188,10 @@ class OdometryNode
 			// check for incoming messages. Single threaded model:
 			ros::spinOnce();
 			const ros::Time current_time = ros::Time::now();
-			const mrpt::system::TTimeStamp mrpt_cur_time = mrpt::system::now();
-
-			bool has_new_pos_or_vel = false;
 
 			// new encoder position data?
 			if (new_enc_pos_.timestamp != last_enc_pos_.timestamp)
 			{
-				has_new_pos_or_vel = true;
 				// Yes: process new encoder positions:
 				MRPT_TODO("Handle potential encoders overflow!!");
 
@@ -233,9 +237,6 @@ class OdometryNode
 					odom_broadcaster.sendTransform(odom_trans);
 				}
 
-				// if enabled, save to act-sf rawlog:
-				// TODO!
-
 				// if enabled, save to obs-only rawlog:
 				if (out_rawlog_obs_.is_open())
 				{
@@ -251,8 +252,12 @@ class OdometryNode
 					odom->encoderRightTicks = right_incr;
 
 					// Serialize:
+#if MRPT_VERSION >= 0x199
 					auto arch =
 						mrpt::serialization::archiveFrom(out_rawlog_obs_);
+#else
+					auto& arch = out_rawlog_obs_;
+#endif
 					arch << odom;
 				}
 			}  // end new odom pos data
