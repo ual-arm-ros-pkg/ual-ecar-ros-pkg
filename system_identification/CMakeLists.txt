@@ -11,8 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
-find_package(MRPT 1.9.9 COMPONENTS comms QUIET)
-if (NOT MRPT_FOUND)
+find_package(MRPT COMPONENTS QUIET)
+if(NOT "${MRPT_VERSION}" VERSION_LESS "1.9.9")
+	find_package(MRPT REQUIRED comms)
+else()
 	find_package(MRPT REQUIRED hwdrivers)
 endif()
 message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
