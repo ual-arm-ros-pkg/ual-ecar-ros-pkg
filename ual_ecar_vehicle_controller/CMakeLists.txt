@@ -11,11 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 )
 
-find_package(MRPT 1.9.9 COMPONENTS comms QUIET)
-if (NOT MRPT_FOUND)
+# System dependencies are found with CMake's conventions
+find_package(MRPT 1.5 REQUIRED)
+message(STATUS "MRPT version found: ${MRPT_VERSION}")
+if (MRPT_VERSION VERSION_LESS 1.9.0)
 	find_package(MRPT REQUIRED hwdrivers)
+else()
+	find_package(MRPT REQUIRED comms)
 endif()
-message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
 
 ################################################
 ## Declare ROS messages, services and actions ##
