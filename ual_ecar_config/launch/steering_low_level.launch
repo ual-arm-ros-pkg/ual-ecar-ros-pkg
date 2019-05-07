@@ -8,7 +8,7 @@
     <param name="DECIM_CONTROLSIGNAL_STEER" value="1" />
     <param name="DECIM_ADC_SPEEDCRUISE" value="1" />
     <param name="DECIM_ENCINC_SPEEDCRUISE" value="1" />
-    <param name="DECIM_CONTROLSIGNAL_SPEEDCRUISE" value="1" />
+    <param name="DECIM_CONTROLSIGNAL_SPEEDCRUISE" value="2" />
   </node>
 
   <node name="libredaq" pkg="libredaq" type="libredaq_node" output="screen">

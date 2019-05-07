@@ -29,7 +29,7 @@ using mrpt::utils::saturate;
 #endif
 
 // Define to see serial communication traces
-//#define DEBUG_TRACES
+#define DEBUG_TRACES
 
 bool VehicleControllerLowLevel::initialize()
 {
@@ -814,6 +814,12 @@ bool VehicleControllerLowLevel::CMD_Decimation_configuration(
 	cmd.payload = Decimation_config;
 	cmd.calc_and_update_checksum();
 
-	return SendFrameAndWaitAnswer(
-		reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial);
+	for (int retry = 0; retry < 3; retry++)
+	{
+		if (SendFrameAndWaitAnswer(
+				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial))
+			return true;
+	}
+	MRPT_LOG_ERROR("CMD_Decimation_configuration(): Missed ACK!");
+	return false;
 }
