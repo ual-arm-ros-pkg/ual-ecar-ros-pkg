@@ -29,6 +29,7 @@ add_message_files(
   FILES
 	Controller_parameters.msg
 	System_parameters.msg
+	AnalogReading.msg
  )
 
 ## Generate added messages and services with any dependencies listed here
