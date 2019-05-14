@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "vehicle_cruise_control", "vehicle_cruise_control.cppproj", "{30951E78-4960-4941-9B07-DD091C881534}"
 EndProject
-Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "libclaraquino", "claraquino\libclaraquino\libclaraquino.cppproj", "{C11E8498-0DF8-4F82-85C9-050AC4FE1D4E}"
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "libclaraquino", "..\firmware\claraquino\libclaraquino\libclaraquino.cppproj", "{C11E8498-0DF8-4F82-85C9-050AC4FE1D4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
