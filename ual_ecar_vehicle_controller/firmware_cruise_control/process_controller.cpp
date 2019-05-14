@@ -335,6 +335,4 @@ void processBrakeController()
 		// PWM direction:
 		gpio_pin_write(PWM_DIR, u_brake_is_positive);
 
-		// Decimate the number of msgs sent to the PC:
-		#warning TODO decimate
 }

@@ -128,7 +128,7 @@
   <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
   <avrgcccpp.compiler.directories.IncludePaths>
     <ListValues>
-      <Value>../claraquino</Value>
+      <Value>../../../../claraquino</Value>
       <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.0.106\include</Value>
     </ListValues>
   </avrgcccpp.compiler.directories.IncludePaths>
