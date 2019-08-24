@@ -69,7 +69,16 @@ float	U_throttle_controller[6] = {0,0,0,0,0,0};
 int16_t U_brake_controller[6] = {0,0,0,0,0,0};
 TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 
+float	Ref_speed[2]			=	{0,0};			// Speed reference
+float	Error_speed[3]			=	{0,0,0};		// Speed error
+float	Antiwindup[2]			=	{0,0};			// Antiwindup variable
+float	Ref_brake[2]			=	{0,0};			// Brake reference
+float	Error_brake[3]			=	{0,0,0};		// Brake error
+float	Antiwindup_brake[2]			=	{0,0};		// Brake Antiwindup variable
+	
 // Auxiliary vars:
+float ANTIWINDUP_CTE = sqrt(0.5744);				// Antiwindup "constant" regulated by software
+float ANTIWINDUP_CTE_BRAKE = sqrt(0.2);				// Antiwindup "constant" regulated by software
 uint32_t  CONTROL_last_millis_THROTTLE = 0;
 uint32_t  CONTROL_last_millis_BRAKE = 0;
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
@@ -111,6 +120,10 @@ uint32_t SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = 0;
   */
 float SETPOINT_CONTROL_BRAKE_FORCE = .0f;
 uint32_t SETPOINT_CONTROL_BRAKE_FORCE_TIMESTAMP = 0;
+
+// Vehicle UAL-eCARM speed value
+float SPEED_eCARM			= 0.0f;
+uint32_t SPEED_eCARM_TIMESTAMP = 0;
 
 template <typename T, size_t N>
 void do_shift(T (&v)[N])
@@ -198,6 +211,11 @@ void setBrake_ControllerParams(const TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_
 	U_BRAKE_DECOUPLING = p.U_BRAKE_DECOUPLING;
 }
 
+void setSpeed_Vehicle(float speed_vehicle_ecarm)
+{
+	SPEED_eCARM = speed_vehicle_ecarm;
+	SPEED_eCARM_TIMESTAMP = millis();
+}
 void setOpenLoopSetpoint_VehVel(float ol_vel_mps)
 {
 	SETPOINT_OPENLOOP_THROTTLE = ol_vel_mps;
@@ -216,12 +234,6 @@ void setControllerSetpoint_VehVel(float vel_mps)
 	SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP = millis();
 }
 
-void setControllerSetpoint_Brake(float brakeforce)
-{
-	SETPOINT_CONTROL_BRAKE_FORCE = brakeforce;
-	SETPOINT_CONTROL_BRAKE_FORCE_TIMESTAMP = millis();
-}
-
 // CONTROL FOR MAIN VEHICLE MOTOR
 // Stopwatch: 0.35 ms
 void processThrottleController()
@@ -232,7 +244,7 @@ void processThrottleController()
 
 	CONTROL_last_millis_THROTTLE = tnow;
 
-
+	// Open-Loop mode
 	if (!THROTTLECONTROL_active)
 	{
 		if (tnow>(SETPOINT_OPENLOOP_THROTTLE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
@@ -248,18 +260,73 @@ void processThrottleController()
 		*/
 		if (tnow>(SETPOINT_CONTROL_THROTTLE_SPEED_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
 			SETPOINT_CONTROL_THROTTLE_SPEED = 0;
-		#warning TODO Throttle-by-wire controller
-		// TODO: Throttle-by-wire controller here!!
-		U_throttle_controller[0] = (SETPOINT_CONTROL_THROTTLE_SPEED / 12.5)*5;
+		
+		/*Speed reference reading*/
+		Ref_speed[0] = SETPOINT_CONTROL_THROTTLE_SPEED;
+		/*Speed error and brake control reference*/
+		Error_speed[0] = Ref_speed[0] - SPEED_eCARM;
+		if (Error_speed[0]<0)
+		{
+			Ref_brake[0] = Error_speed[0];
+		}else{
+			Ref_brake[0] = 0;
+		}
+		/*Speed controller*/
+		if (SPEED_eCARM>0){
+			if (SPEED_eCARM>2.3){
+				Q_THROTTLE[0] =  2.406;
+				Q_THROTTLE[1] = -2.328;
+				Q_THROTTLE[2] =  0.0;
+			}
+			else{
+				Q_THROTTLE[0] =  1.994;
+				Q_THROTTLE[1] = -1.929;
+				Q_THROTTLE[2] =  0.0;
+			}
+		} 
+		else{
+			if (SPEED_eCARM>-2.1){
+				Q_THROTTLE[0] =  2.482;
+				Q_THROTTLE[1] = -2.402;
+				Q_THROTTLE[2] =  0.0;
+			} 
+			else{
+				Q_THROTTLE[0] =  4.505;
+				Q_THROTTLE[1] = -4.358;
+				Q_THROTTLE[2] =  0.0;
+			}
+		}
+		U_throttle_controller[0] = U_throttle_controller[1] + Q_THROTTLE[0] * Error_speed[0] + Q_THROTTLE[1] * Error_speed[1] + Q_THROTTLE[2] * Error_speed[2];
+		U_throttle_controller[0] = U_throttle_controller[0] + 1.0; // Dead Zone
+		/*Control Signal with feedforward & decoupling*/
+		U_throttle_controller[0] = U_throttle_controller[0] + U_THROTTLE_DECOUPLING[0] + U_THROTTLE_DECOUPLING[1] + U_THROTTLE_FEEDFORWARD[0] + U_THROTTLE_FEEDFORWARD[1];
 	}
-
-	// Ensure normalized speed is in range [-5,5]
-	if (U_throttle_controller[0]>5)
-		U_throttle_controller[0]=5;
+	/*	Variable to Anti-windup technique*/
+	int m_speed= round(U_throttle_controller[0]);
+	/*	Saturation */
+	bool has_sat = false;
+	if (abs(U_throttle_controller[0]) > 5)
+	{
+		if (U_throttle_controller[0] < -5)
+		U_throttle_controller[0] = -5;
+		else
+		U_throttle_controller[0] = 5;
+		has_sat = true;
+	}
+	/*	Anti-windup technique*/
+	if(has_sat)
+	Antiwindup[0] = (U_throttle_controller[0] - m_speed) / ANTIWINDUP_CTE;
 	else
-		if (U_throttle_controller[0]<-5)
-			U_throttle_controller[0]=-5;
-
+	Antiwindup[0] = 0;
+	U_throttle_controller[0] = round(0.5 * (2 * U_throttle_controller[0] + T * (Antiwindup[0] + Antiwindup[1])));
+	
+	/* Values actualization*/
+	do_shift(Ref_speed);
+	do_shift(Antiwindup);
+	do_shift(Error_speed);
+	do_shift(U_throttle_controller);
+	
+	
 	// Output direction:
 	// Relay output = HIGH if going BACKWARDS.
 	gpio_pin_write(RELAY_FRWD_REV, U_throttle_controller[0]<0);
@@ -302,34 +369,59 @@ void processBrakeController()
 		CONTROL_last_millis_BRAKE = tnow;
 
 		cli();
-		const int32_t enc_diff = enc_last_reading.encoders[0];
+		const int32_t enc_diff = enc_last_reading.encoders[0]*360/(500*100);
 		sei();
 
-		if (!BRAKECONTROL_active)
-		{
+		if (!BRAKECONTROL_active){
 			if (tnow>(SETPOINT_OPENLOOP_BRAKE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
 				SETPOINT_OPENLOOP_BRAKE = 0;
 
 			U_brake_controller[0] = SETPOINT_OPENLOOP_BRAKE;
 		}
-		else
-		{
+		else{
 			if (tnow>(SETPOINT_CONTROL_BRAKE_FORCE_TIMESTAMP + WATCHDOG_TIMEOUT_msth))
 			SETPOINT_CONTROL_BRAKE_FORCE = 0;
 		/*	+-------------------+
 			|	BRAKE-BY-WIRE	|
 			+-------------------+
 		*/
-			#warning TODO Brake-by-wire controller
-			// TODO: Brake-by-wire controller here!!
-			U_brake_controller[0] = SETPOINT_CONTROL_BRAKE_FORCE;
+			/*Brake reference reading*/
+			Ref_brake[0] = Ref_brake[0] * 6.2; // Experimental factor
+			/*Position error*/
+			Error_brake[0] = Ref_brake[0] - enc_diff;
+			/*Position controller*/
+			U_brake_controller[0] = U_brake_controller[1]+Q_BRAKE[0]*Error_brake[0]+Q_BRAKE[1]*Error_brake[1]+Q_BRAKE[2]*Error_brake[2];
+			/*Control Signal with feedforward & decoupling*/
+			U_brake_controller[0] = U_brake_controller[0] + U_BRAKE_DECOUPLING[0] + U_BRAKE_DECOUPLING[1] + U_BRAKE_FEEDFORWARD[0] + U_BRAKE_FEEDFORWARD[1];
 		}
-
+		/*	Variable to Anti-windup technique*/
+		int m_brake= round(U_brake_controller[0]);
+		/*	Saturation */
+		bool has_sat = false;
+		if (abs(U_brake_controller[0]) > 24)
+		{
+			if (U_brake_controller[0] < -24)
+			U_brake_controller[0] = -24;
+			else
+			U_brake_controller[0] = 24;
+			has_sat = true;
+		}
+		/*	Anti-windup technique*/
+		if(has_sat)
+			Antiwindup_brake[0] = (U_brake_controller[0] - m_brake) / ANTIWINDUP_CTE_BRAKE;
+		else
+			Antiwindup_brake[0] = 0;
+		U_brake_controller[0] = round(0.5 * (2 * U_brake_controller[0] + T * (Antiwindup_brake[0] + Antiwindup_brake[1])));
+		
 		/* Values actualization*/
 		do_shift(U_brake_controller);
+		do_shift(Ref_brake);
+		do_shift(Error_brake);
+		do_shift(Antiwindup_brake);
+		
 		// Output PWM:
 		bool u_brake_is_positive = (U_brake_controller[0] >= 0);
-		uint8_t u_brake = abs(U_brake_controller[0]);
+		uint8_t u_brake = abs(U_brake_controller[0])*255/24;
 		pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_brake);
 
 		// PWM direction:

@@ -64,6 +64,7 @@ enum opcode_t {
 	OP_START_ENCODERS  = 0x30,
 	OP_STOP_ENCODERS   = 0x31,
 	// Control:
+	OP_SPEED_VEHICLE				= 0x49,
 	OP_CONTROL_MODE					= 0x50,
 	OP_CONTROL_BRAKE_SET_PARAMS		= 0x51,
 	OP_CONTROL_THROTTLE_SET_PARAMS	= 0x53,
@@ -424,6 +425,20 @@ struct TFrameCMD_CONTROL_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_BR
 {
 	// Defaults:
 	TFrameCMD_CONTROL_BRAKE_SETPOINT() : TBaseFrame(OP_CONTROL_BRAKE_SETPOINT)
+	{
+	}
+};
+
+struct TFrameCMD_SPEED_VEHICLE_payload_t
+{
+	/** Speed UAL-eCARM
+	  */
+	float  SPEED_eCARM { 0.0 };
+};
+struct TFrameCMD_SPEED_VEHICLE : public TBaseFrame<TFrameCMD_SPEED_VEHICLE_payload_t>
+{
+	// Defaults:
+	TFrameCMD_SPEED_VEHICLE() : TBaseFrame(OP_SPEED_VEHICLE)
 	{
 	}
 };
