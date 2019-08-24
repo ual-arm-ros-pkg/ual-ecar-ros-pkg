@@ -64,7 +64,6 @@ const int8_t PWM_PIN_NO             = 0x46; // PD6
 const uint32_t WATCHDOG_TIMEOUT_msth = 1000*10;  // timeout for watchdog timer (both, openloop & controller)
 
 // Control vars:
-float	Ys[4]					=	{0,0,0,0};		// Smith predictor output
 float	T						=	0.01f;			// Sample time
 float	Encoder_dir[2]			=	{0,0};			// Direction value
 int16_t	U_steer_controller[6]	=	{0,0,0,0,0,0};	// Steer controller signal
@@ -90,11 +89,10 @@ uint32_t  CONTROL_last_millis_STEER = 0;			// Timer to check the sample time
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
 bool      STEERCONTROL_active = false;				// true: controller; false: open loop
 
-float	Q_STEER_INT[3]				= { - 0.2838f, 0.1986f, .0f };	/* Steer speed controller */
-float	Q_STEER_EXT[3]				= { 2.8673f, -2.8469f, .0f };	/* Steer position controller */
-float	P_SMITH_SPEED[5]			= {0.2977f,.0f,1,-0.7023f,.0f};	/* {b0,b1,a0,a1,a2} */
+float	Q_STEER_INT[3]				= { - 1.4954f, -0.2229f, -0.5204f };	/* Steer speed controller */
+float	Q_STEER_EXT[3]				= { 9.0f, 1.0f, .0f };	/* Steer position controller */
 int16_t	U_STEER_FEEDFORWARD[2]		= {0,0};						/* Feedforward signal: Weight,other */
-int16_t	U_STEER_DECOUPLING[2]		= {0,0};						/* Decoupling signal: battery-charge,speed */
+int16_t	U_STEER_DECOUPLING[2]		= {0.9515,0};						/* Decoupling signal: battery-charge,speed */
 
 /** Desired setpoint for steering angle.
   * -630:max right, +630: max left
@@ -168,8 +166,6 @@ void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_paylo
 		Q_STEER_INT[i] = p.Q_STEER_INT[i];
 		Q_STEER_EXT[i] = p.Q_STEER_EXT[i];
 	}
-	for (int i=0;i<5;i++)
-		P_SMITH_SPEED[i] = p.P_SMITH_SPEED[i];
 
 	Steer_offset = p.STEER_OFFSET;
 	ANTIWINDUP_CTE = p.Antiwindup;
@@ -209,15 +205,15 @@ void processSteerController()
 	const int32_t enc_diff = enc_last_reading.encoders[0];
 	sei();
 	// Read abs encoder:
-	const int16_t abs_enc_pos_new = enc_abs_last_reading.enc_pos - Steer_offset-512; // Abs encoder (10 bit resolution)
+	const int16_t abs_enc_pos_new = (enc_abs_last_reading.enc_pos - Steer_offset-512)* (32.5/(1138/2)); // Abs encoder (10 bit resolution)
 	// Filter out clearly erroneous readings from the abs encoder:
  	if (abs(abs_enc_pos_new - abs_enc_pos)<512)
 		abs_enc_pos = abs_enc_pos_new;
 	// Calibration with absolute encoder:
-	const float K_enc_diff = 337.0f / (500.0f * 100.0f);	/** 500: Pulses per revolution
-															  * 100: Reductor 100:1
-															  * 337: Experimental constant
-															  */
+	const float K_enc_diff = 337.0f * (32.5/(1138/2))/ (500.0f * 100.0f);	/** 500: Pulses per revolution
+																			  * 100: Reductor 100:1
+																			  * 337: Experimental constant
+																			*/
 	// Incremental encoder calibration if encoders differences are upper than ten pulses
 	const float Adiff = enc_diff * K_enc_diff;
 	if (abs(abs_enc_pos - (enc_offset_correction+Adiff))>5)
@@ -231,7 +227,6 @@ void processSteerController()
 	// Control:
 	/*	Speed encoder reading and Smith Predictor implementation*/
 	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
-	Ys[0] = (- Ys[1] * P_SMITH_SPEED[3] - Ys[2] * P_SMITH_SPEED[4] + P_SMITH_SPEED[0] * U_steer_controller[1+3] + P_SMITH_SPEED[1] * U_steer_controller[2+3])/P_SMITH_SPEED[2];
 
 	if (!STEERCONTROL_active)
 	{
