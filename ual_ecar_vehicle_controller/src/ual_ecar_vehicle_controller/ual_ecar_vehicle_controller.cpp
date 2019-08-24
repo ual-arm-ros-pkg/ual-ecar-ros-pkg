@@ -123,6 +123,14 @@ bool VehicleControllerLowLevel::initialize()
 	m_sub_brake_enable = m_nh.subscribe(
 		"vehicle_brake_enable", 10,
 		&VehicleControllerLowLevel::brakeenableCallback, this);
+	m_sub_leftWheel =
+		m_nh.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+		"joint_states_ch0_decim_speed", 10,
+		&VehicleControllerLowLevel::onNewEncoderSpeed, this);
+	m_sub_rightWheel =
+		m_nh.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+		"joint_states_ch1_decim_speed", 10,
+		&VehicleControllerLowLevel::onNewEncoderSpeed, this);
 	/*Sub:System_Identification[Controller & Smith predictor params,
 	   Feedforwards...]
 	*/
@@ -317,6 +325,7 @@ bool VehicleControllerLowLevel::iterate()
 	// New joystick
 	if (!m_autonomous_driving_mode && m_joy_changed)
 	{
+		m_speed_vehicle = (m_sub_leftWheel+m_sub_rightWheel)/2;
 		// X: Steering
 		if (m_mode_openloop_steer)
 		{
@@ -328,12 +337,13 @@ bool VehicleControllerLowLevel::iterate()
 			ROS_INFO_THROTTLE(
 				1, "Sending openloop STEER: %d",
 				cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED);
+				
 		}
 		else
 		{
 			MRPT_TODO("Recalibrate steer pos range");
 			TFrameCMD_CONTROL_STEERING_SETPOINT cmd;
-			cmd.payload.SETPOINT_STEER_POS = 512 * m_joy_x;
+			cmd.payload.SETPOINT_STEER_POS = 32.5 * m_joy_x;
 			cmd.calc_and_update_checksum();
 			WriteBinaryFrame(
 				reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
@@ -341,6 +351,10 @@ bool VehicleControllerLowLevel::iterate()
 				1, "Sending closedloop STEER: %d",
 				cmd.payload.SETPOINT_STEER_POS);
 		}
+		TFrameCMD_SPEED_VEHICLE cmd;
+		cmd.payload.SPEED_eCARM = m_speed_vehicle;
+		cmd.calc_and_update_checksum();
+		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
 		// Y: throttle
 		if (!m_mode_brake_enable)
 		{
@@ -358,9 +372,9 @@ bool VehicleControllerLowLevel::iterate()
 			}
 			else
 			{
-				const float MAX_VEL_MPS = 2.0;
+				const float MAX_VEL_MPS = 4.0;
 				float vel_mps = m_joy_y * MAX_VEL_MPS;
-				// TO-DO: CONTROL_BRAKE_SETPOINT
+				// CONTROL_THROTTLE_SETPOINT
 				TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
 				cmd.payload.SETPOINT_CONTROL_THROTTLE_SPEED = vel_mps;
 				cmd.calc_and_update_checksum();
@@ -368,21 +382,13 @@ bool VehicleControllerLowLevel::iterate()
 					reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
 					m_serial_SpeedCruise);
 				ROS_INFO_THROTTLE(
-					1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
+					1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);;
 			}
 		}
 		// Brake:
 		{
 			TFrameCMD_OPENLOOP_BRAKE_SETPOINT cmd_brake;
-			if (m_mode_brake_enable)
-			{
-				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE =
-					m_joy_y * 255.0 * 0.5;
-			}
-			else
-			{
-				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = 0;
-			}
+			cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE = m_joy_y * 255.0 * 0.5;
 			cmd_brake.calc_and_update_checksum();
 			WriteBinaryFrame(
 				reinterpret_cast<uint8_t*>(&cmd_brake), sizeof(cmd_brake),
@@ -391,6 +397,10 @@ bool VehicleControllerLowLevel::iterate()
 				1, "Sending openloop Brake: %d",
 				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
 		}
+		TFrameCMD_SPEED_VEHICLE cmd;
+		cmd.payload.SPEED_eCARM = m_speed_vehicle;
+		cmd.calc_and_update_checksum();
+		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
 	}
 
 	// Main module loop code.
@@ -471,6 +481,18 @@ void VehicleControllerLowLevel::brakeenableCallback(
 {
 	m_mode_brake_enable = msg->data;
 	m_mode_brake_changed = true;
+}
+void VehicleControllerLowLevel::onNewEncoderSpeed(
+	const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,int index)
+{
+	ROS_ASSERT(index < 2);
+	last_encoder_vel_time_ = msg->header.stamp;
+	ROS_DEBUG(
+	"Received encoder avr_speed: [%d]=%12f", index, msg->avr_speed);
+
+	last_encoder_vel_[index] = msg->avr_speed;
+	m_sub_leftWheel = last_encoder_vel_[0]*(-0.000122); // Velocidad rueda izq. en m/s
+	m_sub_rightWheel = last_encoder_vel_[1]*(-0.000122);// Velocidad rueda dcha. en m/s
 }
 
 void VehicleControllerLowLevel::ejexCallback(

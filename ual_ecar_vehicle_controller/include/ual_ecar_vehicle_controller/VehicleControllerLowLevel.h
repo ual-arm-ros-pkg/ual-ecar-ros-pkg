@@ -50,9 +50,9 @@ class VehicleControllerLowLevel : public COutputLogger
 	ros::Publisher m_pub_controller_status, m_pub_Steer_ADC,
 		m_pub_SpeedCruise_ADC, m_pub_Steer_ENC, m_pub_SpeedCruise_ENC,
 		m_pub_ENC_ABS, m_pub_Steer_Control_signal,
-		m_pub_SpeedCruise_Control_signal;
+		m_pub_SpeedCruise_Control_signal,m_pub_SPEED_eCARM;
 
-	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status[2],m_sub_autonomous_driving,m_sub_brake_enable;
+	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status[2],m_sub_autonomous_driving,m_sub_brake_enable,m_sub_rightWheel,m_sub_leftWheel;
 
 	/*Sub:	1. System_Identification[Controller & Smith predictor params,
 	 * Feedforwards...]
@@ -67,6 +67,7 @@ class VehicleControllerLowLevel : public COutputLogger
 	void modeThrottleCallback(const std_msgs::Bool::ConstPtr& msg);
 	void autonomousModeCallback(const std_msgs::Bool::ConstPtr& msg);
 	void brakeenableCallback(const std_msgs::Bool::ConstPtr& msg);
+	void onNewEncoderSpeed( const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg, int index);
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data, CSerialPort& m_serial);
@@ -92,6 +93,7 @@ class VehicleControllerLowLevel : public COutputLogger
 	bool m_autonomous_driving_mode{false};
 	bool m_joy_changed{false};
 	double m_joy_x{.0}, m_joy_y{.0};
+	float m_speed_vehicle{.0};
 
 	// Local methods:
 	bool AttemptConnection(CSerialPort& m_serial);  //!< Returns true if
