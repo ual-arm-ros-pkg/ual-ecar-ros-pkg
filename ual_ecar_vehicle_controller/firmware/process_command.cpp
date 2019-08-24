@@ -239,6 +239,15 @@ void process_command(const uint8_t opcode, const uint8_t datalen, const uint8_t*
 		setOpenLoopSetpoint_Steer(ol_steer_setpoint.SETPOINT_OPENLOOP_STEER_SPEED);
 	}
 	break;
+	case OP_SPEED_VEHICLE:
+	{
+		if (datalen!=sizeof(TFrameCMD_SPEED_VEHICLE_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);
+		
+		TFrameCMD_SPEED_VEHICLE_payload_t speed_vehicle;
+		memcpy(&speed_vehicle,data, sizeof(speed_vehicle));
+		setSpeed_Vehicle(speed_vehicle.SPEED_eCARM);
+	}
+	break;
 	case OP_VERBOSITY_CONTROL:
 	{
 		if (datalen!=sizeof(TFrameCMD_VERBOSITY_CONTROL_payload_t)) return send_simple_opcode_frame(RESP_WRONG_LEN);

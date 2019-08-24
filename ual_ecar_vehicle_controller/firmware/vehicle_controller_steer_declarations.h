@@ -57,6 +57,7 @@ void processSteerController();
 void enableSteerController(bool enabled);
 void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_payload_t &steer_controller_params);
 void setOpenLoopSetpoint_Steer(int16_t speed);
+void setSpeed_Vehicle(float speed_vehicle_ecarm);
 void setControllerSetpoint_Steer(int16_t pos);
 
 // Verbosity Control:

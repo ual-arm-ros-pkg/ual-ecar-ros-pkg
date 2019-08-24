@@ -65,6 +65,7 @@ enum opcode_t {
 	OP_START_EMS22A	   = 0x40, //
 	OP_STOP_EMS22A     = 0x41, //
 	// Control:
+	OP_SPEED_VEHICLE					= 0x49,
 	OP_CONTROL_MODE						= 0x50,
 	OP_CONTROL_STEERING_SET_PARAMS		= 0x52,
 	OP_CONTROL_STEERING_SETPOINT		= 0x58,
@@ -415,6 +416,21 @@ struct TFrameCMD_OPENLOOP_STEERING_SETPOINT : public TBaseFrame<TFrameCMD_OPENLO
 	{
 	}
 };
+
+struct TFrameCMD_SPEED_VEHICLE_payload_t
+{
+	/** Speed UAL-eCARM
+	  */
+	float  SPEED_eCARM { 0.0 };
+};
+struct TFrameCMD_SPEED_VEHICLE : public TBaseFrame<TFrameCMD_SPEED_VEHICLE_payload_t>
+{
+	// Defaults:
+	TFrameCMD_SPEED_VEHICLE() : TBaseFrame(OP_SPEED_VEHICLE)
+	{
+	}
+};
+
 
 struct TFrameCMD_VERBOSITY_CONTROL_payload_t
 {

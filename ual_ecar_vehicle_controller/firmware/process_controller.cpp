@@ -78,12 +78,12 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 bool	steer_mech_limit_reached= false;			// Enable security limit of the mechanism
 #warning Cambiar limite
 int16_t Steer_offset			= 200;				// Steer offset regulated by software
-float	steer_mech_limit_pos	= (1024*1.33f-100)/2; // Safety limit of the mechanism. In units of absolute encoder.
-																	// 100 = Safety margin
+float	steer_mech_limit_pos	= 32.5; // Safety limit of the mechanism. In Ackermann units.
+																	
 int16_t abs_enc_pos			= 0;				// Init variable
-const	float	sat_ref			= 250/T;			// Slope position reference limit to over current protection
+const	float	sat_ref			= 12/T;			// Slope position reference limit to over current protection
 float	enc_offset_correction	= .0f;				// Incremental encoder calibration offset
-float ANTIWINDUP_CTE = sqrt(0.0283);				// Antiwindup "constant" regulated by software
+float ANTIWINDUP_CTE = sqrt(0.0939);				// Antiwindup "constant" regulated by software
 
 uint32_t  CONTROL_last_millis_STEER = 0;			// Timer to check the sample time
 uint16_t  CONTROL_sampling_period_ms_tenths = 50 /*ms*/ * 10;
@@ -92,7 +92,7 @@ bool      STEERCONTROL_active = false;				// true: controller; false: open loop
 float	Q_STEER_INT[3]				= { - 1.4954f, -0.2229f, -0.5204f };	/* Steer speed controller */
 float	Q_STEER_EXT[3]				= { 9.0f, 1.0f, .0f };	/* Steer position controller */
 int16_t	U_STEER_FEEDFORWARD[2]		= {0,0};						/* Feedforward signal: Weight,other */
-int16_t	U_STEER_DECOUPLING[2]		= {0.9515,0};						/* Decoupling signal: battery-charge,speed */
+int16_t	U_STEER_DECOUPLING[2]		= {0,0};						/* Decoupling signal: battery-charge,speed */
 
 /** Desired setpoint for steering angle.
   * -630:max right, +630: max left
@@ -107,6 +107,10 @@ int16_t SETPOINT_OPENLOOP_STEER_SPEED = 0;
 /** Time of when the setpoint was last changed (1/10 of ms) */
 uint32_t SETPOINT_STEER_TIMESTAMP = 0;
 uint32_t SETPOINT_OPENLOOP_STEER_TIMESTAMP = 0;
+
+// Vehicle UAL-eCARM speed value
+float SPEED_eCARM			= 0.0f;
+uint32_t SPEED_eCARM_TIMESTAMP = 0;
 
 template <typename T, size_t N>
 void do_shift(T (&v)[N])
@@ -176,6 +180,11 @@ void setSteer_ControllerParams(const TFrameCMD_CONTROL_STEERING_SET_PARAMS_paylo
 	}
 }
 
+void setSpeed_Vehicle(float speed_vehicle_ecarm)
+{
+	SPEED_eCARM = speed_vehicle_ecarm;
+	SPEED_eCARM_TIMESTAMP = millis();
+}
 void setOpenLoopSetpoint_Steer(int16_t speed)
 {
 	SETPOINT_OPENLOOP_STEER_SPEED = speed;
@@ -235,7 +244,6 @@ void processSteerController()
 		if (tnow>(SETPOINT_OPENLOOP_STEER_TIMESTAMP+ WATCHDOG_TIMEOUT_msth))
 			SETPOINT_OPENLOOP_STEER_SPEED = 0;
 		U_steer_controller[0] = SETPOINT_OPENLOOP_STEER_SPEED;
-/*		U_steer_controller[0] = 200;*/
 	}
 	else
 	{
@@ -259,21 +267,25 @@ void processSteerController()
 	/*	Position controller */
 		Ref_speed[0] = Ref_speed[1] + Q_STEER_EXT[0] * Error_pos[0] + Q_STEER_EXT[1] * Error_pos[1] + Q_STEER_EXT[2] * Error_pos[2];
 	/*	Speed error. Intern loop*/
-		Error_speed[0] = Ref_speed[0] - Ys[0] - (rpm - Ys[3]);
+		Error_speed[0] = Ref_speed[0] - rpm;
 	/*	Speed controller */
 		U_steer_controller[0] = U_steer_controller[1] + Q_STEER_INT[0] * Error_speed[0] + Q_STEER_INT[1] * Error_speed[1] + Q_STEER_INT[2] * Error_speed[2];
 	/*	Control Signal with feedforward & decoupling*/
+		if (SPEED_eCARM!=0 & rpm!=0)
+			U_STEER_DECOUPLING[0] = 0.9515;
+		else
+			U_STEER_DECOUPLING[0] = 0;
 		U_steer_controller[0] = U_steer_controller[0] + U_STEER_DECOUPLING[0] + U_STEER_DECOUPLING[1] + U_STEER_FEEDFORWARD[0] + U_STEER_FEEDFORWARD[1];
 	/*	Variable to Anti-windup technique*/
 		int m_v= round(U_steer_controller[0]);
 	/*	Saturation */
 		bool has_sat = false;
-		if (abs(U_steer_controller[0]) > 254)
+		if (abs(U_steer_controller[0]) > 24)
 		{
-			if (U_steer_controller[0] < -254)
-				U_steer_controller[0] = -254;
+			if (U_steer_controller[0] < -24)
+				U_steer_controller[0] = -24;
 			else
-				U_steer_controller[0] = 254;
+				U_steer_controller[0] = 24;
 			has_sat = true;
 		}
 
@@ -289,7 +301,7 @@ void processSteerController()
 	/* for both, open & closed loop: protection against steering mechanical limits: */
 	steer_mech_limit_reached =
 		steer_mech_limit_reached ?
-		(abs(abs_enc_pos_new) > (steer_mech_limit_pos - 50))
+		(abs(abs_enc_pos_new) > (steer_mech_limit_pos - 5))
 		:
 		(abs(abs_enc_pos_new) >= steer_mech_limit_pos);
 
@@ -309,12 +321,11 @@ void processSteerController()
 	do_shift(Ref_speed);
 	do_shift(Error_speed);
 	do_shift(Encoder_dir);
-	do_shift(Ys);
 	do_shift(U_steer_controller);
 
 	/*	Direction*/
 	bool u_steer_is_positive = (U_steer_controller[0] >= 0);
-	uint8_t u_steer = abs(U_steer_controller[0]);
+	uint8_t u_steer = abs(U_steer_controller[0])*255/24;
 
 	// Output PWM:
 	pwm_set_duty_cycle(PWM_OUT_TIMER,PWM_OUT_PIN,u_steer);
