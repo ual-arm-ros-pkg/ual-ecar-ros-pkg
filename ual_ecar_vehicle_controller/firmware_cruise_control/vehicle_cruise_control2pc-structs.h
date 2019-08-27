@@ -432,6 +432,7 @@ struct TFrameCMD_CONTROL_BRAKE_SETPOINT : public TBaseFrame<TFrameCMD_CONTROL_BR
 struct TFrameCMD_SPEED_VEHICLE_payload_t
 {
 	/** Speed UAL-eCARM
+        Units: [m/s]
 	  */
 	float  SPEED_eCARM { 0.0 };
 };

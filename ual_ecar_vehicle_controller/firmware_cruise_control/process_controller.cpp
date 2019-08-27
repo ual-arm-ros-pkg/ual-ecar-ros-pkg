@@ -262,7 +262,7 @@ void processThrottleController()
 			SETPOINT_CONTROL_THROTTLE_SPEED = 0;
 		
 		/*Speed reference reading*/
-		Ref_speed[0] = 0.9254*Ref_speed[1]+0.07459*SETPOINT_CONTROL_THROTTLE_SPEED;
+		Ref_speed[0] = 0.9254*Ref_speed[1]+0.07459*SETPOINT_CONTROL_THROTTLE_SPEED; // Reference filter
 		/*Speed error and brake control reference*/
 		Error_speed[0] = Ref_speed[0] - SPEED_eCARM;
 		if (Error_speed[0]<0)
@@ -386,7 +386,7 @@ void processBrakeController()
 			+-------------------+
 		*/
 			/*Brake reference reading*/
-			Ref_brake[0]=0.9265*Ref_brake[1]+Ref_brake[0]*0.75; // Experimental factor
+			Ref_brake[0]=0.9265*Ref_brake[1]+Ref_brake[0]*0.0551; // Reference filter
 			/*Position error*/
 			Error_brake[0] = Ref_brake[0] - enc_diff;
 			/*Position controller*/
