@@ -347,7 +347,7 @@ struct TFrameCMD_CONTROL_MODE : public TBaseFrame<TFrameCMD_CONTROL_MODE_payload
 struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t
 {
 	float Q_THROTTLE_CONTROLLER[3] = {0,0,0};
-	int16_t U_THROTTLE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_THROTTLE_DECOUPLING = 0; /*battery-charge*/
+	int16_t U_THROTTLE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_THROTTLE_DECOUPLING[2] = {0,0}; /*battery-charge*/
 };
 struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_payload_t>
 {
@@ -360,7 +360,7 @@ struct TFrameCMD_CONTROL_THROTTLE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTR
 struct TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t
 {
 	float Q_BRAKE_CONTROLLER[3] = {0,0,0};
-	int16_t U_BRAKE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_BRAKE_DECOUPLING = 0; /*battery-charge*/
+	int16_t U_BRAKE_FEEDFORWARD[2]={0,0} /*Weight,other*/, U_BRAKE_DECOUPLING[2] = {0,0}; /*battery-charge*/
 };
 struct TFrameCMD_CONTROL_BRAKE_SET_PARAMS : public TBaseFrame<TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t>
 {

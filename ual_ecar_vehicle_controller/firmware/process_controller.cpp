@@ -77,7 +77,7 @@ TFrameCMD_VERBOSITY_CONTROL_payload_t global_decimate;
 // Auxiliary vars:
 bool	steer_mech_limit_reached= false;			// Enable security limit of the mechanism
 #warning Cambiar limite
-int16_t Steer_offset			= 200;				// Steer offset regulated by software
+int16_t Steer_offset			= 217;				// Steer offset regulated by software
 float	steer_mech_limit_pos	= 32.5; // Safety limit of the mechanism. In Ackermann units.
 																	
 int16_t abs_enc_pos			= 0;				// Init variable

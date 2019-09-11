@@ -87,11 +87,11 @@ bool	  BRAKECONTROL_active		= false; //true: controller; false: open loop
 
 float	Q_THROTTLE[3]				= {0,0,0};
 int16_t	U_THROTTLE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/
-int16_t U_THROTTLE_DECOUPLING		= 0; /*battery-charge*/
+int16_t U_THROTTLE_DECOUPLING[2]	= {0,0}; /*battery-charge*/
 
 float	Q_BRAKE[3]				= {0,0,0};
 int16_t	U_BRAKE_FEEDFORWARD[2]	= {0,0}; /*Weight,other*/
-int16_t U_BRAKE_DECOUPLING		= 0; /*battery-charge*/
+int16_t U_BRAKE_DECOUPLING[2]	= {0,0}; /*battery-charge*/
 
 /** Desired setpoint for throttle in Open Loop.
   * [-1,0]:max reverse, [0,+1]: max forward
@@ -197,18 +197,20 @@ void setThrottle_ControllerParams(const TFrameCMD_CONTROL_THROTTLE_SET_PARAMS_pa
 	for (int i=0;i<2;i++)
 		U_THROTTLE_FEEDFORWARD[i] = p.U_THROTTLE_FEEDFORWARD[i];
 
-	U_THROTTLE_DECOUPLING = p.U_THROTTLE_DECOUPLING;
+	for (int i=0;i<2;i++)
+		U_THROTTLE_DECOUPLING[i] = p.U_THROTTLE_DECOUPLING[i];
 }
 
 void setBrake_ControllerParams(const TFrameCMD_CONTROL_BRAKE_SET_PARAMS_payload_t &p)
 {
 	for (int i=0;i<3;i++)
-	Q_BRAKE[i] = p.Q_BRAKE_CONTROLLER[i];
+		Q_BRAKE[i] = p.Q_BRAKE_CONTROLLER[i];
 
 	for (int i=0;i<2;i++)
-	U_BRAKE_FEEDFORWARD[i] = p.U_BRAKE_FEEDFORWARD[i];
+		U_BRAKE_FEEDFORWARD[i] = p.U_BRAKE_FEEDFORWARD[i];
 
-	U_BRAKE_DECOUPLING = p.U_BRAKE_DECOUPLING;
+	for (int i=0;i<2;i++)
+		U_BRAKE_DECOUPLING [i]= p.U_BRAKE_DECOUPLING[i];
 }
 
 void setSpeed_Vehicle(float speed_vehicle_ecarm)
