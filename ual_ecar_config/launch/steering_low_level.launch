@@ -21,13 +21,8 @@
 
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
   </node>
-  
-  <node name="ual_ecar_odometry" pkg="ual_ecar_odometry" type="ual_ecar_odometry_node" output="screen">
-    <param name="rawlog_obs_prefix" value="/home/ecar/datasets/dataset_odom" />
-    <param name="left_K" value="3.1e-5"/>
-    <param name="right_K" value="-1.22e-4"/>
-    <param name="wheels_dist" value="1.26"/>
-  </node>
+
+  <include file="$(find ual_ecar_config)/launch/ual_ecar_odometry.launch" />
 
   <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find ual_ecar_config)/launch/vis_default.rviz" />
 

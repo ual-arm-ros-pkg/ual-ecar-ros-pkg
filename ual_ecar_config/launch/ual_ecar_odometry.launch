@@ -1,0 +1,9 @@
+<launch>
+  <node name="ual_ecar_odometry" pkg="ual_ecar_odometry" type="ual_ecar_odometry_node" output="screen">
+    <param name="rawlog_obs_prefix" value="/home/ecar/datasets/dataset_odom" />
+    <param name="left_K" value="1.22e-4"/>
+    <param name="right_K" value="-1.22e-4"/>
+    <param name="wheels_dist" value="1.26"/>
+    <param name="ODOM_PUBLISH_RATE" value="5"/>
+  </node>
+</launch>

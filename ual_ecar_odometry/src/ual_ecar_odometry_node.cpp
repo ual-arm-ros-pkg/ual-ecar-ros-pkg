@@ -12,6 +12,7 @@
 #include <tf/transform_broadcaster.h>
 #include <phidgets_high_speed_encoder/EncoderDecimatedSpeed.h>
 #include <mrpt_bridge/time.h>  // ros2mrpt bridge
+#include <mutex>
 #include <array>
 #include <cmath>
 #include <string>
@@ -43,10 +44,12 @@ class OdometryNode
 		ros::Time timestamp;
 		std::array<double, 2> pos{{0.0, 0.0}};  // tick counts
 	};
+	std::mutex new_enc_pos_mx_;
 	EncoderPos last_enc_pos_, new_enc_pos_;
 	bool first_enc_pos_{true};
 	ros::Time last_encoder_vel_time_;
-	std::array<double, 2> last_encoder_vel_{{0.0, 0.0}};
+	std::array<double, 2> last_encoder_vel = {0.0, 0.0};
+	std::mutex last_encoder_vel_mx;
 
 	// Node parameters:
 	double ODOM_PUBLISH_RATE_{5.0};  // Hz
@@ -66,6 +69,8 @@ class OdometryNode
 			"Received encoder pos: [0]=%12f [1]=%12f", msg->position[0],
 			msg->position[1]);
 
+		std::lock_guard<std::mutex> lk(new_enc_pos_mx_);
+
 		new_enc_pos_.timestamp = msg->header.stamp;
 		new_enc_pos_.pos[0] = msg->position[0];
 		new_enc_pos_.pos[1] = msg->position[1];
@@ -76,12 +81,14 @@ class OdometryNode
 		const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,
 		int index)
 	{
+		std::lock_guard<std::mutex> lk(last_encoder_vel_mx);
+
 		ROS_ASSERT(index < 2);
 		last_encoder_vel_time_ = msg->header.stamp;
 		ROS_DEBUG(
 			"Received encoder avr_speed: [%d]=%12f", index, msg->avr_speed);
 
-		last_encoder_vel_[index] = msg->avr_speed;
+		last_encoder_vel[index] = msg->avr_speed;
 	}
 
 	/** The odometry model: converts encoder ticks to pose increments, using
@@ -182,14 +189,17 @@ class OdometryNode
 		odom_trans.header.frame_id = "odom";
 		odom_trans.child_frame_id = "base_link";
 
+		ros::Time last_processed_encoder_vel_time_;
+
 		ros::Rate r(ODOM_PUBLISH_RATE_);
 		while (n_.ok())
 		{
 			// check for incoming messages. Single threaded model:
 			ros::spinOnce();
-			const ros::Time current_time = ros::Time::now();
 
 			// new encoder position data?
+			new_enc_pos_mx_.lock();
+
 			if (new_enc_pos_.timestamp != last_enc_pos_.timestamp)
 			{
 				// Yes: process new encoder positions:
@@ -232,7 +242,6 @@ class OdometryNode
 					odom_trans.transform.translation.z = 0.0;
 					odom_trans.transform.rotation =
 						tf::createQuaternionMsgFromYaw(global_odometry_.phi);
-					;
 
 					odom_broadcaster.sendTransform(odom_trans);
 				}
@@ -262,9 +271,26 @@ class OdometryNode
 				}
 			}  // end new odom pos data
 
-			MRPT_TODO("process new vel");
+			new_enc_pos_mx_.unlock();
 
-			MRPT_TODO("reset vel to zero if no news");
+			// Process new velocity:
+			if (last_processed_encoder_vel_time_ != last_encoder_vel_time_)
+			{
+				std::lock_guard<std::mutex> lk(last_encoder_vel_mx);
+
+				last_processed_encoder_vel_time_ = last_encoder_vel_time_;
+
+				const double vel_left = last_encoder_vel[0],
+							 vel_right = last_encoder_vel[1];
+
+				cur_vel_.vy = 0;
+				differentialOdometryModelVel(
+					cur_vel_.vx, cur_vel_.omega, vel_left, vel_right);
+			}
+			else
+			{
+				MRPT_TODO("reset vel to zero if no news");
+			}
 
 			// publish odom topic:
 			{
