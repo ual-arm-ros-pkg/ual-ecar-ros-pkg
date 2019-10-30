@@ -816,7 +816,14 @@ bool VehicleControllerLowLevel::ReceiveFrameFromController(
 	s += mrpt::format("RX frame (%u bytes): ", (unsigned int)lengthField);
 	for (size_t i = 0; i < lengthField; i++)
 		s += mrpt::format("%02X ", rxFrame[i]);
-	MRPT_LOG_INFO_FMT("%s", s.c_str());
+	if (&m_serial == &m_serial_Steer)
+	{
+		MRPT_LOG_INFO_FMT("Rx frame: %s. STEER_SERIAL_PORT", s.c_str());
+	}
+	else
+	{
+		MRPT_LOG_INFO_FMT("Rx frame: %s. SPEEDCRUISE_SERIAL_PORT", s.c_str());
+	}
 #endif
 
 	// All OK
