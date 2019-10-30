@@ -11,13 +11,7 @@
     <param name="DECIM_CONTROLSIGNAL_SPEEDCRUISE" value="2" />
   </node>
 
-  <node name="libredaq" pkg="libredaq" type="libredaq_node" output="screen">
-    <param name="joint0_name" value="wheel_RL" />
-    <param name="joint1_name" value="wheel_RR" />
-    <param name="joint0_tick2rad" value="1.0" />
-    <param name="joint1_tick2rad" value="1.0" />
-    <param name="serial_port" value="/dev/serial/by-id/usb-LibreDAQ_LDAQ-BASE_0001-if00" />
-  </node>
+  <include file="$(find ual_ecar_config)/launch/libredaq_odometry.launch" />
 
   <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
   </node>
