@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
-set (CMAKE_CXX_STANDARD 14)
 project(ual_ecar_vehicle_controller)
 
 ## Find catkin macros and libraries
@@ -15,7 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(MRPT 1.5 REQUIRED)
 message(STATUS "MRPT version found: ${MRPT_VERSION}")
 if (MRPT_VERSION VERSION_LESS 1.9.0)
-	find_package(MRPT REQUIRED hwdrivers)
+        set (CMAKE_CXX_STANDARD 14)
+        find_package(MRPT REQUIRED hwdrivers)
 else()
 	find_package(MRPT REQUIRED comms)
 endif()

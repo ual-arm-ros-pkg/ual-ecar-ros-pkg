@@ -10,7 +10,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
-//#include <std_msgs/UInt8.h>
+#include <phidgets_high_speed_encoder/EncoderDecimatedSpeed.h>
 
 #include <mrpt/version.h>
 #if MRPT_VERSION >= 0x199
@@ -54,6 +54,9 @@ class VehicleControllerLowLevel : public COutputLogger
 
 	ros::Subscriber m_sub_eje_x, m_sub_eje_y, m_sub_contr_status[2],m_sub_autonomous_driving,m_sub_brake_enable,m_sub_rightWheel,m_sub_leftWheel;
 
+	double m_last_vel_rear_left = 0, m_last_vel_rear_right = 0;
+	double last_encoder_vel_[2] = {0, 0};
+
 	/*Sub:	1. System_Identification[Controller & Smith predictor params,
 	 * Feedforwards...]
 	 */
@@ -93,7 +96,7 @@ class VehicleControllerLowLevel : public COutputLogger
 	bool m_autonomous_driving_mode{false};
 	bool m_joy_changed{false};
 	double m_joy_x{.0}, m_joy_y{.0};
-	float m_speed_vehicle{.0};
+	double m_speed_vehicle{.0};
 
 	// Local methods:
 	bool AttemptConnection(CSerialPort& m_serial);  //!< Returns true if

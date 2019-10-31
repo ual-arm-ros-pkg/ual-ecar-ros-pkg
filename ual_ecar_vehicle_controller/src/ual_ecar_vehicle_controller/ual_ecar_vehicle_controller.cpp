@@ -29,7 +29,7 @@ using mrpt::utils::saturate;
 #endif
 
 // Define to see serial communication traces
-#define DEBUG_TRACES
+//#define DEBUG_TRACES
 
 bool VehicleControllerLowLevel::initialize()
 {
@@ -125,12 +125,14 @@ bool VehicleControllerLowLevel::initialize()
 		&VehicleControllerLowLevel::brakeenableCallback, this);
 	m_sub_leftWheel =
 		m_nh.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
-		"joint_states_ch0_decim_speed", 10,
-		&VehicleControllerLowLevel::onNewEncoderSpeed, this);
+			"joint_states_ch0_decim_speed", 10,
+			boost::bind(
+				&VehicleControllerLowLevel::onNewEncoderSpeed, this, _1, 0));
 	m_sub_rightWheel =
 		m_nh.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
-		"joint_states_ch1_decim_speed", 10,
-		&VehicleControllerLowLevel::onNewEncoderSpeed, this);
+			"joint_states_ch1_decim_speed", 10,
+			boost::bind(
+				&VehicleControllerLowLevel::onNewEncoderSpeed, this, _1, 1));
 	/*Sub:System_Identification[Controller & Smith predictor params,
 	   Feedforwards...]
 	*/
@@ -325,7 +327,11 @@ bool VehicleControllerLowLevel::iterate()
 	// New joystick
 	if (!m_autonomous_driving_mode && m_joy_changed)
 	{
-		m_speed_vehicle = (m_sub_leftWheel+m_sub_rightWheel)/2;
+		m_speed_vehicle = (m_last_vel_rear_left + m_last_vel_rear_right) / 2.0;
+		ROS_INFO(
+			"m_speed_vehicle=%6.03f m/s   left=%6.03f m/s  right=%6.03f m/s\n",
+			m_speed_vehicle, m_last_vel_rear_left, m_last_vel_rear_right);
+
 		// X: Steering
 		if (m_mode_openloop_steer)
 		{
@@ -337,7 +343,6 @@ bool VehicleControllerLowLevel::iterate()
 			ROS_INFO_THROTTLE(
 				1, "Sending openloop STEER: %d",
 				cmd.payload.SETPOINT_OPENLOOP_STEER_SPEED);
-				
 		}
 		else
 		{
@@ -351,10 +356,14 @@ bool VehicleControllerLowLevel::iterate()
 				1, "Sending closedloop STEER: %d",
 				cmd.payload.SETPOINT_STEER_POS);
 		}
+
+		// Send current ecar speed to uController:
 		TFrameCMD_SPEED_VEHICLE cmd;
 		cmd.payload.SPEED_eCARM = m_speed_vehicle;
 		cmd.calc_and_update_checksum();
-		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
+		WriteBinaryFrame(
+			reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
+
 		// Y: throttle
 		if (!m_mode_brake_enable)
 		{
@@ -382,7 +391,7 @@ bool VehicleControllerLowLevel::iterate()
 					reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd),
 					m_serial_SpeedCruise);
 				ROS_INFO_THROTTLE(
-					1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);;
+					1, "Sending closedloop THROTTLE: %.03f m/s", vel_mps);
 			}
 		}
 		// Brake:
@@ -397,10 +406,6 @@ bool VehicleControllerLowLevel::iterate()
 				1, "Sending openloop Brake: %d",
 				cmd_brake.payload.SETPOINT_OPENLOOP_BRAKE);
 		}
-		TFrameCMD_SPEED_VEHICLE cmd;
-		cmd.payload.SPEED_eCARM = m_speed_vehicle;
-		cmd.calc_and_update_checksum();
-		WriteBinaryFrame(reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), m_serial_Steer);
 	}
 
 	// Main module loop code.
@@ -483,16 +488,19 @@ void VehicleControllerLowLevel::brakeenableCallback(
 	m_mode_brake_changed = true;
 }
 void VehicleControllerLowLevel::onNewEncoderSpeed(
-	const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,int index)
+	const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,
+	int index)
 {
 	ROS_ASSERT(index < 2);
-	last_encoder_vel_time_ = msg->header.stamp;
-	ROS_DEBUG(
-	"Received encoder avr_speed: [%d]=%12f", index, msg->avr_speed);
+	// last_encoder_vel_time_ = msg->header.stamp;
+	ROS_DEBUG("Received encoder avr_speed: [%d]=%12f", index, msg->avr_speed);
 
 	last_encoder_vel_[index] = msg->avr_speed;
-	m_sub_leftWheel = last_encoder_vel_[0]*(-0.000122); // Velocidad rueda izq. en m/s
-	m_sub_rightWheel = last_encoder_vel_[1]*(-0.000122);// Velocidad rueda dcha. en m/s
+	// Velocidad rueda izq. en m/s
+	MRPT_TODO("Move these constants to odometry module!");
+	m_last_vel_rear_left = last_encoder_vel_[0] * (-0.000122);
+	// Velocidad rueda dcha. en m/s
+	m_last_vel_rear_right = last_encoder_vel_[1] * (-0.000122);
 }
 
 void VehicleControllerLowLevel::ejexCallback(
