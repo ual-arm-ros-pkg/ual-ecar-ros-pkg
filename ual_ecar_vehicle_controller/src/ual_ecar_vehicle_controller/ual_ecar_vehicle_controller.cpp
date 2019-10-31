@@ -500,7 +500,8 @@ void VehicleControllerLowLevel::onNewEncoderSpeed(
 	MRPT_TODO("Move these constants to odometry module!");
 	m_last_vel_rear_left = last_encoder_vel_[0] * (-0.000122);
 	// Velocidad rueda dcha. en m/s
-	m_last_vel_rear_right = last_encoder_vel_[1] * (-0.000122);
+	// (Different sign!)
+	m_last_vel_rear_right = last_encoder_vel_[1] * (0.000122);
 }
 
 void VehicleControllerLowLevel::ejexCallback(
