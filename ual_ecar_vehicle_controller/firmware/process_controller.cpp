@@ -47,6 +47,9 @@
 #include "math.h"
 #include <avr/interrupt.h> // sei()
 
+//#define USE_ABSOLUTE_ENCODER   1
+#define USE_ABSOLUTE_ENCODER   0
+
 // ============== HARDWARE CONFIGURATION =====================
 const uint16_t SAMPLING_PERIOD_MSth = 10 /*ms*/ *10 /*th*/;
 const int8_t ENCODER_ABS_CS         = 0x20; //PB0
@@ -213,11 +216,7 @@ void processSteerController()
 	cli();
 	const int32_t enc_diff = enc_last_reading.encoders[0];
 	sei();
-	// Read abs encoder:
-	const int16_t abs_enc_pos_new = (enc_abs_last_reading.enc_pos - Steer_offset-512)* (32.5/(1138/2)); // Abs encoder (10 bit resolution)
-	// Filter out clearly erroneous readings from the abs encoder:
- 	if (abs(abs_enc_pos_new - abs_enc_pos)<512)
-		abs_enc_pos = abs_enc_pos_new;
+
 	// Calibration with absolute encoder:
 	const float K_enc_diff = 337.0f * (32.5/(1138/2))/ (500.0f * 100.0f);	/** 500: Pulses per revolution
 																			  * 100: Reductor 100:1
@@ -225,14 +224,25 @@ void processSteerController()
 																			*/
 	// Incremental encoder calibration if encoders differences are upper than ten pulses
 	const float Adiff = enc_diff * K_enc_diff;
+
+	// Read abs encoder:
+#if USE_ABSOLUTE_ENCODER
+	const int16_t abs_enc_pos_new = (enc_abs_last_reading.enc_pos - Steer_offset-512)* (32.5/(1138/2)); // Abs encoder (10 bit resolution)
+	// Filter out clearly erroneous readings from the abs encoder:
+ 	if (abs(abs_enc_pos_new - abs_enc_pos)<512)
+		abs_enc_pos = abs_enc_pos_new;
+
 	if (abs(abs_enc_pos - (enc_offset_correction+Adiff))>5)
 	{
 		// Recalc offset:
 		enc_offset_correction = abs_enc_pos - Adiff;
 	}
 	// Define encoder value to controller
-//	Encoder_dir[0] = enc_offset_correction + Adiff;
 	Encoder_dir[0] = abs_enc_pos_new;
+#else
+	Encoder_dir[0] = enc_offset_correction + Adiff;
+#endif
+
 	// Control:
 	/*	Speed encoder reading and Smith Predictor implementation*/
 	float rpm = (Encoder_dir[0] - Encoder_dir[1]) / T;
@@ -299,6 +309,8 @@ void processSteerController()
 	}
 	
 	/* for both, open & closed loop: protection against steering mechanical limits: */
+	// JLBC: TODO: Check limits in both directions (!!)
+#if USE_ABSOLUTE_ENCODER
 	steer_mech_limit_reached =
 		steer_mech_limit_reached ?
 		(abs(abs_enc_pos_new) > (steer_mech_limit_pos - 5))
@@ -313,6 +325,7 @@ void processSteerController()
 		if(abs_enc_pos_new < 0 && U_steer_controller[0] < 0)
 	 		U_steer_controller[0] = 0;
 	}
+#endif
 
 	/* Values actualization*/
 	do_shift(Ref_pos);
