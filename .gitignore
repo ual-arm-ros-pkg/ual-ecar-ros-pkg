@@ -1,3 +1,4 @@
+CATKIN_IGNORE
 *~
 ual_ecar_vehicle_controller/arduino/steer_controller_dac_encoder_interface/steer_controller_dac_encoder_interface/ArduinoCore/Release/
 ual_ecar_vehicle_controller/arduino/steer_controller_dac_encoder_interface/steer_controller_dac_encoder_interface/steer_controller_dac_encoder_interface/Release/

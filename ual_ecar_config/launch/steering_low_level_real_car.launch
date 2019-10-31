@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find ual_ecar_config)/launch/ual_ecar_vehicle_controller.launch" />
+  <include file="$(find ual_ecar_config)/launch/libredaq_odometry.launch" />
+  <include file="$(find ual_ecar_config)/launch/joystick_driving.launch" />
+  <include file="$(find ual_ecar_config)/launch/ual_ecar_odometry.launch" />
+  <include file="$(find ual_ecar_config)/launch/ual_ecar_rviz.launch" />
+</launch>

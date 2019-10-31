@@ -1,0 +1,4 @@
+<launch>
+  <node name="joystick_driving" pkg="joystick_driving" type="joystick_driving_node" output="screen">
+  </node>
+</launch>
