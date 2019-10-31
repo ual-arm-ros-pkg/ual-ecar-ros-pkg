@@ -5,6 +5,7 @@
     <param name="joint0_tick2rad" value="1.0" />
     <param name="joint1_tick2rad" value="1.0" />
     <param name="serial_port" value="/dev/serial/by-id/usb-LibreDAQ_LDAQ-BASE_0001-if00" />
-    <param name="SPEED_FILTER_SAMPLES_LEN" value="2" />
+    <param name="SPEED_FILTER_SAMPLES_LEN" value="10" />
+    <param name="PUBLISH_RATE" value="40" />
   </node>
 </launch>

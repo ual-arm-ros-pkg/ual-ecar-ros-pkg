@@ -381,7 +381,7 @@ bool VehicleControllerLowLevel::iterate()
 			}
 			else
 			{
-				const float MAX_VEL_MPS = 4.0;
+				const float MAX_VEL_MPS = 2.0;
 				float vel_mps = m_joy_y * MAX_VEL_MPS;
 				// CONTROL_THROTTLE_SETPOINT
 				TFrameCMD_CONTROL_THROTTLE_SETPOINT cmd;
@@ -498,10 +498,10 @@ void VehicleControllerLowLevel::onNewEncoderSpeed(
 	last_encoder_vel_[index] = msg->avr_speed;
 	// Velocidad rueda izq. en m/s
 	MRPT_TODO("Move these constants to odometry module!");
-	m_last_vel_rear_left = last_encoder_vel_[0] * (-0.000122);
+	m_last_vel_rear_left = last_encoder_vel_[0] * (0.000122);
 	// Velocidad rueda dcha. en m/s
 	// (Different sign!)
-	m_last_vel_rear_right = last_encoder_vel_[1] * (0.000122);
+	m_last_vel_rear_right = last_encoder_vel_[1] * (-0.000122);
 }
 
 void VehicleControllerLowLevel::ejexCallback(
