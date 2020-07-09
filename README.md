@@ -26,7 +26,8 @@ sudo apt-get install -y ros-${ROS_DISTRO}-hardware-interface \
   ros-${ROS_DISTRO}-diagnostic-updater xutils-dev
 ```
 
-* Install [arduino_daq](https://github.com/ual-arm-ros-pkg/arduino-daq-ros-pkg).
+* Install [Phidgets drivers for ROS](https://github.com/ros-drivers/phidgets_drivers).
+* Install [arduino_daq](https://github.com/ual-arm-ros-pkg/arduino-daq-ros-pkg) (optional).
 * Install Ackermann messages:
 ```
 sudo apt-get install ros-kinetic-ackermann-msgs
