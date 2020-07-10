@@ -10,7 +10,7 @@
 #include <sensor_msgs/JointState.h>
 #include <ros/console.h>
 #include <tf/transform_broadcaster.h>
-#include <phidgets_high_speed_encoder/EncoderDecimatedSpeed.h>
+#include <phidgets_msgs/EncoderDecimatedSpeed.h>
 #include <mrpt_bridge/time.h>  // ros2mrpt bridge
 #include <mutex>
 #include <array>
@@ -78,7 +78,7 @@ class OdometryNode
 
 	// callback for topics /joint_states_ch{0,1}_decim_speed
 	void onNewEncoderSpeed(
-		const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,
+		const phidgets_msgs::EncoderDecimatedSpeed::ConstPtr& msg,
 		int index)
 	{
 		std::lock_guard<std::mutex> lk(last_encoder_vel_mx);
@@ -146,11 +146,11 @@ class OdometryNode
 		sub_encoders_ = n_.subscribe(
 			"joint_states", 10, &OdometryNode::onNewEncoderState, this);
 		sub_enc_decim_speed_[0] =
-			n_.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+			n_.subscribe<phidgets_msgs::EncoderDecimatedSpeed>(
 				"joint_states_ch0_decim_speed", 10,
 				boost::bind(&OdometryNode::onNewEncoderSpeed, this, _1, 0));
 		sub_enc_decim_speed_[1] =
-			n_.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+			n_.subscribe<phidgets_msgs::EncoderDecimatedSpeed>(
 				"joint_states_ch1_decim_speed", 10,
 				boost::bind(&OdometryNode::onNewEncoderSpeed, this, _1, 1));
 

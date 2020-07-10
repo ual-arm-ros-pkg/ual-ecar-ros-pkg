@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
 	tf
 	phidgets_high_speed_encoder
+	phidgets_msgs
 	mrpt_bridge
 )
 

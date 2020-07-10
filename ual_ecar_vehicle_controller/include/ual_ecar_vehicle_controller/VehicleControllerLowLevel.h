@@ -10,7 +10,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
-#include <phidgets_high_speed_encoder/EncoderDecimatedSpeed.h>
+#include <phidgets_msgs/EncoderDecimatedSpeed.h>
 
 #include <mrpt/version.h>
 #if MRPT_VERSION >= 0x199
@@ -70,7 +70,7 @@ class VehicleControllerLowLevel : public COutputLogger
 	void modeThrottleCallback(const std_msgs::Bool::ConstPtr& msg);
 	void autonomousModeCallback(const std_msgs::Bool::ConstPtr& msg);
 	void brakeenableCallback(const std_msgs::Bool::ConstPtr& msg);
-	void onNewEncoderSpeed( const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg, int index);
+	void onNewEncoderSpeed( const phidgets_msgs::EncoderDecimatedSpeed::ConstPtr& msg, int index);
 	void ejexCallback(const std_msgs::Float64::ConstPtr& msg);
 	void ejeyCallback(const std_msgs::Float64::ConstPtr& msg);
 	void daqOnNewADCCallback(const TFrame_ADC_readings_payload_t& data, CSerialPort& m_serial);

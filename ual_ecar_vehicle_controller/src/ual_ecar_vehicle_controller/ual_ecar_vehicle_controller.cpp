@@ -124,12 +124,12 @@ bool VehicleControllerLowLevel::initialize()
 		"vehicle_brake_enable", 10,
 		&VehicleControllerLowLevel::brakeenableCallback, this);
 	m_sub_leftWheel =
-		m_nh.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+		m_nh.subscribe<phidgets_msgs::EncoderDecimatedSpeed>(
 			"joint_states_ch0_decim_speed", 10,
 			boost::bind(
 				&VehicleControllerLowLevel::onNewEncoderSpeed, this, _1, 0));
 	m_sub_rightWheel =
-		m_nh.subscribe<phidgets_high_speed_encoder::EncoderDecimatedSpeed>(
+		m_nh.subscribe<phidgets_msgs::EncoderDecimatedSpeed>(
 			"joint_states_ch1_decim_speed", 10,
 			boost::bind(
 				&VehicleControllerLowLevel::onNewEncoderSpeed, this, _1, 1));
@@ -488,7 +488,7 @@ void VehicleControllerLowLevel::brakeenableCallback(
 	m_mode_brake_changed = true;
 }
 void VehicleControllerLowLevel::onNewEncoderSpeed(
-	const phidgets_high_speed_encoder::EncoderDecimatedSpeed::ConstPtr& msg,
+	const phidgets_msgs::EncoderDecimatedSpeed::ConstPtr& msg,
 	int index)
 {
 	ROS_ASSERT(index < 2);
