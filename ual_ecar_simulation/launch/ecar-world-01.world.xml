@@ -41,7 +41,7 @@
 		/>
 
 		<include file="rgbd_camera.sensor.xml" 
-		  sensor_x="0.22" sensor_z="1.29"
+		  sensor_x="0.22" sensor_z="2.29"
 		  sensor_period_sec="0.10"
 		  show_3d_pointcloud="true"
 		/>

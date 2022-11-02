@@ -28,7 +28,8 @@
         <f_wheels_d>2.0</f_wheels_d>
         <max_steer_ang_deg>30.0</max_steer_ang_deg>
 
-        <chassis mass="800.0" zmin="0.15" zmax="1.00">
+        <chassis mass="800.0" zmin="0.1" zmax="1.90">
+            <shape_from_visual/> <!-- automatic size from 3D model file -->
         </chassis>
 
         <!--   Motor controller -->
@@ -58,6 +59,11 @@
         </drivetrain>
 
     </dynamics>
+
+    <visual>
+        <model_uri>../models/ecarm.dae</model_uri>
+        <model_roll>90.0</model_roll>
+    </visual>
 
     <!-- Friction force simulation -->
     <friction class="default">
