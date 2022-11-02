@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>ual_ecar_simulation</name>
+  <version>0.1.0</version>
+  <description>The ual_ecar_simulation contains MVSIM simulation files</description>
+
+  <maintainer email="jlblanco@ual.es">Jose-Luis Blanco</maintainer>
+  <author>Jose-Luis Blanco</author>
+  <license>BSD</license>  
+
+  <buildtool_depend>catkin</buildtool_depend>
+<!--  <run_depend>teleop_twist_keyboard</run_depend>
+  <run_depend>tf</run_depend>
+-->
+
+</package>
