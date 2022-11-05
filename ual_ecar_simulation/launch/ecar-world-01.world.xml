@@ -18,7 +18,7 @@
 	     ======================== -->
 	<element class="occupancy_grid">
 		<file>ecar-world-gridmap-01.png</file>
-		<resolution>0.1</resolution>
+		<resolution>0.2</resolution>
 		<centerpixel_x>100</centerpixel_x>
 		<centerpixel_y>100</centerpixel_y>
 	</element>
@@ -37,11 +37,11 @@
 
 		<!-- Sensors -->
 		<include file="lidar2d.sensor.xml" 
-		  sensor_x="2.00" sensor_z="0.33" sensor_yaw="0" sensor_name="laser1" 
+		  sensor_x="2.20" sensor_z="0.50" sensor_yaw="0" sensor_name="laser1" 
 		/>
 
 		<include file="rgbd_camera.sensor.xml" 
-		  sensor_x="0.22" sensor_z="2.29"
+		  sensor_x="0.50" sensor_z="2.3"
 		  sensor_period_sec="0.10"
 		  show_3d_pointcloud="true"
 		/>
@@ -70,13 +70,13 @@
 	<block class="square_obstacle">
 		<init_pose>5 1 0</init_pose>
 
-		<animation type="keyframes">
+		<!-- <animation type="keyframes">
 			<time_pose>0.0  -1  0  30</time_pose>
 			<time_pose>2.0  -1 -1 -10</time_pose>
 			<time_pose>4.0   1 -1 -50</time_pose>
 			<time_pose>4.5   1  1  40</time_pose>
 			<time_pose>5.0  -1  0  30</time_pose>
-		</animation>
+		</animation> -->
 	</block>
 
 </mvsim_world>
